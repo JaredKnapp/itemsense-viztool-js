@@ -12,7 +12,7 @@ var gulp = require("gulp"),
     browserify = require("browserify-string"),
     walk = require("walk").walkSync;
 
-var base = path.resolve(__dirname, "gulp"),
+var base = path.resolve(__dirname, "client"),
     PATHS = {
         base: base,
         src: {
