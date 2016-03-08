@@ -4,12 +4,11 @@
  *
  */
 
-var request = require("request"),
-    q = require("q"),
+var q = require("q"),
     _ = require("lodash"),
     ItemSense = require("itemsense-node"),
-    project = null,
-    itemsenseApi = null;
+    project = null;
+
 
 function makeUrl(u) {
     if (u.indexOf("http") === -1)
@@ -93,22 +92,7 @@ function reportError(error){
 function startProject(project) {
     var itemsenseApi =  new ItemSense({itemsenseUrl: makeUrl(project.itemSense.trim() + '/itemsense'), username: project.user || 'admin', password: project.password || 'admindefault'});
 
-    function callItemSense(options) {
-        var defer = q.defer(),
-            opts = _.merge({json: true, method: "GET"}, options);
-        request(opts, function (error, response, body) {
-            if (error)
-                defer.reject(reportError(error));
-            else if (response.statusCode > 399)
-                defer.reject({statusCode:response.statusCode,body:response.body});
-            else
-                defer.resolve(body);
-        }).auth(project.user || "admin", project.password || "admindefault");
-        return defer.promise;
-    }
-
-    var base = makeUrl(project.itemSense.trim()),
-        readPromise = null, interval = null, itemSenseJob = {},
+    var readPromise = null, interval = null, itemSenseJob = {},
         results = wrapResults(),
         wrapper = Object.create({
                 stash: function (promise) {
