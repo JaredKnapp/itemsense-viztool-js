@@ -1,0 +1,120 @@
+@import "./classes";
+
+.pnj-presenter {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgb(221, 207, 207);
+  z-index: 1000;
+}
+
+.pnj-presenter-header {
+  position: fixed;
+  left: 0;
+  right: 410px;
+  height: 94px;
+  top: 0;
+  background-color: white;
+  .col-md-6 {
+    text-align: center;
+    font-size: 36px;
+    padding: 25px;
+  }
+  .pnj-map-marker {
+    @extend .fa;
+    @extend .fa-map-marker;
+    color: yellow;
+    margin-right: 30px;
+  }
+  .pnj-map-marker.redMarker {
+    color: red;
+  }
+  .pnj-map-marker.greenMarker {
+    color: green;
+  }
+}
+
+.pnj-presenter-selector {
+  position: fixed;
+  right: 0;
+  width: 410px;
+  height: 94px;
+  top: 0;
+}
+
+.pnj-presenter-panel {
+  position: fixed;
+  right: 0;
+  width: 410px;
+  bottom: 0;
+  top: 94px;
+  background-color: white;
+  overflow:auto;
+}
+.pnj-presenter-detail{
+  position: fixed;
+  right: 0;
+  width: 410px;
+  bottom: 0;
+  height: 380px;
+  background-color: white;
+  overflow:auto;
+}
+.pnj-presenter-stage {
+  position: fixed;
+  left: 0;
+  right: 410px;
+  bottom: 0;
+  top: 94px;
+}
+
+.pnj-presenter-easel {
+  position: absolute;
+  left: 30px;
+  top: 10px;
+  bottom: 10px;
+  right: 30px;
+  background-color: rgb(221, 207, 207);
+  display: flex;
+  justify-content:center;
+  align-content:center;
+  flex-direction: column;
+  canvas{
+    flex:none;
+  }
+}
+
+.pnj-circle-small{
+  @extend .pnj-center-box;
+  height:70px;
+  border-radius:35px;
+  border:5px solid black;
+  margin-top:12px;
+  cursor:pointer;
+  text-align:center;
+}
+
+.pnj-clear-filter{
+  @extend .pnj-circle-small;
+  @extend .pull-right;
+  width:70px;
+}
+.pnj-icon-label{
+  text-align: center;
+}
+.pnj-panel-icon{
+  @extend .col-md-4;
+  margin-top:20px;
+}
+.pnj-presenter-image{
+  width:80%;
+  height:80%;
+}
+.pnj-panel-btn{
+  @extend .pnj-center-box;
+  cursor : pointer;
+  text-align : center;
+  width : 100%;
+}

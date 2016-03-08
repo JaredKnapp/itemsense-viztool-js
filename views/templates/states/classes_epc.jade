@@ -1,0 +1,13 @@
+H4 Tag Editor
+form(name="EPCEditor")
+    .form-group
+        .pnj-item-epc
+            .input-group-addon EPC
+            .input-group-addon(ng-click="editEpc()") {{record.EPC}}
+            .input-group-addon
+                i.fa.fa-trash(ng-click="deleteTag(record.EPC)")
+            .input-group-addon
+                i.fa.fa-copy(ng-click="cloneTag()")
+        .input-group(ng-repeat="(k,v) in project.classes")
+            .pnj-label-110 {{k}}:
+            select.form-control(ng-options="l for l in v" ng-model="record[k]")

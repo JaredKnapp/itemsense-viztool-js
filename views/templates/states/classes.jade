@@ -1,0 +1,14 @@
+.pnj-record-container
+    table.table
+        thead
+            tr
+                th(ng-click="sortClassesBy('EPC')") EPC
+                    i.pnj-sort-caret(ng-if="sortStatus['EPC']!==undefined", ng-class="sortStatus.EPC? 'fa-caret-up':'fa-caret-down'")
+                th(ng-repeat="k in headers" ng-click="sortClassesBy(k)") {{k}}
+                    i.pnj-sort-caret(ng-if="sortStatus[k]!==undefined", ng-class="sortStatus[k]? 'fa-caret-up':'fa-caret-down'")
+        tbody
+            tr(ng-repeat="c in classes")
+                td(ng-click="editRecord(c)") {{c.EPC}}
+                td(ng-repeat="h in headers" ng-click="editSymbol(c[h],h)") {{c[h]}}
+.pnj-editor
+    .ui-view

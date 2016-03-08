@@ -1,0 +1,21 @@
+H4 From top-left corner of the floorplan:
+.form-group
+    .input-group
+        .input-group-addon X (Pixels):
+        input.form-control(type="number" ng-model="project.origin._x")
+    .input-group
+        .input-group-addon Y (Pixels):
+        input.form-control(type="number" ng-model="project.origin._y")
+.form-group(ng-if="project.stage && project.scale !== 1")
+    .input-group
+        .input-group-addon X (Meters):
+        input.form-control(type="number" ng-model="project.origin.X" step="0.1")
+    .input-group
+        .input-group-addon Y (Meters):
+        input.form-control(type="number" ng-model="project.origin.Y" step="0.1")
+.form-group
+    i.pnj-axis-top-left(title="Set Origin to Top Left" ng-click="project.setOrigin(0,0)")
+    i.pnj-axis-top-right(title="Set Origin to Top Right" ng-click="project.setOrigin(1,0)")
+    i.pnj-axis-bottom-left(title="Set Origin to Bottom Left" ng-click="project.setOrigin(0,1)")
+    i.pnj-axis-bottom-right(title="Set Origin to Bottom Right" ng-click="project.setOrigin(1,1)")
+    i.pnj-axis-center(title="Set Origin to Center" ng-click="project.setOrigin(0.5,0.5)")

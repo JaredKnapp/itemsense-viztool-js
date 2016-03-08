@@ -1,0 +1,43 @@
+form.css-form(name="readerForm" novalidate)
+    button.btn.btn-primary(ng-click="newReader()") New
+    .form-group
+        .input-group
+            .pnj-label-75 Type:
+            select.form-control(ng-options="type.data as type.label for type in [{label:'xArray',data:'XARRAY'},{label:'Spot Reader',data:'SPEEDWAY'}]" ng-model="activeReader.type")
+        .input-group
+            .pnj-label-75 Name:
+            input.form-control(type="text" ng-model="activeReader.name" required)
+        .input-group
+            .pnj-label-75 Address:
+            input.form-control(type="text" ng-model="activeReader.address" required)
+        .input-group
+            .pnj-label-75 Zone:
+            input.form-control(type="text" ng-model="activeReader.readerZone")
+        .input-group
+            .pnj-label-75 Facility:
+            input.form-control(type="text" ng-model="activeReader.facility")
+    .form-group
+        h3 Placement
+        .input-group
+            .pnj-label-75 Floor:
+            input.form-control(type="text" ng-model="activeReader.placement.floor")
+        .input-group
+            .pnj-label-75 X:
+            input.form-control(type="number" ng-model="activeReader.placement.X" step="0.1" ng-change="project.updateReader(activeReader)")
+        .input-group
+            .pnj-label-75 Y:
+            input.form-control(type="number" ng-model="activeReader.placement.Y" step="0.1" ng-change="project.updateReader(activeReader)")
+        .input-group
+            .pnj-label-75 Z:
+            input.form-control(type="number" ng-model="activeReader.placement.z" step="0.1")
+        .input-group
+            .pnj-label-75 Yaw:
+            input.form-control(type="number" ng-model="activeReader.placement.yaw" step="10" ng-change="project.updateReader(activeReader)")
+        .input-group
+            .pnj-label-75 Pitch:
+            input.form-control(type="number" ng-model="activeReader.placement.pitch" step="10")
+        .input-group
+            .pnj-label-75 Roll:
+            input.form-control(type="number" ng-model="activeReader.placement.roll" step="10")
+    button.btn.btn-default.pull-left(ng-click="cancel()") Cancel
+    button.btn.btn-primary.pull-right(ng-click="save()" ng-disabled="!readerForm.$valid") Save

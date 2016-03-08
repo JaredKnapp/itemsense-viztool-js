@@ -1,0 +1,31 @@
+form.container.form-group(name="projectForm")
+    H4 Project Information
+    .input-group(ng-class="{'has-warning':projectForm.handle.$touched && projectForm.handle.$invalid}")
+        .input-group-addon Name:
+        input.form-control(type="text" name="handle" ng-model="project.name" ng-trim="true" required)
+    .input-group(ng-class="{'has-warning':projectForm.url.$touched && projectForm.url.$invalid}")
+        .input-group-addon Item Sense Url:
+        input.form-control(type="url" name="url" ng-model="project.itemSense" ng-change="shouldReconnect()" ng-trim="true" required)
+    .input-group(ng-class="{'has-warning':projectForm.user.$touched && projectForm.user.$invalid}")
+        .input-group-addon User Name:
+        input.form-control(type="text" name="user" ng-model="project.user" ng-trim="true" required)
+    .input-group(ng-class="{'has-warning':projectForm.pass.$touched && projectForm.pass.$invalid}")
+        .input-group-addon Password:
+        input.form-control(type="password" name="pass" ng-model="project.password" required)
+    .form-group(ng-if="project.recipes")
+        H4 Job
+        .input-group
+            .input-group-addon Recipe:
+            select.form-control(ng-options="v.name for v in project.recipes track by v.name" ng-model="project.recipe")
+        .input-group
+            .input-group-addon Duration (s):
+            input.form-control(type="number" ng-model="project.duration")
+        .checkbox.form-control(ng-show="project.job")
+            label(style="padding-left:0;")
+                span(from-template="index/job_control")
+                |   {{projectInfo()}}
+        button.pnj-cancel(ng-click="project.startJob()" ng-disabled="!canStart()" ng-show="!project.isJobRunning()") Start Job
+        button.pnj-cancel(ng-click="project.stopJob()" ng-show="project.isJobRunning()" ng-disabled="!project.jobMonitor") Cancel Job
+    .form-group
+        button.pnj-save(ng-click="project.connect()" ng-disabled="!projectForm.$valid" ng-show="!project.recipes") Connect
+

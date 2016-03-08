@@ -1,0 +1,26 @@
+H4 Symbol Editor
+form(name="SymbolEditor")
+    .form-group
+        .pnj-item-epc
+            .input-group-addon Name
+            .input-group-addon(ng-click="editLabel()") {{symbol.Property}}
+            .input-group-addon
+                i.fa.fa-trash(ng-click="deleteSymbol()")
+            .input-group-addon
+                i.fa.fa-copy(ng-click="cloneSymbol()")
+    .form-group
+        .pnj-item-preview
+            .pnj-item-color(colorpicker="" ng-model="symbol.Color"
+            colorpicker-with-input="true" colorpicker-absolute-position="true" colorpicker-parent="true"
+            colorpicker-position="center" colorpicker-is-open="isOpen"
+            style="background-color:{{bkColor(symbol)}};border-color:{{getBorder(bkColor(symbol))}}")
+                img(ng-if="symbol.Image" ng-src="{{symbolImage()}}" title="Symbol Image")
+                .pnj-item-text(ng-if="!symbol.Image && !symbol.Color") {{symbol.Property}}
+        .clearfix
+    .form-group
+        span(flow-init="{target:targetSymbol}"
+        flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow)")
+            button.btn.btn-default(flow-btn flow-attrs="{accept:'image/png,image/jpeg,image/gif'}") Use Image
+        button.btn.btn-default(ng-click="symbol.Color=symbol.Color || '#FFFFFF'; isOpen=true;") Use Color
+        button.btn.btn-default(ng-click="symbol.Image=null; symbol.Color='' ") Use Text
+
