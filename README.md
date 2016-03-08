@@ -1,5 +1,5 @@
 # itemsense-viztool-js
-> A web-based visualization tool for using your ItemSense Instance <br/>
+> A web-based visualization tool for using your ItemSense Instance. <br/>
 For more information about ItemSense, check out http://developer.impinj.com.
 
 
