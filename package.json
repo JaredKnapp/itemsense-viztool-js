@@ -1,6 +1,6 @@
 {
-  "name": "RecApp",
-  "version": "0.0.0",
+  "name": "itemsense-viztool-js",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"
