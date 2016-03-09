@@ -1,0 +1,5 @@
+i.pnj-run(ng-click="project.jobMonitor=!project.jobMonitor" ng-show="project.isJobRunning()" ng-class="{animated:project.jobMonitor}" title="Monitor Job")
+i.pnj-stop(ng-click="canStart() ? project.startJob():'';" ng-hide="project.isJobRunning()" title="Restart Job")
+i.pnj-filter(ng-click="setEpcFilter()" ng-class="{activeFilter:project.epcFilter!=='.'}" title="Set Epc Filter")
+
+

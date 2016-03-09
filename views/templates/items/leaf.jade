@@ -1,0 +1,6 @@
+.ui-tree-handle.pnj-tree-node(data-nodrag ng-click="editSubItem($parent.$parent.item,item, this)")
+    i.pnj-kids.nokids(ng-hide="item.items.length")
+    i.pnj-kids(data-nodrag ng-click="item.collapsed = ! item.collapsed" ng-class="item.collapsed ? 'collapsed' : 'expanded'" ng-show="item.items.length")
+    span {{item.label}}
+ol(ui-tree-nodes ng-model="item.items" ng-class="{hidden:item.collapsed}")
+    li(ng-repeat="item in item.items" ui-tree-node ng-include="'/templates/items/leaf'")

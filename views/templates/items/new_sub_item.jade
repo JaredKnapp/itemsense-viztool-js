@@ -1,0 +1,25 @@
+h4 Item Description
+.form-group
+    .input-group
+        .pnj-label-110 Label:
+        input.form-control(type="text" ng-model="subItem.label")
+    .input-group
+        .pnj-label-110 URL:
+        input.form-control(type="text" ng-model="subItem.name" ng-change="sanitizeUrl()")
+    .input-group
+        .pnj-label-110 RegEx Filter:
+        input.form-control(type="text" ng-model="subItem.filter")
+    .clearfix
+    .col-md-6
+        img.pnj-item-icon(ng-src="{{imageSrc('icon')}}" alt="Icon For Item")
+        div(flow-init="{target:targetIcon}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow,'icon')")
+            a.btn.btn-primary(flow-btn flow-attrs="{accept:'image/png,image/jpeg,image/gif'}" href="javascript:void(0);" ng-disabled="!subItem.name") Select Icon Image
+    .col-md-6
+        img.pnj-item-icon(ng-src="{{imageSrc('avatar')}}" alt="Avatar For Item")
+        div(flow-init="{target:targetAvatar}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow,'avatar')")
+            a.btn.btn-primary(flow-btn flow-attrs="{accept:'image/png,image/jpeg,image/gif'}" href="javascript:void(0);" ng-disabled="!subItem.name") Select Avatar Image
+    .clearfix
+    .form-group
+        button.pnj-cancel(ng-click="removeItem()") Remove
+        button.pnj-save(ng-hide="isNew" ng-click="newSubItem(subItem)") New Sub Item
+        button.pnj-save(ng-show="isNew" ng-click="addItem()") Add

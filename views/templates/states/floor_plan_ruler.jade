@@ -1,0 +1,37 @@
+.form-group
+    .input-group
+        .pnj-label-75 Pixels:
+        input.form-control(type="number" ng-model="project._rulerLength" step="0.1")
+    .input-group
+        .pnj-label-75 Meters:
+        input.form-control(type="number" ng-model="project._rulerMeters" step="0.1")
+    .input-group
+        .pnj-label-75(ng-click="setScale()" style="cursor:pointer;") Scale:
+        input.form-control(type="number" ng-model="project._scale")
+table.table
+    thead
+        tr
+            th Point
+            th X(m)
+            th Y(m)
+            th Fix
+            th Reader
+    tbody
+        tr
+            th Red
+            td {{project.stageToMeters(project.rulerCoords.startX,'x') | number:2}}
+            td {{project.stageToMeters(project.rulerCoords.startY,'y') | number:2}}
+            td
+                input(type="checkbox" ng-model="project.rulerCoords.fix[0]" ng-click="project.rulerCoords.fix[1] =  project.rulerCoords.fix[0] ? false : project.rulerCoords.fix[1]")
+            td
+                button.btn.btn-primary(ng-click="addReader('start')" ng-disabled="!project.readers") Put
+        tr
+            th Blue
+            td {{project.stageToMeters(project.rulerCoords.endX,'x') | number:2}}
+            td {{project.stageToMeters(project.rulerCoords.endY,'y') | number:2}}
+            td
+                input(type="checkbox" ng-model="project.rulerCoords.fix[1]" ng-click="project.rulerCoords.fix[0] =  project.rulerCoords.fix[1] ? false : project.rulerCoords.fix[0]")
+            td
+                button.btn.btn-primary(ng-click="addReader('end')" ng-disabled="!project.readers") Put
+.ui-view
+

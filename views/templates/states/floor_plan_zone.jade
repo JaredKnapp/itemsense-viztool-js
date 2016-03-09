@@ -1,0 +1,15 @@
+.form-group
+    .input-group
+        .pnj-label-110 Name:
+        input.form-control(type="text" ng-model="project.zone.name")
+    .input-group
+        .pnj-label-110 Type:
+        select.form-control(ng-options="t.value as t.label for t in [{label:'Fixture',value:'fixture'},{label:'Blocker',value:'blocker'}]" ng-model="project.zone.type")
+    .input-group
+        .pnj-label-110 Tolerance:
+        input.form-control(type="number" ng-model="project.zone.tolerance",ng-change="project.setTolerance()" step="0.1")
+    .input-group
+        .pnj-label-110 Include:
+        input.form-control(type="text" ng-model="project.zone._include")
+    i.pnj-delete(title="delete" ng-click="project.deleteZone()")
+    i.pnj-clone(title="duplicate" ng-click="project.cloneZone()")

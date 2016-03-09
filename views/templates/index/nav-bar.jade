@@ -1,0 +1,54 @@
+.container-fluid
+   .navbar-header
+      a.navbar-brand(href="javascript:void(0);")
+         img(src="/images/logo.png")
+   ul.nav.navbar-nav
+      li(uib-dropdown)
+         a(uib-dropdown-toggle href="javascript:void(0);") File
+         ul(uib-dropdown-menu)
+            li.menuitem
+               a(ui-sref="project({id:'newProject'})" ui-sref-opts="{reload:true}") New Project ...
+            li.menuitem
+               a(href="javascript:void(0);" ng-click="select()") Open Project ...
+            li.menuitem
+               a(href="javascript:void(0);" ng-click="project.save()") Save Project
+            li.menuitem(ng-class="{disabled:!project.handle}" flow-init="{target:targetClasses}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow,'classes')")
+               a(href="javascript:void(0);" flow-btn flow-attrs="{accept:'text/csv'}") Import Classification CSV
+            li.menuitem(ng-class="{disabled:!project.handle}" flow-init="{target:targetSymbols}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow,'symbols')")
+               a(href="javascript:void(0);" flow-btn flow-attrs="{accept:'text/csv'}") Import Picture Map CSV
+            li.menuitem.disabled
+               a(href="javascript:void(0);") Export...
+            li.menuitem(ng-show="!project.recipes" ng-class="{disabled:!project.canConnect()}")
+               a(href="javascript:void(0);" ng-click="project.connect()") Connect to Item Sense
+            li.menuitem(ng-class="{disabled:!project.canConnect()}")
+               a(ui-sref="present({id:project.handle})") Present Project
+            li.divider
+            li.menuitem
+               a(href="javascript:void(0);" ng-click="about()") About
+      li(uib-dropdown ng-class="{disabled:!project.recipes}")
+         a(uib-dropdown-toggle href="javascript:void(0);") View
+         ul(uib-dropdown-menu)
+            li.menu-item
+               a(href="javascript:void(0);" ng-click="project.jobMonitor=!project.jobMonitor")
+                  i.pnj-menu-check(ng-show="project.jobMonitor")
+                  |    Monitor Job
+            li.menu-item
+               a(href="javascript:void(0);" ng-click="project.showReaders=!project.showReaders")
+                  i.pnj-menu-check(ng-show="project.showReaders")
+                  |    Show Readers
+            li.menu-item
+               a(href="javascript:void(0);" ng-click="project.pullItems=!project.pullItems")
+                  i.pnj-menu-check(ng-show="project.pullItems")
+                  |    Pull Items
+            li.menu-item(ng-class="{disabled:!project.items}")
+               a(href="javascript:void(0);" ng-click="project.showItems=!project.showItems")
+                  i.pnj-menu-check(ng-show="project.showItems")
+                  |    Show Items
+            li.menu-item
+               a(href="javascript:void(0);" ng-click="setEpcFilter()")
+                  i.pnj-menu-check(ng-show="project.epcFilter!=='.'")
+                  |    Epc Filter
+            li.menu-item
+               a(href="javascript:void(0);" ng-click="setFloorName()") Floor Name...
+   .pnj-job-control(ng-show="project.job" from-template="index/job_control")
+

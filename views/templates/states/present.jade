@@ -1,0 +1,45 @@
+.pnj-presenter
+    .pnj-presenter-header
+        .col-md-3
+            img(src="/images/logo.png")
+        .col-md-6
+            i.pnj-map-marker(title="{{iconTitle}}" ng-class="getIconColor()")
+            | Search for an Item
+        .col-md-3
+            .pnj-clear-filter(ng-click="clearSelection()")
+                .pnj-circle-text CLEAR
+    .pnj-presenter-selector
+        div(ng-repeat="c in classes" ng-class="getSelectorClass()" ng-click="selectedClass=c" ng-dblclick="clearSelection(c)")
+            .pnj-circle-small(style="{{setColor(selection[c])}}")
+                img.pnj-presenter-image(ng-if="selection[c].Image" ng-src="{{project.symbolImage(selection[c].Image)}}")
+                span(ng-if="!selection[c].Image && selection[c].Color==='white'") {{selection[c].Property}}
+                span(ng-if="!selection[c]") {{c}}
+    .pnj-presenter-stage
+        .pnj-presenter-easel(presentation="true")
+    .pnj-presenter-panel(style="{{project.item?'bottom:400px;':''}}")
+        .pnj-panel-icon(ng-repeat-start="i in candidates[selectedClass]"
+        circle-icon="project.symbols[i.toLowerCase()]" icon-text="{{i}}" icon-label="{{i}}"
+        ng-click="filterItems(selectedClass,i)")
+        .clearfix(ng-repeat-end ng-if="($index+1)%3===0")
+    .pnj-presenter-detail(ng-if="project.item")
+        table.table
+            tr
+                td EPC
+                td {{project.item.epc}}
+            tr(ng-repeat="c in classes")
+                td {{c}}
+                td {{project.itemHash[project.item.epc][c]}}
+            tr
+                td Last Updated
+                td {{project.item.lastModifiedTime | date:'MM/dd/yyyy HH:mm:ss'}}
+        table.table
+            thead
+                tr
+                    th X:
+                    th Y:
+                    th Zone:
+            tbody
+                tr
+                    td {{project.item.xLocation}}
+                    td {{project.item.yLocation}}
+                    td {{project.item.zone}}

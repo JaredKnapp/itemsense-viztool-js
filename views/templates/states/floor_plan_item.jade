@@ -1,0 +1,21 @@
+table.table
+    tr
+        td EPC
+        td {{project.item.epc}}
+    tr
+        td X
+        td {{project.item.xLocation}}
+    tr
+        td Y
+        td {{project.item.yLocation}}
+table.table
+    tr
+        td Zone
+        td {{project.item.zone}}
+    tr
+        td Confidence
+        td {{project.item.presenceConfidence}}
+    tr
+        td Modified
+        td {{project.item.lastModifiedTime | date:'MM/dd/yyyy HH:mm:ss'}}
+

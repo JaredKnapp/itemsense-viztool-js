@@ -1,0 +1,20 @@
+.container
+    .pnj-easel(easel)
+    .pnj-tools
+        div(flow-init="{target:targetUrl}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow)")
+            a.btn.btn-primary(flow-btn flow-attrs="{accept:'image/png,image/jpeg,image/gif'}" href="javascript:void(0);") Select Floor Plan Image
+        div(ng-show="project.floorPlan")
+            i.pnj-zoom-in(ng-click="zoomIn()" title="Zoom In")
+            i.pnj-zoom-out(ng-click="zoomOut()" title="Zoom Out")
+            i.pnj-zoom-width(ng-click="zoomWidth()" title="Zoom Width")
+            i.pnj-zoom-reset(ng-click="zoomReset()" title="Zoom Reset")
+            i.pnj-ruler(ng-click="moveRuler()" ng-class="{active:$state.is('floorPlan.ruler')}" title="Set Scale")
+            i.pnj-origin(ng-click="moveOrigin()" ng-class="{active:$state.is('floorPlan.origin')}" title="Set Coordinate Origin")
+            .form-group(ng-if="project.showReaders")
+                .input-group
+                    .input-group-addon Reader Fields:
+                    select.form-control(ng-model="project.showReaderFields" ng-options="f.i as f.n for f in fields")
+            a.pnj-add-zone(ng-click="trace()" ng-class="{active:$state.is('floorPlan.trace')}") Add Zone
+        .ui-view
+    .pnj-footer(ng-if="project.mouse") {{round(project.mouse.x)}} , {{round(project.mouse.y)}}
+

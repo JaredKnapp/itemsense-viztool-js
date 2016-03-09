@@ -1,0 +1,92 @@
+@import "../base/base";
+
+.pnj-nav-bar {
+  @extend .nav;
+  @extend .navbar-default;
+  @extend .navbar-fixed-top;
+  .container-fluid a img {
+    height: 40px;
+    top: -14px;
+    position: relative;
+  }
+}
+
+.pnj-job-control {
+  margin-top: 15px;
+  float: right;
+  font-size: large;
+}
+
+.pnj-job-video {
+  @extend .fa;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.pnj-run {
+  @extend .pnj-job-video;
+  @extend .fa-futbol-o;
+  @extend .faa-spin;
+}
+
+.pnj-stop {
+  @extend .pnj-job-video;
+  @extend .fa-play-circle;
+}
+
+.pnj-filter {
+  @extend .pnj-job-video;
+  @extend .fa-filter;
+}
+.pnj-filter.activeFilter{
+  color:red;
+}
+.pnj-body {
+  position: fixed;
+  top: 55px;
+  padding: 3px;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pnj-control-button {
+  @extend .btn;
+  margin-top: 15px;
+}
+
+.pnj-save {
+  @extend .pnj-control-button;
+  @extend .btn-success;
+  @extend .pull-right;
+}
+
+.pnj-cancel {
+  @extend .pnj-control-button;
+  @extend .btn-default;
+  @extend .pull-left;
+}
+
+.pnj-middle-btn {
+  @extend .pnj-control-button;
+  @extend .btn-default;
+  @extend .center-block;
+}
+
+.pnj-job-status {
+  float: left;
+  margin-top: 20px;
+  margin-left: 40px;
+}
+
+.pnj-menu-check {
+  @extend .fa;
+  @extend .fa-check;
+}
+
+.pnj-sort-caret {
+  @extend .fa;
+  margin-left: 10px;
+}
+
