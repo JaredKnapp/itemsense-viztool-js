@@ -98,9 +98,9 @@ function startProject(project) {
                 stash: function (promise) {
 
                     return promise.then(function (data) {
-                        console.log("Data returned", data);
+                        console.log("Data returned", Object.keys(data));
                         var now = new Date().getTime();
-                        results.last = createResultItem(data, "at");
+                        results.last = createResultItem(data.items, "at");
                         return results.last;
                     }, function (error) {
                         console.log("item promise failed", error);
@@ -119,14 +119,15 @@ function startProject(project) {
                     readPromise = wrapper.stash(itemsenseApi.items.get({pageSize:1000})).then(function (items) {
                         if(!itemSenseJob)
                             return q.reject({statusCode:500,body:"Job not started"});
-                        console.log("Items returned", items.data);
-                        return _.filter(items.items, function (i) {
+                        console.log("Items returned", Object.keys(items.data), itemSenseJob.creationTime);
+			items.data = _.filter(items.data, function (i) {
+			    if(i.lastModifiedTime > itemSenseJob.creationTime)
+				console.log("greater", i.lastModifiedTime, itemSenseJob.creationTime);
                             return i.lastModifiedTime > itemSenseJob.creationTime
                         });
+			return items;
                     });
-                    return readPromise.then(function () {
-                        return results.last;
-                    });
+                    return readPromise;
                 },
                 startClock: function () {
                     interval = setInterval(wrapper.readItems, 1000);
@@ -264,7 +265,10 @@ var md = {
     getItems: function () {
         if (!project)
             return q.reject({statusCode:500, body:"Server error: Project Not Started"});
-        return project.getItems();
+        return project.getItems().then(function(data){
+			console.log(Object.keys(data),data.data.length,"data");
+			return data;
+	});
     },
     postReaders:function(data){
         if (!project)
