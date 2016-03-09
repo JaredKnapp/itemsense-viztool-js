@@ -53,6 +53,9 @@ function createResultItem(data, tp) {
             enumerable: true,
             get: function () {
                 return data;
+            },
+            set: function(v){
+                data = v;
             }
         }
         , at: {
@@ -85,12 +88,16 @@ function createResultItem(data, tp) {
     });
 }
 
-function reportError(error){
-    return error.statusCode ? error : {statusCode:500, body:"OS error "+error.name +": "+error.description};
+function reportError(error) {
+    return error.statusCode ? error : {statusCode: 500, body: "OS error " + error.name + ": " + error.description};
 }
 
 function startProject(project) {
-    var itemsenseApi =  new ItemSense({itemsenseUrl: makeUrl(project.itemSense.trim() + '/itemsense'), username: project.user || 'admin', password: project.password || 'admindefault'});
+    var itemsenseApi = new ItemSense({
+        itemsenseUrl: makeUrl(project.itemSense.trim() + '/itemsense'),
+        username: project.user || 'admin',
+        password: project.password || 'admindefault'
+    });
 
     var readPromise = null, interval = null, itemSenseJob = {},
         results = wrapResults(),
@@ -116,16 +123,15 @@ function startProject(project) {
                 getItems: function () {
                     if (readPromise)
                         return readPromise;
-                    readPromise = wrapper.stash(itemsenseApi.items.get({pageSize:1000})).then(function (items) {
-                        if(!itemSenseJob)
-                            return q.reject({statusCode:500,body:"Job not started"});
+                    readPromise = wrapper.stash(itemsenseApi.items.get({pageSize: 1000})).then(function (items) {
+                        if (!itemSenseJob)
+                            return q.reject({statusCode: 500, body: "Job not started"});
                         console.log("Items returned", Object.keys(items.data), itemSenseJob.creationTime);
-			items.data = _.filter(items.data, function (i) {
-			    if(i.lastModifiedTime > itemSenseJob.creationTime)
-				console.log("greater", i.lastModifiedTime, itemSenseJob.creationTime);
+                        items.data = _.filter(items.data, function (i) {
                             return i.lastModifiedTime > itemSenseJob.creationTime
                         });
-			return items;
+                        console.log("after filter", items.data.length);
+                        return items;
                     });
                     return readPromise;
                 },
@@ -147,7 +153,7 @@ function startProject(project) {
                     });
 
                 },
-                postReaders:function(data){
+                postReaders: function (data) {
                     return itemsenseApi.readerDefinitions.update(data);
                 },
                 getReaders: function () {
@@ -238,25 +244,25 @@ var md = {
 
     monitorJob: function (data) {
         if (!project)
-            return q.reject({statusCode:500, body:"Server error: Project Not Started"});
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
         return project.monitorJob(data);
     },
 
     stopJob: function (data) {
         if (!project)
-            return q.reject({statusCode:500, body:"Server error: Project Not Started"});
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
         return project.stopJob(data);
     },
 
     startJob: function (data) {
         if (!project)
-            return q.reject({statusCode:500, body:"Server error: Project Not Started"});
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
         return project.startJob(data);
     },
 
     getReaders: function () {
         if (!project)
-            return q.reject({statusCode:500, body:"Server error: Project Not Started"});
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
         return project.getReaders().then(function (list) {
             return list || [];
         });
@@ -264,15 +270,15 @@ var md = {
 
     getItems: function () {
         if (!project)
-            return q.reject({statusCode:500, body:"Server error: Project Not Started"});
-        return project.getItems().then(function(data){
-			console.log(Object.keys(data),data.data.length,"data");
-			return data;
-	});
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
+        return project.getItems().then(function (data) {
+            console.log(Object.keys(data), data.data.length, "data");
+            return data;
+        });
     },
-    postReaders:function(data){
+    postReaders: function (data) {
         if (!project)
-            return q.reject({statusCode:500, body:"Server error: Project Not Started"});
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
         return project.postReaders(data);
     }
 };
