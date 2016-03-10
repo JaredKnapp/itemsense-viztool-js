@@ -115,26 +115,26 @@ module.exports = (function (app) {
             };
         }])
         .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", "ZoneModel", function (_, projectOrigin, $interval, zoneModel) {
-            function HeatMapData() {
+            function TimeLapseData() {
                 var base = [], project = null, self = this;
-                this.add = function addItems(items, heatMap) {
+                this.add = function addItems(items, timeLapse) {
                     var item = _.find(items.data, function (i) {
-                        return i.epc === heatMap;
+                        return i.epc === timeLapse;
                     });
                     base.unshift(item);
                     if (base.length > 20)
                         base.pop();
                 };
-                this.replace = function (items, heatMap) {
-                    if (heatMap)
-                        self.add(items, heatMap);
+                this.replace = function (items, timeLapse) {
+                    if (timeLapse)
+                        self.add(items, timeLapse);
                     else
                         base = [];
                 };
                 this.getBase = function () {
                     return base;
                 };
-                this.getHeatMap = function () {
+                this.getTimeLapse = function () {
                     var map = _.reduce(base, function (r, i) {
                         if (!i) return r;
                         var key = i.xLocation + "_" + i.yLocation;
@@ -186,9 +186,9 @@ module.exports = (function (app) {
                     selection = {},
                     facility = "DEFAULT",
                     epcFilter = ".",
-                    heatMap = false,
-                    heatMapFlag=false,
-                    heatMapData = new HeatMapData();
+                    timeLapse = false,
+                    timeLapseFlag=false,
+                    timeLapseData = new TimeLapseData();
 
                 var project = Object.create({
                     disconnect: function () {
@@ -397,39 +397,39 @@ module.exports = (function (app) {
                             return items;
                         },
                         set: function (v) {
-                            if (heatMap)
-                                heatMapData.add(v, heatMap);
+                            if (timeLapse)
+                                timeLapseData.add(v, timeLapse);
                             else
-                                heatMapData.replace(items, heatMap);
+                                timeLapseData.replace(items, timeLapse);
                             items = v;
                         }
                     },
                     headMapFlag:{
                         get:function(){
-                            return heatMapFlag;
+                            return timeLapseFlag;
                         },
                         set:function(v){
-                            heatMapFlag=v;
+                            timeLapseFlag=v;
                         }
                     },
-                    heatMap: {
+                    timeLapse: {
                         enumerable: true,
                         get: function () {
-                            return heatMap;
+                            return timeLapse;
                         },
                         set: function (v) {
-                            heatMap = v;
-                            heatMapData.replace(items, heatMap);
+                            timeLapse = v;
+                            timeLapseData.replace(items, timeLapse);
                             if(stage)
-                                stage.heatMap=v;
+                                stage.timeLapse=v;
                         }
                     },
-                    heatMapData: {
+                    timeLapseData: {
                         get: function () {
-                            return heatMapData;
+                            return timeLapseData;
                         },
                         set: function (v) {
-                            heatMapData.replace(v);
+                            timeLapseData.replace(v);
                         }
                     },
                     mouse: {
@@ -453,8 +453,8 @@ module.exports = (function (app) {
                             return item;
                         },
                         set: function (v) {
-                            this.heatMapFlag=false;
-                            this.heatMap=false;
+                            this.timeLapseFlag=false;
+                            this.timeLapse=false;
                             item = v;
                         }
                     },
@@ -727,7 +727,7 @@ module.exports = (function (app) {
 
                 });
                 origin.project = project;
-                heatMapData.setProject(project);
+                timeLapseData.setProject(project);
                 if (ref.itemSense)
                     itemSense = ref.itemSense; //set itemsense url separately because it resets the object
                 delete ref.origin;

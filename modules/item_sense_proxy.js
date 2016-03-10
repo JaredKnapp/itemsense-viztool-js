@@ -105,7 +105,6 @@ function startProject(project) {
                 stash: function (promise) {
 
                     return promise.then(function (data) {
-                        console.log("Data returned", Object.keys(data));
                         var now = new Date().getTime();
                         results.last = createResultItem(data.items, "at");
                         return results.last;
@@ -126,7 +125,6 @@ function startProject(project) {
                     readPromise = wrapper.stash(itemsenseApi.items.get({pageSize: 1000})).then(function (items) {
                         if (!itemSenseJob)
                             return q.reject({statusCode: 500, body: "Job not started"});
-                        console.log("Items returned", Object.keys(items.data), itemSenseJob.creationTime);
                         items.data = _.filter(items.data, function (i) {
                             return i.lastModifiedTime > itemSenseJob.creationTime
                         });
@@ -271,10 +269,7 @@ var md = {
     getItems: function () {
         if (!project)
             return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
-        return project.getItems().then(function (data) {
-            console.log(Object.keys(data), data.data.length, "data");
-            return data;
-        });
+        return project.getItems();
     },
     postReaders: function (data) {
         if (!project)

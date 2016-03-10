@@ -8,9 +8,9 @@
 module.exports = (function (app) {
     app.factory("ItemModel", ["StageMetrics", function (stageMetrics) {
         return function (ref, stage) {
-            ref.x=ref.x || ref.xLocation;
-            ref.y= ref.y || ref.yLocation;
-            return stageMetrics(ref, stage);
+            var xKey=ref.x === undefined ? "xLocation" : "x",
+                yKey=ref.y === undefined ? "yLocation" : "y";
+            return stageMetrics(ref, stage,xKey,yKey);
         };
     }]).factory("Item", ["CreateJS", "ItemModel", "$q", function (createjs, ItemModel, $q) {
         return function (ref, stage, hash) {
@@ -95,7 +95,7 @@ module.exports = (function (app) {
             return wrapper;
         };
     }])
-        .factory("HeatMapColor",[function(){
+        .factory("TimeLapseColor",[function(){
             var colors=[
                 "rgba(0,0,64,1)",
                 "rgba(0,0,128,1)",
@@ -122,7 +122,7 @@ module.exports = (function (app) {
                 return colors[Math.min(value,colors.length)-1];
             };
         }])
-        .factory("HeatMap",["HeatMapColor","CreateJS","_",function(heatMapColor,createjs,_){
+        .factory("TimeLapse",["TimeLapseColor","CreateJS","_",function(timeLapseColor,createjs,_){
             return function(){
                 var shape=new createjs.Shape(),
                     zoomHandler = null,
@@ -150,7 +150,7 @@ module.exports = (function (app) {
                                     y =stage.metersToStage(point.y,"y");
                                 if(lastX)
                                     g.s("black").ss(1,null,null,null,true).mt(lastX,lastY).lt(x,y);
-                                g.f(heatMapColor(point.value)).dc(x,y,stage.screenToCanvas(5+point.value));
+                                g.f(timeLapseColor(point.value)).dc(x,y,stage.screenToCanvas(5+point.value));
                                 lastX = x;
                                 lastY = y;
                             });
@@ -159,7 +159,7 @@ module.exports = (function (app) {
                         },
                         init:function(stg){
                             stage = stg;
-                            shape.name="HeatMap";
+                            shape.name="TimeLapse";
                             stage.addChild(shape);
                             zoomHandler = stage.on("Zoom", function () {
                                 wrapper.draw();

@@ -8,15 +8,15 @@
 
 module.exports = (function (app) {
     app.factory("Stage", ["_", "$q", "$state", "$interval", "CreateJS", "Origin", "Ruler", "Tracer", "Zones", "Reader", "Item",
-        "ZoneModel","HeatMap",
-        function (_, $q, $state, $interval, createjs, Origin, Ruler, Tracer, Zones, Reader, Item, zoneModel,HeatMap) {
+        "ZoneModel","TimeLapse",
+        function (_, $q, $state, $interval, createjs, Origin, Ruler, Tracer, Zones, Reader, Item, zoneModel,TimeLapse) {
             var main = new createjs.Container(),
                 canvas = document.createElement("canvas"),
                 stage = new createjs.Stage(canvas),
-                heatMap=HeatMap(),
+                timeLapse=TimeLapse(),
                 floorPlan, project, bkWidth = 1300, bkHeight = 700, events = {}, zone = null, readers = [], reader = null,
                 items = {}, itemInterval = null, item = null, activeTweens = 0,
-                layers = ["Floorplan", "Origin", "Zone", "Field", "Reader", "Item", "Ruler", "Tracer","HeatMap"],
+                layers = ["Floorplan", "Origin", "Zone", "Field", "Reader", "Item", "Ruler", "Tracer","TimeLapse"],
                 wrapper = Object.create({
                         offAll: function () {
                             _.each(events, function (v, k) {
@@ -362,8 +362,8 @@ module.exports = (function (app) {
                                 delete items[i.epc];
                                 i.destroy();
                             });
-                            if(project.heatMap)
-                                heatMap.draw(project.heatMapData.getHeatMap());
+                            if(project.timeLapse)
+                                timeLapse.draw(project.timeLapseData.getTimeLapse());
                         },
                         containsShape: function (shape) {
                             var i = this.selectLayer(shape);
@@ -391,8 +391,8 @@ module.exports = (function (app) {
                                 this.addChild(v);
                                 if (!this.containsShape(Origin.shape))
                                     this.addChild(Origin.shape);
-                                if(!this.containsShape(heatMap.shape))
-                                    this.addChild(heatMap.shape)
+                                if(!this.containsShape(timeLapse.shape))
+                                    this.addChild(timeLapse.shape);
                                 project.zoom = this.zoom || this.widthZoom();
                                 this.origin = this.origin.x === undefined ? this.visibleCenter() : this.origin;
                             }
@@ -517,12 +517,12 @@ module.exports = (function (app) {
                                 return project.epcFilter;
                             }
                         },
-                        heatMap:{
+                        timeLapse:{
                             set:function(v){
                                 if(v)
-                                    heatMap.draw(project.heatMapData.getHeatMap(),true);
+                                    timeLapse.draw(project.timeLapseData.getTimeLapse(),true);
                                 else
-                                    heatMap.clear(true);
+                                    timeLapse.clear(true);
                             }
                         }
                     });
@@ -534,7 +534,7 @@ module.exports = (function (app) {
             wrapper.addChild(Origin.shape);
             Origin.stage = wrapper;
             Ruler.init(wrapper);
-            heatMap.init(wrapper);
+            timeLapse.init(wrapper);
             function switchFocus(ev, focus) {
                 $state.params[focus] = ev[focus];
                 if (wrapper[focus] && wrapper[focus] !== ev[focus]) wrapper[focus] = ev[focus];
