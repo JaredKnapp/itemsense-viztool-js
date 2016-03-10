@@ -115,6 +115,43 @@ module.exports = (function (app) {
             };
         }])
         .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", "ZoneModel", function (_, projectOrigin, $interval, zoneModel) {
+            function HeatMapData() {
+                var base = [], project = null, self = this;
+                this.add = function addItems(items, heatMap) {
+                    var item = _.find(items.data, function (i) {
+                        return i.epc === heatMap;
+                    });
+                    base.unshift(item);
+                    if (base.length > 20)
+                        base.pop();
+                };
+                this.replace = function (items, heatMap) {
+                    if (heatMap)
+                        self.add(items, heatMap);
+                    else
+                        base = [];
+                };
+                this.getBase = function () {
+                    return base;
+                };
+                this.getHeatMap = function () {
+                    var map = _.reduce(base, function (r, i) {
+                        if (!i) return r;
+                        var key = i.xLocation + "_" + i.yLocation;
+                        if (!r[key])
+                            r[key] = {x: i.xLocation, y: i.yLocation, value: 0};
+                        r[key].value += 1;
+                        return r;
+                    }, {});
+                    return _.map(map, function (i) {
+                        return i;
+                    });
+                };
+                this.setProject = function (p) {
+                    project = p;
+                };
+            }
+
             return function (ref) {
                 ref = JSON.parse(JSON.stringify(ref || {}));
                 var zoom = null,
@@ -147,8 +184,11 @@ module.exports = (function (app) {
                     jobMonitor = false,
                     targets = {},
                     selection = {},
-                    facility="DEFAULT",
-                    epcFilter = ".";
+                    facility = "DEFAULT",
+                    epcFilter = ".",
+                    heatMap = false,
+                    heatMapFlag=false,
+                    heatMapData = new HeatMapData();
 
                 var project = Object.create({
                     disconnect: function () {
@@ -259,14 +299,14 @@ module.exports = (function (app) {
                     stageToMeters: function (v, axis) {
                         return this.stage ? this.stage.stageToMeters(v, axis) : v;
                     },
-                    setScale:function(v){
+                    setScale: function (v) {
                         if (v === null)
                             this.scale = null;
                         else
                             this.scale = this.rulerLength / v;
                     },
-                    updateReader:function(reader){
-                        if(stage)
+                    updateReader: function (reader) {
+                        if (stage)
                             stage.updateReader(reader);
                     }
                 }, {
@@ -329,7 +369,7 @@ module.exports = (function (app) {
                             return Math.round10(this.rulerLength / this.scale, -3);
                         },
                         set: function (v) {
-                            if(v=== null)
+                            if (v === null)
                                 return null;
                             this._rulerLength = v * this.scale;
                         }
@@ -357,7 +397,39 @@ module.exports = (function (app) {
                             return items;
                         },
                         set: function (v) {
+                            if (heatMap)
+                                heatMapData.add(v, heatMap);
+                            else
+                                heatMapData.replace(items, heatMap);
                             items = v;
+                        }
+                    },
+                    headMapFlag:{
+                        get:function(){
+                            return heatMapFlag;
+                        },
+                        set:function(v){
+                            heatMapFlag=v;
+                        }
+                    },
+                    heatMap: {
+                        enumerable: true,
+                        get: function () {
+                            return heatMap;
+                        },
+                        set: function (v) {
+                            heatMap = v;
+                            heatMapData.replace(items, heatMap);
+                            if(stage)
+                                stage.heatMap=v;
+                        }
+                    },
+                    heatMapData: {
+                        get: function () {
+                            return heatMapData;
+                        },
+                        set: function (v) {
+                            heatMapData.replace(v);
                         }
                     },
                     mouse: {
@@ -381,6 +453,8 @@ module.exports = (function (app) {
                             return item;
                         },
                         set: function (v) {
+                            this.heatMapFlag=false;
+                            this.heatMap=false;
                             item = v;
                         }
                     },
@@ -641,18 +715,19 @@ module.exports = (function (app) {
                                 stage.setEpcFilter(epcFilter);
                         }
                     },
-                    facility:{
-                        enumerable:true,
-                        get:function(){
+                    facility: {
+                        enumerable: true,
+                        get: function () {
                             return facility || "DEFAULT";
                         },
-                        set:function(v){
+                        set: function (v) {
                             facility = v;
                         }
                     }
 
                 });
                 origin.project = project;
+                heatMapData.setProject(project);
                 if (ref.itemSense)
                     itemSense = ref.itemSense; //set itemsense url separately because it resets the object
                 delete ref.origin;
@@ -754,16 +829,16 @@ module.exports = (function (app) {
                         return self;
                     });
                 },
-                postReaders:function(reader){
-                    var self=this;
+                postReaders: function (reader) {
+                    var self = this;
                     return restCall({
-                        url:"/project/"+self.handle +"/readers",
-                        method:"POST",
-                        data:reader
-                    }).then(function(){
-                        self.showReaders=false;
-                        return self.getReaders().then(function(){
-                            self.showReaders=true;
+                        url: "/project/" + self.handle + "/readers",
+                        method: "POST",
+                        data: reader
+                    }).then(function () {
+                        self.showReaders = false;
+                        return self.getReaders().then(function () {
+                            self.showReaders = true;
                         });
                     });
                 },

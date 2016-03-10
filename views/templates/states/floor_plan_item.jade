@@ -18,4 +18,7 @@ table.table
     tr
         td Modified
         td {{project.item.lastModifiedTime | date:'MM/dd/yyyy HH:mm:ss'}}
-
+.checkbox
+    label
+        input(type="checkbox",ng-model="project.heatMapFlag" ng-change="project.heatMap= project.heatMapFlag? project.item.epc : false")
+        | Show HeatMap

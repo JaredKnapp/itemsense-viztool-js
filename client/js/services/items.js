@@ -94,5 +94,86 @@ module.exports = (function (app) {
             wrapper.draw();
             return wrapper;
         };
-    }]);
+    }])
+        .factory("HeatMapColor",[function(){
+            var colors=[
+                "rgba(0,0,64,1)",
+                "rgba(0,0,128,1)",
+                "rgba(0,0,192,1)",
+                "rgba(0,0,255,1)",
+                "rgba(0,64,255,1)",
+                "rgba(0,128,255,1)",
+                "rgba(0,192,255,1)",
+                "rgba(0,255,255,1)",
+                "rgba(0,255,192,1)",
+                "rgba(0,255,128,1)",
+                "rgba(0,255,64,1)",
+                "rgba(0,255,0,1)",
+                "rgba(64,255,0,1)",
+                "rgba(128,255,0,1)",
+                "rgba(192,255,0,1)",
+                "rgba(255,255,0,1)",
+                "rgba(255,192,0,1)",
+                "rgba(255,128,0,1)",
+                "rgba(255,64,0,1)",
+                "rgba(255,0,0,1)"
+            ];
+            return function(value){
+                return colors[Math.min(value,colors.length)-1];
+            };
+        }])
+        .factory("HeatMap",["HeatMapColor","CreateJS","_",function(heatMapColor,createjs,_){
+            return function(){
+                var shape=new createjs.Shape(),
+                    zoomHandler = null,
+                    stage= null,
+                    wrapper=Object.create({
+                        destroy: function (update) {
+                            if (zoomHandler)
+                                stage.off("Zoom", zoomHandler);
+                            stage.removeChild(shape);
+                            if (update)
+                                stage.update();
+                            zoomHandler = null;
+                        },
+                        clear:function(update){
+                            shape.graphics.clear();
+                            if (update)
+                                stage.update();
+                        },
+                        draw: function (ref,update) {
+                            var g = shape.graphics.clear(),
+                                lastX=null,
+                                lastY=null;
+                            _.each((ref||[]).reverse(),function(point){
+                                var x = stage.metersToStage(point.x,"x"),
+                                    y =stage.metersToStage(point.y,"y");
+                                if(lastX)
+                                    g.s("black").ss(1,null,null,null,true).mt(lastX,lastY).lt(x,y);
+                                g.f(heatMapColor(point.value)).dc(x,y,stage.screenToCanvas(5+point.value));
+                                lastX = x;
+                                lastY = y;
+                            });
+                            if (update)
+                                stage.update();
+                        },
+                        init:function(stg){
+                            stage = stg;
+                            shape.name="HeatMap";
+                            stage.addChild(shape);
+                            zoomHandler = stage.on("Zoom", function () {
+                                wrapper.draw();
+                            });
+                            wrapper.draw();
+                        }
+                    },{
+                        shape:{
+                            get:function(){
+                                return shape;
+                            }
+                        }
+                    });
+                return wrapper;
+            };
+        }]);
 })(angular.module(window.mainApp));
