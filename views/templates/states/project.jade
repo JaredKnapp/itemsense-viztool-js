@@ -12,6 +12,12 @@ form.container.form-group(name="projectForm")
     .input-group(ng-class="{'has-warning':projectForm.pass.$touched && projectForm.pass.$invalid}")
         .input-group-addon Password:
         input.form-control(type="password" name="pass" ng-model="project.password" required)
+    .input-group
+        .input-group-addon Facility:
+        input.form-control(type="text" name="pass" ng-model="project.facility" required)
+    .input-group
+        .input-group-addon Floor:
+        input.form-control(type="text" name="pass" ng-model="project.floorName" required)
     .form-group(ng-if="project.recipes")
         H4 Job
         .input-group

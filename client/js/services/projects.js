@@ -147,6 +147,7 @@ module.exports = (function (app) {
                     jobMonitor = false,
                     targets = {},
                     selection = {},
+                    facility="DEFAULT",
                     epcFilter = ".";
 
                 var project = Object.create({
@@ -639,6 +640,15 @@ module.exports = (function (app) {
                             if (stage)
                                 stage.setEpcFilter(epcFilter);
                         }
+                    },
+                    facility:{
+                        enumerable:true,
+                        get:function(){
+                            return facility || "DEFAULT";
+                        },
+                        set:function(v){
+                            facility = v;
+                        }
                     }
 
                 });
@@ -775,7 +785,8 @@ module.exports = (function (app) {
                         url: "/project/" + self.handle + "/job",
                         data: {
                             recipeName: self.recipe.name,
-                            durationSeconds: self.duration
+                            durationSeconds: self.duration,
+                            facility: self.facility
                         },
                         silent: {400: true}
                     }).then(function (job) {
