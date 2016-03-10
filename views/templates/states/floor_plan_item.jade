@@ -1,5 +1,8 @@
 table.table
     tr
+        td Total
+        td {{project.items.data.length}} Tags on Screen
+    tr
         td EPC
         td {{project.item.epc}}
     tr
@@ -18,4 +21,7 @@ table.table
     tr
         td Modified
         td {{project.item.lastModifiedTime | date:'MM/dd/yyyy HH:mm:ss'}}
-
+.checkbox
+    label
+        input(type="checkbox",ng-model="project.timeLapseFlag" ng-change="project.timeLapse= project.timeLapseFlag? project.item.epc : false")
+        | TimeLapse

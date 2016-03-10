@@ -7,7 +7,30 @@
 
 module.exports = (function (app) {
     app.factory("StageMetrics", [function () {
-            return function (ref, stage) {
+            return function (ref, stage,xKey,yKey) {
+                xKey = xKey || "x";
+                yKey = yKey || "y";
+                if(ref.x === undefined)
+                    Object.defineProperties(ref,{
+                        x:{
+                            configurable:true,
+                            get:function(){
+                                return ref[xKey];
+                            },
+                            set:function(v){
+                                ref[xKey]=v;
+                            }
+                        },
+                        y:{
+                            configurable:true,
+                            get:function(){
+                                return ref[yKey];
+                            },
+                            set:function(v){
+                                ref[yKey]=v;
+                            }
+                        }
+                    });
                 //Expects ref to have x and y, in meters from origin. (what is supplied by item sense)
                 Object.defineProperties(ref, {
                     _x: { //x for the shape

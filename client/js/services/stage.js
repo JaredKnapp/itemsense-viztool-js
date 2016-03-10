@@ -8,14 +8,15 @@
 
 module.exports = (function (app) {
     app.factory("Stage", ["_", "$q", "$state", "$interval", "CreateJS", "Origin", "Ruler", "Tracer", "Zones", "Reader", "Item",
-        "ZoneModel",
-        function (_, $q, $state, $interval, createjs, Origin, Ruler, Tracer, Zones, Reader, Item, zoneModel) {
+        "ZoneModel","TimeLapse",
+        function (_, $q, $state, $interval, createjs, Origin, Ruler, Tracer, Zones, Reader, Item, zoneModel,TimeLapse) {
             var main = new createjs.Container(),
                 canvas = document.createElement("canvas"),
                 stage = new createjs.Stage(canvas),
+                timeLapse=TimeLapse(),
                 floorPlan, project, bkWidth = 1300, bkHeight = 700, events = {}, zone = null, readers = [], reader = null,
                 items = {}, itemInterval = null, item = null, activeTweens = 0,
-                layers = ["Floorplan", "Origin", "Zone", "Field", "Reader", "Item", "Ruler", "Tracer"],
+                layers = ["Floorplan", "Origin", "Zone", "Field", "Reader", "Item", "Ruler", "Tracer","TimeLapse"],
                 wrapper = Object.create({
                         offAll: function () {
                             _.each(events, function (v, k) {
@@ -278,23 +279,23 @@ module.exports = (function (app) {
                         setTolerance: function (v) {
                             this.zone.setTolerance(v);
                         },
-                        updateReader:function(reader){
-                            var target = _.find(readers,function(r){
+                        updateReader: function (reader) {
+                            var target = _.find(readers, function (r) {
                                 return r.ref === reader.placement;
                             });
-                            if(target)
+                            if (target)
                                 target.draw(true);
 
                         },
-                        addReader:function(ref){
-                            var reader = Reader.create(ref.placement,this);
+                        addReader: function (ref) {
+                            var reader = Reader.create(ref.placement, this);
                             readers.push(reader);
-                            this.reader=reader;
+                            this.reader = reader;
                             reader.activate(true);
                             return reader;
                         },
-                        removeReader:function(reader){
-                            readers= _.filter(readers,function(r){
+                        removeReader: function (reader) {
+                            readers = _.filter(readers, function (r) {
                                 return r !== reader;
                             });
                             reader.destroy();
@@ -361,6 +362,8 @@ module.exports = (function (app) {
                                 delete items[i.epc];
                                 i.destroy();
                             });
+                            if(project.timeLapse)
+                                timeLapse.draw(project.timeLapseData.getTimeLapse());
                         },
                         containsShape: function (shape) {
                             var i = this.selectLayer(shape);
@@ -383,11 +386,13 @@ module.exports = (function (app) {
                                     this.removeChild(floorPlan);
                                 floorPlan = v;
                                 if (!v) return;
-                                bkWidth = canvas.width = v.image.width;
+                                bkWidth =  canvas.width = v.image.width;
                                 bkHeight = canvas.height = v.image.height;
                                 this.addChild(v);
                                 if (!this.containsShape(Origin.shape))
                                     this.addChild(Origin.shape);
+                                if(!this.containsShape(timeLapse.shape))
+                                    this.addChild(timeLapse.shape);
                                 project.zoom = this.zoom || this.widthZoom();
                                 this.origin = this.origin.x === undefined ? this.visibleCenter() : this.origin;
                             }
@@ -428,8 +433,8 @@ module.exports = (function (app) {
                                 };
                             }
                         },
-                        rulerCoords:{
-                            get:function(){
+                        rulerCoords: {
+                            get: function () {
                                 return Ruler.coords;
                             }
                         },
@@ -511,6 +516,14 @@ module.exports = (function (app) {
                             get: function () {
                                 return project.epcFilter;
                             }
+                        },
+                        timeLapse:{
+                            set:function(v){
+                                if(v)
+                                    timeLapse.draw(project.timeLapseData.getTimeLapse(),true);
+                                else
+                                    timeLapse.clear(true);
+                            }
                         }
                     });
             canvas.width = bkWidth;
@@ -521,10 +534,11 @@ module.exports = (function (app) {
             wrapper.addChild(Origin.shape);
             Origin.stage = wrapper;
             Ruler.init(wrapper);
+            timeLapse.init(wrapper);
             function switchFocus(ev, focus) {
                 $state.params[focus] = ev[focus];
                 if (wrapper[focus] && wrapper[focus] !== ev[focus]) wrapper[focus] = ev[focus];
-                if(wrapper.scope && ev.force)
+                if (wrapper.scope && ev.force)
                     wrapper.scope.$apply();
                 $state.go("floorPlan." + focus, $state.params);
             }

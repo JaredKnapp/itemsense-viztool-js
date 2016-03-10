@@ -115,6 +115,43 @@ module.exports = (function (app) {
             };
         }])
         .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", "ZoneModel", function (_, projectOrigin, $interval, zoneModel) {
+            function TimeLapseData() {
+                var base = [], project = null, self = this;
+                this.add = function addItems(items, timeLapse) {
+                    var item = _.find(items.data, function (i) {
+                        return i.epc === timeLapse;
+                    });
+                    base.unshift(item);
+                    if (base.length > 20)
+                        base.pop();
+                };
+                this.replace = function (items, timeLapse) {
+                    if (timeLapse)
+                        self.add(items, timeLapse);
+                    else
+                        base = [];
+                };
+                this.getBase = function () {
+                    return base;
+                };
+                this.getTimeLapse = function () {
+                    var map = _.reduce(base, function (r, i) {
+                        if (!i) return r;
+                        var key = i.xLocation + "_" + i.yLocation;
+                        if (!r[key])
+                            r[key] = {x: i.xLocation, y: i.yLocation, value: 0};
+                        r[key].value += 1;
+                        return r;
+                    }, {});
+                    return _.map(map, function (i) {
+                        return i;
+                    });
+                };
+                this.setProject = function (p) {
+                    project = p;
+                };
+            }
+
             return function (ref) {
                 ref = JSON.parse(JSON.stringify(ref || {}));
                 var zoom = null,
@@ -147,7 +184,11 @@ module.exports = (function (app) {
                     jobMonitor = false,
                     targets = {},
                     selection = {},
-                    epcFilter = ".";
+                    facility = "DEFAULT",
+                    epcFilter = ".",
+                    timeLapse = false,
+                    timeLapseFlag=false,
+                    timeLapseData = new TimeLapseData();
 
                 var project = Object.create({
                     disconnect: function () {
@@ -258,14 +299,14 @@ module.exports = (function (app) {
                     stageToMeters: function (v, axis) {
                         return this.stage ? this.stage.stageToMeters(v, axis) : v;
                     },
-                    setScale:function(v){
+                    setScale: function (v) {
                         if (v === null)
                             this.scale = null;
                         else
                             this.scale = this.rulerLength / v;
                     },
-                    updateReader:function(reader){
-                        if(stage)
+                    updateReader: function (reader) {
+                        if (stage)
                             stage.updateReader(reader);
                     }
                 }, {
@@ -328,7 +369,7 @@ module.exports = (function (app) {
                             return Math.round10(this.rulerLength / this.scale, -3);
                         },
                         set: function (v) {
-                            if(v=== null)
+                            if (v === null)
                                 return null;
                             this._rulerLength = v * this.scale;
                         }
@@ -356,7 +397,39 @@ module.exports = (function (app) {
                             return items;
                         },
                         set: function (v) {
+                            if (timeLapse)
+                                timeLapseData.add(v, timeLapse);
+                            else
+                                timeLapseData.replace(items, timeLapse);
                             items = v;
+                        }
+                    },
+                    headMapFlag:{
+                        get:function(){
+                            return timeLapseFlag;
+                        },
+                        set:function(v){
+                            timeLapseFlag=v;
+                        }
+                    },
+                    timeLapse: {
+                        enumerable: true,
+                        get: function () {
+                            return timeLapse;
+                        },
+                        set: function (v) {
+                            timeLapse = v;
+                            timeLapseData.replace(items, timeLapse);
+                            if(stage)
+                                stage.timeLapse=v;
+                        }
+                    },
+                    timeLapseData: {
+                        get: function () {
+                            return timeLapseData;
+                        },
+                        set: function (v) {
+                            timeLapseData.replace(v);
                         }
                     },
                     mouse: {
@@ -380,6 +453,8 @@ module.exports = (function (app) {
                             return item;
                         },
                         set: function (v) {
+                            this.timeLapseFlag=false;
+                            this.timeLapse=false;
                             item = v;
                         }
                     },
@@ -639,10 +714,20 @@ module.exports = (function (app) {
                             if (stage)
                                 stage.setEpcFilter(epcFilter);
                         }
+                    },
+                    facility: {
+                        enumerable: true,
+                        get: function () {
+                            return facility || "DEFAULT";
+                        },
+                        set: function (v) {
+                            facility = v;
+                        }
                     }
 
                 });
                 origin.project = project;
+                timeLapseData.setProject(project);
                 if (ref.itemSense)
                     itemSense = ref.itemSense; //set itemsense url separately because it resets the object
                 delete ref.origin;
@@ -744,16 +829,16 @@ module.exports = (function (app) {
                         return self;
                     });
                 },
-                postReaders:function(reader){
-                    var self=this;
+                postReaders: function (reader) {
+                    var self = this;
                     return restCall({
-                        url:"/project/"+self.handle +"/readers",
-                        method:"POST",
-                        data:reader
-                    }).then(function(){
-                        self.showReaders=false;
-                        return self.getReaders().then(function(){
-                            self.showReaders=true;
+                        url: "/project/" + self.handle + "/readers",
+                        method: "POST",
+                        data: reader
+                    }).then(function () {
+                        self.showReaders = false;
+                        return self.getReaders().then(function () {
+                            self.showReaders = true;
                         });
                     });
                 },
@@ -775,7 +860,8 @@ module.exports = (function (app) {
                         url: "/project/" + self.handle + "/job",
                         data: {
                             recipeName: self.recipe.name,
-                            durationSeconds: self.duration
+                            durationSeconds: self.duration,
+                            facility: self.facility
                         },
                         silent: {400: true}
                     }).then(function (job) {
