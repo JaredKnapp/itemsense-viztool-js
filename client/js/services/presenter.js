@@ -206,7 +206,7 @@ module.exports = (function (app) {
                         main.addChild(bitmap);
                         main.setTransform(0, 0, wrapper.zoom, wrapper.zoom);
                         stage.update();
-                        project.preparePresentation(stage,bitmap);
+                        project.preparePresentation(wrapper,bitmap);
                         zones = prepareZones(project.zones, wrapper);
                         return project.connect();
                     }).then(function () {
