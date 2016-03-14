@@ -191,7 +191,7 @@ module.exports = (function (app) {
         .controller("Readers", ["$scope", function ($scope) {
             var stageReader;
             function makeReader() {
-                var newReader = Object.create({
+                var newReader = {
                     address: "",
                     name: "",
                     facility: "DEFAULT",
@@ -199,14 +199,14 @@ module.exports = (function (app) {
                     readerZone: "",
                     antennaZones: null,
                     labels: null,
-                    placement: Object.create({
+                    placement: {
                         x: $scope.$stateParams.x || 0,
                         y: $scope.$stateParams.y || 0,
                         z: 0,
                         yaw: 0, pitch: 0, roll: 0,
                         floor: $scope.project.floorName || ""
-                    },{})
-                },{});
+                    }
+                };
                 $scope.project.readers.push(newReader);
                 stageReader = $scope.project.stage ? $scope.project.stage.addReader(newReader) : null;
                 return newReader;
