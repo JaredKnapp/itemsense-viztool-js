@@ -24,8 +24,12 @@ var base = path.resolve(__dirname, "client"),
         dest: {
             mainJs: "app.js",
             mainCss: "app.css",
+			/*
             js: path.resolve(__dirname, "public/javascripts"),
             css: path.resolve(__dirname, "public/stylesheets")
+			*/
+            js: path.resolve(__dirname, "public","javascripts"),
+            css: path.resolve(__dirname, "public","stylesheets")
         }
     };
 
@@ -42,7 +46,10 @@ gulp.task("browserify", ["lint"], function () {
             listeners: {
                 file: function (root, stat, next) {
                     if(stat.name.match(/[.]js$/))
-                            result += "require('" + root + "/" + stat.name + "');\n";
+							if(process.platform.match(/^win/))
+								result += "require('" + root.replace(/\\/g,"\\\\")+ "\\\\" + stat.name + "');\n";
+							else
+								result += "require('" + root + "/" + stat.name + "');\n";
                     next();
                 }
             }
