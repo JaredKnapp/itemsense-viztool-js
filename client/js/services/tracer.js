@@ -159,6 +159,7 @@ module.exports = (function (app) {
                     return this.createZone(zone, stage);
                 },
                 createZone: function (zone, stage, scale) {
+                    console.log("creating zone",arguments);
                     var points = zone.points,
                         shadow = transform(points, scale),
                         colors = {

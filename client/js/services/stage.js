@@ -162,7 +162,7 @@ module.exports = (function (app) {
                         startTrace: function () {
                             var self = this;
                             return Tracer.trace(this).then(function (points) {
-                                Zones.createZone(self.addZone(points), self, 1.2);
+                                Zones.createZone(self.addZone(points), self, 1.0);
                                 $state.go("floorPlan");
                             });
                         },
@@ -253,7 +253,7 @@ module.exports = (function (app) {
                                 return;
                             this.setFloorPlan(p.floorPlanUrl);
                             _.each(p.zones, function (zone) {
-                                Zones.createZone(zone, self);
+                                Zones.createZone(zone, self, zone.tolerance);
                             });
                             self.showReaders(p.showReaders);
                             self.update();
