@@ -19,6 +19,9 @@ form.container.form-group(name="projectForm")
         .input-group-addon Floor:
         input.form-control(type="text" name="pass" ng-model="project.floorName" required)
     .form-group(ng-if="project.recipes")
+        .input-group
+            .input-group-addon ZoneMaps:
+            select.form-control(ng-options="v.name for v in project.zoneMaps track by v.name" ng-model="project.zoneMap")
         H4 Job
         .input-group
             .input-group-addon Recipe:

@@ -160,6 +160,15 @@ function startProject(project) {
                 getRecipes: function () {
                     return itemsenseApi.recipes.get();
                 },
+                createZoneMap:function(data){
+                    return itemsenseApi.zoneMaps.update(data);
+                },
+                getCurrentZoneMap:function(){
+                    return itemsenseApi.currentZoneMap.get(project.facility);
+                },
+                getAllZoneMaps:function(){
+                    return itemsenseApi.zoneMaps.getAll();
+                },
                 getJobs: function (id) {
                     return itemsenseApi.jobs.get(id);
                 },
@@ -230,13 +239,22 @@ var md = {
     },
 
     connect: function () {
-        var recipes = null;
+        var payload = {};
         return project.getRecipes().then(function (r) {
-            recipes = r;
+            payload.recipes = r;
             return project.getRunningJob();
         }).then(function (job) {
             project.itemSenseJob = job;
-            return {recipes: recipes, job: job};
+            payload.job = job;
+            return project.getAllZoneMaps();
+        }).then(function(zoneMaps){
+            payload.zoneMaps = _.filter(zoneMaps,function(z){
+                return z.facility === project.project.facility;
+            });
+            return project.getCurrentZoneMap();
+        }).then(function(currentZoneMap){
+            payload.currentZoneMap = currentZoneMap;
+            return payload;
         });
     },
 
@@ -275,6 +293,11 @@ var md = {
         if (!project)
             return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
         return project.postReaders(data);
+    },
+    getZoneMaps:function(){
+        if (!project)
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
+        return project.getAllZoneMaps();
     }
 };
 

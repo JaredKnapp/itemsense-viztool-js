@@ -166,6 +166,8 @@ module.exports = (function (app) {
                     scale = 1.0,
                     zones = [],
                     zone = null,
+                    zoneMaps = null,
+                    zoneMap = null,
                     readers = null,
                     reader = null,
                     items = null,
@@ -187,7 +189,7 @@ module.exports = (function (app) {
                     facility = "DEFAULT",
                     epcFilter = ".",
                     timeLapse = false,
-                    timeLapseFlag=false,
+                    timeLapseFlag = false,
                     timeLapseData = new TimeLapseData();
 
                 var project = Object.create({
@@ -404,12 +406,12 @@ module.exports = (function (app) {
                             items = v;
                         }
                     },
-                    headMapFlag:{
-                        get:function(){
+                    headMapFlag: {
+                        get: function () {
                             return timeLapseFlag;
                         },
-                        set:function(v){
-                            timeLapseFlag=v;
+                        set: function (v) {
+                            timeLapseFlag = v;
                         }
                     },
                     timeLapse: {
@@ -420,8 +422,8 @@ module.exports = (function (app) {
                         set: function (v) {
                             timeLapse = v;
                             timeLapseData.replace(items, timeLapse);
-                            if(stage)
-                                stage.timeLapse=v;
+                            if (stage)
+                                stage.timeLapse = v;
                         }
                     },
                     timeLapseData: {
@@ -453,8 +455,8 @@ module.exports = (function (app) {
                             return item;
                         },
                         set: function (v) {
-                            this.timeLapseFlag=false;
-                            this.timeLapse=false;
+                            this.timeLapseFlag = false;
+                            this.timeLapse = false;
                             item = v;
                         }
                     },
@@ -572,6 +574,22 @@ module.exports = (function (app) {
                                 //ToDo: make it so it takes a model object
                                 return zoneModel(z.points, z.name, z.tolerance, z.type, z.include);
                             });
+                        }
+                    },
+                    zoneMaps: {
+                        get: function () {
+                            return zoneMaps;
+                        },
+                        set: function (v) {
+                            zoneMaps = v;
+                        }
+                    },
+                    zoneMap: {
+                        get: function () {
+                            return zoneMap;
+                        },
+                        set: function (v) {
+                            zoneMap = v;
                         }
                     },
                     zoom: {
@@ -801,6 +819,8 @@ module.exports = (function (app) {
                     }).then(function (data) {
                         self.recipes = data.recipes || [];
                         self.job = data.job;
+                        self.zoneMaps = data.zoneMaps || [];
+                        self.zoneMap = data.currentZoneMap || null;
                         self.recipe = data.job ? _.find(self.recipes, function (r) {
                             return r.name === data.job.job.recipeName;
                         }) : null;
