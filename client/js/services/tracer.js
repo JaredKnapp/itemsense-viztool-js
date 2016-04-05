@@ -9,7 +9,6 @@ module.exports = (function (app) {
     app.factory("Tracer", ["$q", "_", "CreateJS", function ($q, _, createjs) {
         var stage, points = [], defer,
             shape = new createjs.Shape();
-        
         return Object.create({
             mousedown: function (ev) {
                 var zoom = stage.zoom,
@@ -210,10 +209,16 @@ module.exports = (function (app) {
                                 }, g).lt(pts[0].x, pts[0].y);
                             },
                             drawPoints: function () {
-                                var radius = stage.screenToCanvas(4);
+                                var radius = stage.screenToCanvas(4),
+                                    lastP=null;
                                 _.reduce(points, function (r, p) {
-                                    return r.s("brown").ss(4, null, null, null, true).f("brown").dc(p.x, p.y, radius).es().ef();
-                                }, editor.graphics.clear());
+                                    var g = r.s("brown").ss(4, null, null, null, true).f("brown").dc(p.x, p.y, radius).es().ef();
+                                    if(lastP)
+                                        g = g.s("brown").ss(2,null,null,null,true).f("white").dc((p.x+lastP.x)/2, (p.y+lastP.y)/2, radius *0.75).es().ef();
+                                    lastP = p;
+                                    return g;
+                                }, editor.graphics.clear())
+                                    .s("brown").ss(2,null,null,null,true).f("white").dc((points[0].x+lastP.x)/2,(points[0].y+lastP.y)/2, radius *0.75).es().ef();
                             }
                         }, {
                             model: {
@@ -260,6 +265,40 @@ module.exports = (function (app) {
                         });
                         lastX = ev.stageX;
                         lastY = ev.stageY;
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                    });
+                    editor.on("dblclick",function(ev){
+                        var x = ev.localX,
+                            y = ev.localY,
+                            cutoff = stage.screenToCanvas(6),
+                            halfPoints = _.map(points,function(p,i){
+                                var j = points[i+1] ? i+1 : 0;
+                                return {x:(p.x+points[j].x)/2, y:(p.y+points[j].y)/2, i:i};
+                            }),
+                            halfPoint = _.find(halfPoints,function(p){
+                                if (Math.abs(p.x - x) < cutoff)
+                                    if (Math.abs(p.y - y) < cutoff)
+                                        return true;
+                            }),
+                            curPoint = _.find(points,function(p){
+                                if (Math.abs(p.x - x) < cutoff)
+                                    if (Math.abs(p.y - y) < cutoff)
+                                        return true;
+                            });
+                        if(halfPoint){
+                            points.splice(halfPoint.i+1, 0,{x:halfPoint.x,y:halfPoint.y});
+                            shadow.points=points;
+                            wrapper.draw();
+                        }
+                        else if(curPoint){
+                            points = _.filter(points,function(p){
+                                return p!==curPoint;
+                            });
+                            movingPoint = null;
+                            shadow.points = points;
+                            wrapper.draw();
+                        }
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
