@@ -9,6 +9,7 @@ module.exports = (function (app) {
     app.factory("Tracer", ["$q", "_", "CreateJS", function ($q, _, createjs) {
         var stage, points = [], defer,
             shape = new createjs.Shape();
+        
         return Object.create({
             mousedown: function (ev) {
                 var zoom = stage.zoom,
