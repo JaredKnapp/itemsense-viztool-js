@@ -7,23 +7,6 @@
 var app = require('./app');
 var debug = require('debug')('zoner:server');
 var http = require('http');
-var RED= require("node-red"),
-    path = require("path"),
-    redSettings={
-      httpAdminRoot:"/red",
-      httpNodeRoot:"/api",
-      userDir:path.resolve(__dirname,"public","flows"),
-      verbose:true,
-      functionGlobalContext: {},
-      editorTheme:{
-        page:{
-          title:"Impinj SVL Flow"
-        },
-        header:{
-          title:"Impinj SVL Flow"
-        }
-      }
-    };
 
 /**
  * Get port from environment and store in Express.
@@ -37,13 +20,6 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-RED.init(server,redSettings);
-
-// Serve the editor UI from /red
-app.use(redSettings.httpAdminRoot,RED.httpAdmin);
-
-// Serve the http nodes UI from /api
-app.use(redSettings.httpNodeRoot,RED.httpNode);
 
 app.use('/users', require("./routes/users"));
 
@@ -85,8 +61,6 @@ app.use(function (err, req, res, next) {
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
-
-RED.start();
 
 /**
  * Normalize a port into a number, string, or false.

@@ -166,13 +166,13 @@ function startProject(project) {
                 getRunningJob: function () {
                     return this.getJobs().then(function (jobs) {
                         return _.find(jobs, function (j) {
-                            return j.status === "RUNNING";
+                            return j.status.indexOf("RUNNING")!==-1;
                         });
                     });
                 },
                 isComplete: function (job) {
                     return job ? _.find(["COMPLETE", "STOPPED"], function (c) {
-                        return c === job.status;
+                        return job.status.indexOf(c)!==-1;
                     }) : true;
                 },
                 stopInterval: function () {
