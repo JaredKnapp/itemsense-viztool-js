@@ -288,7 +288,7 @@ module.exports = (function (app) {
 
                         },
                         addReader: function (ref) {
-                            var reader = Reader.create(ref.placement, this);
+                            var reader = Reader.create(ref, this);
                             readers.push(reader);
                             this.reader = reader;
                             reader.activate(true);
@@ -309,7 +309,7 @@ module.exports = (function (app) {
                                     });
                                 else
                                     readers = _.map(project.readers, function (reader) {
-                                        return Reader.create(reader.placement, self);
+                                        return Reader.create(reader, self);
                                     });
                             else
                                 readers = _.reduce(readers, function (r, reader) {
