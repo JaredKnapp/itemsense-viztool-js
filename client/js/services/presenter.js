@@ -296,7 +296,7 @@ module.exports = (function (app) {
                     return r;
                 }, []);
             }
-
+/*
             function getShadowPoints(z, center) {
                 return _.map(z.points, function (p) {
                     return {
@@ -305,11 +305,11 @@ module.exports = (function (app) {
                     };
                 });
             }
-
+*/
             function prepareZone(z, stage) {
                 var center = getCenterPoint(z),
                     lines = getLineObjects(z, center),
-                    shadow = drawShape(new createjs.Shape(), getShadowPoints(z, center)),
+//                    shadow = drawShape(new createjs.Shape(), getShadowPoints(z, center)),
                     shape = drawShape(new createjs.Shape(), z.points);
 
                 return Object.create({
@@ -339,7 +339,7 @@ module.exports = (function (app) {
                         });
                     },
                     hits: function (p) {
-                        return false; //disable zone fixtures and blockers for now
+                        return false && p; //disable zone fixtures and blockers for now
                         /*
                         if (shape.hitTest(p.x, p.y))
                             return z.type === "blocker";
