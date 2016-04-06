@@ -50,5 +50,11 @@
                   |    Epc Filter
             li.menu-item
                a(href="javascript:void(0);" ng-click="setFloorName()") Floor Name...
+      li(uib-dropdown ng-class="{disabled:!project.recipes}")
+         a(uib-dropdown-toggle href="javascript:void(0);") Zones
+         ul(uib-dropdown-menu)
+            li.menu-item
+               a(href="javascript:void(0);" ng-click="newZoneMap()") New ZoneMap...
+
    .pnj-job-control(ng-show="project.job" from-template="index/job_control")
 

@@ -310,6 +310,14 @@ module.exports = (function (app) {
                     updateReader: function (reader) {
                         if (stage)
                             stage.updateReader(reader);
+                    },
+                    newZoneMap:function(name){
+                        var zoneMap = {
+                            name:name,
+                            facility:this.facility,
+                            zones:this.zoneMap ? [] : this.zones ||[]
+                        };
+                        this.addZoneMap(zoneMap);
                     }
                 }, {
                     stage: {
@@ -565,7 +573,6 @@ module.exports = (function (app) {
                         }
                     },
                     zones: {
-                        enumerable: true,
                         get: function () {
                             return zones;
                         },
@@ -820,7 +827,9 @@ module.exports = (function (app) {
                         self.recipes = data.recipes || [];
                         self.job = data.job;
                         self.zoneMaps = data.zoneMaps || [];
-                        self.zoneMap = data.currentZoneMap || null;
+                        self.zoneMap = _.find(data.zoneMaps,function(z){
+                            return z.name === data.currentZoneMap.name;
+                        });
                         self.recipe = data.job ? _.find(self.recipes, function (r) {
                             return r.name === data.job.job.recipeName;
                         }) : null;
@@ -929,7 +938,6 @@ module.exports = (function (app) {
                 getItems: function (opts) {
                     var self = this;
                     return restCall(_.merge({
-                        method: "GET",
                         url: "/project/" + self.handle + "/items"
                     }, opts)).then(function (items) {
                         self.items = items;
@@ -937,6 +945,16 @@ module.exports = (function (app) {
                         if (!self.isJobRunning())
                             self.pullItems = false;
                         return items;
+                    });
+                },
+                addZoneMap:function(data){
+                    var self=this;
+                    return restCall({
+                        method:"POST",
+                        url:"/project/" + self.handle + "/zones",
+                        data:data
+                    }).then(function(zoneMap){
+                        console.log("addzoneMap",zoneMap);
                     });
                 }
             };

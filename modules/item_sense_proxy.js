@@ -160,7 +160,7 @@ function startProject(project) {
                 getRecipes: function () {
                     return itemsenseApi.recipes.get();
                 },
-                createZoneMap:function(data){
+                addZoneMap:function(data){
                     return itemsenseApi.zoneMaps.update(data);
                 },
                 getCurrentZoneMap:function(){
@@ -298,6 +298,11 @@ var md = {
         if (!project)
             return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
         return project.getAllZoneMaps();
+    },
+    addZoneMap:function(data){
+        if (!project)
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
+        return project.addZoneMap(data);
     }
 };
 

@@ -283,10 +283,18 @@ router.post("/:projectId/readers", function (req, res) {
 
 router.get("/:projectId/zones",function(req,res){
     var id = req.params.projectId;
-    thread.invoke(id, {command: "getZoneMaps", data: req.body}).then(function (data) {
+    thread.invoke(id, {command: "getZoneMaps"}).then(function (data) {
         res.json(data.payload.data);
     }, function (err) {
         handleError(err, res, threadError);
+    });
+});
+router.post("/:projectId/zones",function(req,res){
+    var id=req.params.projectId;
+    thread.invoke(id,{command:"addZoneMap",data:req.body}).then(function(data){
+        res.json(data.payload.data);
+    },function(err){
+        handleError(err,res,threadError);
     });
 });
 
