@@ -5,11 +5,18 @@
 For more information about ItemSense, check out http://developer.impinj.com.
 
 
-## Usage
+## Installation
+Once you have cloned the repository, you need version 4.0.0 of node and upwards. check your node version with the following command:
+```bash
+$ node --version
+```
+If you have an older version of node, or don't have not at all, you can install it by going to https://nodejs.org/en/download/
+Once node is installed, three commands should be run
 To get the application ready for execution, run the following two commands:
 ```javascript
 $ npm install
-$ gulp
+$ npm install -g gulp
+$ gulp compile
 ```
 
 Once those have completed, you can now start up a server:
@@ -18,3 +25,4 @@ $ npm start
 ```
 
 Once the server executable is running, just browse to **http://localhost:3000** to see it in action.
+
