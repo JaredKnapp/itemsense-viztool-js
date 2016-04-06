@@ -333,7 +333,8 @@ module.exports = (function (app) {
                             wrapper.draw();
                         }
                         else if (curPointIdx !== -1) {
-                            removeZonePoint(curPointIdx);
+                            if(points.length>3)
+                                removeZonePoint(curPointIdx);
                             movingPoint = null;
                             shadow.points = points;
                             wrapper.draw();
