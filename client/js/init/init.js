@@ -8,7 +8,7 @@
 module.exports = (function (app) {
     app.run(["$rootScope", "$state", "$stateParams", "$q", "CreateJS", "Stage", "Project","$timeout",
             function ($rootScope, $state, $stateParams, $q, createjs, stage, Project,$timeout) {
-                var project = null, buffer = null, alert = null, mainTab = {};
+                var project = null, buffer = null, alert = null, mainTab = {}, imageVersion = 0;
                 $rootScope.$state = $state;
                 $rootScope.$stateParams = $stateParams;
                 $rootScope.round = function (v, d) {
@@ -130,6 +130,14 @@ module.exports = (function (app) {
                         },
                         set: function (v) {
                             mainTab = v;
+                        }
+                    },
+                    imageVersion:{
+                        get:function(){
+                            return imageVersion;
+                        },
+                        set:function(v){
+                            imageVersion = v;
                         }
                     }
                 });
