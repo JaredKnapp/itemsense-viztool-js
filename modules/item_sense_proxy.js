@@ -161,7 +161,15 @@ function startProject(project) {
                     return itemsenseApi.recipes.get();
                 },
                 addZoneMap:function(data){
-                    return itemsenseApi.zoneMaps.update(data);
+                    var self=this;
+                    return itemsenseApi.zoneMaps.update(data).then(function(zmap){
+                        return self.setCurrentZoneMap(zmap.name).then(function(){
+                            return zmap;
+                        });
+                    });
+                },
+                setCurrentZoneMap:function(name){
+                    return itemsenseApi.currentZoneMap.update(name);
                 },
                 getCurrentZoneMap:function(){
                     return itemsenseApi.currentZoneMap.get(project.facility);
@@ -303,6 +311,11 @@ var md = {
         if (!project)
             return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
         return project.addZoneMap(data);
+    },
+    setCurrentZoneMap:function(name){
+        if (!project)
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
+        return project.setCurrentZoneMap(name);
     }
 };
 

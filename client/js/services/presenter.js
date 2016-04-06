@@ -339,12 +339,15 @@ module.exports = (function (app) {
                         });
                     },
                     hits: function (p) {
+                        return false; //disable zone fixtures and blockers for now
+                        /*
                         if (shape.hitTest(p.x, p.y))
                             return z.type === "blocker";
                         if (z.type === "blocker")
                             return false;
                         if (shadow.hitTest(p.x, p.y))
                             return this.appliesToFixture(p);
+                        */
                     },
 
                     entreat: function (p) {

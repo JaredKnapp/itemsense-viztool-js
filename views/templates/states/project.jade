@@ -21,7 +21,7 @@ form.container.form-group(name="projectForm")
     .form-group(ng-if="project.recipes")
         .input-group
             .input-group-addon ZoneMaps:
-            select.form-control(ng-options="v.name for v in project.zoneMaps track by v.name" ng-model="project.zoneMap")
+            select.form-control(ng-options="v.name for v in project.zoneMaps track by v.name" ng-model="project._zoneMap")
         H4 Job
         .input-group
             .input-group-addon Recipe:

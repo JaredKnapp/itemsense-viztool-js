@@ -114,7 +114,7 @@ module.exports = (function (app) {
                 });
             };
         }])
-        .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", "ZoneModel", function (_, projectOrigin, $interval, zoneModel) {
+        .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", function (_, projectOrigin, $interval) {
             function TimeLapseData() {
                 var base = [], project = null, self = this;
                 this.add = function addItems(items, timeLapse) {
@@ -311,11 +311,11 @@ module.exports = (function (app) {
                         if (stage)
                             stage.updateReader(reader);
                     },
-                    newZoneMap:function(name){
+                    newZoneMap: function (name) {
                         var zoneMap = {
-                            name:name,
-                            facility:this.facility,
-                            zones:this.zoneMap ? [] : this.zones ||[]
+                            name: name,
+                            facility: this.facility,
+                            zones: this.zoneMap ? [] : this.zones || []
                         };
                         this.addZoneMap(zoneMap);
                     }
@@ -577,10 +577,7 @@ module.exports = (function (app) {
                             return zones;
                         },
                         set: function (v) {
-                            zones = _.map(v, function (z) {
-                                //ToDo: make it so it takes a model object
-                                return zoneModel(z.points, z.name, z.tolerance, z.type, z.include);
-                            });
+                            zones = v;
                         }
                     },
                     zoneMaps: {
@@ -591,12 +588,24 @@ module.exports = (function (app) {
                             zoneMaps = v;
                         }
                     },
+                    _zoneMap: {
+                        get: function () {
+                            return this.zoneMap;
+                        },
+                        set: function (v) {
+                            this.zoneMap = v;
+                            this.setCurrentZoneMap(zoneMap.name);
+                        }
+                    },
                     zoneMap: {
                         get: function () {
                             return zoneMap;
                         },
                         set: function (v) {
                             zoneMap = v;
+                            this.zones = zoneMap.zones;
+                            if (stage)
+                                stage.replaceZoneCollection();
                         }
                     },
                     zoom: {
@@ -815,6 +824,12 @@ module.exports = (function (app) {
                         method: "POST",
                         url: "/project/",
                         data: self
+                    }).then(function (data) {
+                        if (self.zoneMap)
+                            return self.addZoneMap(self.zoneMap).then(function () {
+                                return data;
+                            });
+                        return data;
                     });
                 },
                 connect: function () {
@@ -827,7 +842,7 @@ module.exports = (function (app) {
                         self.recipes = data.recipes || [];
                         self.job = data.job;
                         self.zoneMaps = data.zoneMaps || [];
-                        self.zoneMap = _.find(data.zoneMaps,function(z){
+                        self.zoneMap = _.find(data.zoneMaps, function (z) {
                             return z.name === data.currentZoneMap.name;
                         });
                         self.recipe = data.job ? _.find(self.recipes, function (r) {
@@ -947,14 +962,22 @@ module.exports = (function (app) {
                         return items;
                     });
                 },
-                addZoneMap:function(data){
-                    var self=this;
+                addZoneMap: function (data) {
+                    var self = this;
                     return restCall({
-                        method:"POST",
-                        url:"/project/" + self.handle + "/zones",
-                        data:data
-                    }).then(function(zoneMap){
-                        console.log("addzoneMap",zoneMap);
+                        method: "POST",
+                        url: "/project/" + self.handle + "/zones",
+                        data: data
+                    }).then(function (zoneMap) {
+                        self.zoneMap = zoneMap;
+                        self.zones = zoneMap.zones;
+                    });
+                },
+                setCurrentZoneMap: function (name) {
+                    var self = this;
+                    return restCall({
+                        method: "POST",
+                        url: "/project/" + self.handle + "/zones/" + name
                     });
                 }
             };

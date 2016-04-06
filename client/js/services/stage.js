@@ -8,15 +8,16 @@
 
 module.exports = (function (app) {
     app.factory("Stage", ["_", "$q", "$state", "$interval", "CreateJS", "Origin", "Ruler", "Tracer", "Zones", "Reader", "Item",
-        "ZoneModel","TimeLapse",
-        function (_, $q, $state, $interval, createjs, Origin, Ruler, Tracer, Zones, Reader, Item, zoneModel,TimeLapse) {
+        "TimeLapse",
+        function (_, $q, $state, $interval, createjs, Origin, Ruler, Tracer, Zones, Reader, Item, TimeLapse) {
             var main = new createjs.Container(),
                 canvas = document.createElement("canvas"),
                 stage = new createjs.Stage(canvas),
-                timeLapse=TimeLapse(),
-                floorPlan, project, bkWidth = 1300, bkHeight = 700, events = {}, zone = null, readers = [], reader = null,
+                timeLapse = TimeLapse(),
+                floorPlan, project, bkWidth = 1300, bkHeight = 700, events = {}, zone = null, zoneCollection = [],
+                readers = [], reader = null,
                 items = {}, itemInterval = null, item = null, activeTweens = 0,
-                layers = ["Floorplan", "Origin", "Zone", "Field", "Reader", "Item", "Ruler", "Tracer","TimeLapse"],
+                layers = ["Floorplan", "Origin", "Zone", "Field", "Reader", "Item", "Ruler", "Tracer", "TimeLapse"],
                 wrapper = Object.create({
                         offAll: function () {
                             _.each(events, function (v, k) {
@@ -162,12 +163,20 @@ module.exports = (function (app) {
                         startTrace: function () {
                             var self = this;
                             return Tracer.trace(this).then(function (points) {
-                                Zones.createZone(self.addZone(points), self, 1.0);
+                                zoneCollection.push(Zones.createZone(self.addZone(points), self, 1.0));
                                 $state.go("floorPlan");
                             });
                         },
                         addZone: function (points) {
-                            var zone = zoneModel(points);
+                            var self = this,
+                                zonePoints = _.map(points, function (p) {
+                                    return {x: self.stageToMeters(p.x, "x"), y: self.stageToMeters(p.y, "y"),z:0};
+                                }),
+                                zone = {
+                                    name: "newZone",
+                                    floor: project.floorName,
+                                    points: zonePoints
+                                };
                             this.zones.push(zone);
                             return zone;
                         },
@@ -177,10 +186,12 @@ module.exports = (function (app) {
                             zone.activate();
                         },
                         deleteZone: function () {
-                            var self = this;
-                            this.zones = _.filter(this.zones, function (zone) {
-                                return zone !== self.zone.model;
-                            });
+                            var self = this,
+                                idx = _.findIndex(this.zones,function(zone){
+                                    return zone === self.zone.model;
+                                });
+                            if(idx !== -1)
+                                this.zones.splice(idx,1);
                             this.zone.destroy();
                             $state.go("floorPlan");
                         },
@@ -252,8 +263,8 @@ module.exports = (function (app) {
                             if (!p || !p.floorPlan)
                                 return;
                             this.setFloorPlan(p.floorPlanUrl);
-                            _.each(p.zones, function (zone) {
-                                Zones.createZone(zone, self, zone.tolerance);
+                            zoneCollection = _.map(p.zones, function (zone) {
+                                return Zones.createZone(zone, self);
                             });
                             self.showReaders(p.showReaders);
                             self.update();
@@ -362,7 +373,7 @@ module.exports = (function (app) {
                                 delete items[i.epc];
                                 i.destroy();
                             });
-                            if(project.timeLapse)
+                            if (project.timeLapse)
                                 timeLapse.draw(project.timeLapseData.getTimeLapse());
                         },
                         containsShape: function (shape) {
@@ -373,6 +384,15 @@ module.exports = (function (app) {
                             if (project.showItems)
                                 if (!project.pullItems)
                                     this.showItems(true);
+                        },
+                        replaceZoneCollection: function () {
+                            var self=this;
+                            _.each(zoneCollection,function(z){
+                                z.destroy();
+                            });
+                            zoneCollection = _.map(project.zones,function(z){
+                                return Zones.createZone(z,self);
+                            });
                         }
                     },
                     {
@@ -386,12 +406,12 @@ module.exports = (function (app) {
                                     this.removeChild(floorPlan);
                                 floorPlan = v;
                                 if (!v) return;
-                                bkWidth =  canvas.width = v.image.width;
+                                bkWidth = canvas.width = v.image.width;
                                 bkHeight = canvas.height = v.image.height;
                                 this.addChild(v);
                                 if (!this.containsShape(Origin.shape))
                                     this.addChild(Origin.shape);
-                                if(!this.containsShape(timeLapse.shape))
+                                if (!this.containsShape(timeLapse.shape))
                                     this.addChild(timeLapse.shape);
                                 project.zoom = this.zoom || this.widthZoom();
                                 this.origin = this.origin.x === undefined ? this.visibleCenter() : this.origin;
@@ -517,10 +537,10 @@ module.exports = (function (app) {
                                 return project.epcFilter;
                             }
                         },
-                        timeLapse:{
-                            set:function(v){
-                                if(v)
-                                    timeLapse.draw(project.timeLapseData.getTimeLapse(),true);
+                        timeLapse: {
+                            set: function (v) {
+                                if (v)
+                                    timeLapse.draw(project.timeLapseData.getTimeLapse(), true);
                                 else
                                     timeLapse.clear(true);
                             }

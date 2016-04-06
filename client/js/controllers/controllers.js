@@ -60,8 +60,20 @@ module.exports = (function (app) {
                 var zoneMapName = (window.prompt("Name of new Zone Map", "") || "").trim();
                 if (!zoneMapName)
                     return;
+                if(_.find($scope.project.zoneMaps,function(z){
+                        return z.name === zoneMapName;
+                    }))
+                    if(!window.confirm("Zone Map "+zoneMapName+" exists. do you want to clear it?"))
+                        return;
                 $scope.project.newZoneMap(zoneMapName);
             };
+            $scope.trace = function () {
+                if ($scope.$state.is("floorPlan.trace"))
+                    $scope.$state.go("floorPlan");
+                else
+                    $scope.$state.go("floorPlan.trace");
+            };
+
         }])
         .factory("Requester", ["$uibModal", "_", function ($uibModal, _) {
             function openModal(options) {
