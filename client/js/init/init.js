@@ -48,6 +48,10 @@ module.exports = (function (app) {
                 });
                 window.addEventListener("keydown",function(ev){
                     $rootScope.$broadcast("keydown",ev);
+                    if(ev.srcElement.tagName === "BODY"){
+                        ev.stopPropagation();
+                        ev.preventDefault();
+                    }
                 });
                 function loadProject(ev, toState, toParams) {
                     ev.preventDefault();

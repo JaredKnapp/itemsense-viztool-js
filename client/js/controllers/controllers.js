@@ -155,6 +155,21 @@ module.exports = (function (app) {
                 if ($scope.project)
                     return "/project/" + $scope.project.handle + "/upload/1";
             };
+            $scope.$on("keydown", function (ev, key) {
+                if($scope.$state.current.name === "floorPlan.zone"){
+                    if(key.srcElement.tagName === "BODY"){
+                        if(key.keyCode === 8 ) //backspace
+                            $scope.project.deleteZone();
+                        else if(key.keyCode === 67 && (key.metaKey || key.ctrlKey)) //Control or Command-C
+                            $scope.project.cloneZone();
+                        $scope.$apply();
+                    }
+                }
+                console.log("keydown", arguments, $scope.$state.current);
+            });
+            $scope.$on("canvasKeydown", function () {
+                console.log("canvas keydown", arguments, $scope.$state.current);
+            });
             $scope.uploadSuccess = function (flow, message) {
                 message = JSON.parse(message);
                 $scope.project.floorPlan = message.filename;
@@ -189,12 +204,6 @@ module.exports = (function (app) {
                     $scope.$state.go("floorPlan");
                 else
                     $scope.$state.go("floorPlan.ruler");
-            };
-            $scope.trace = function () {
-                if ($scope.$state.is("floorPlan.trace"))
-                    $scope.$state.go("floorPlan");
-                else
-                    $scope.$state.go("floorPlan.trace");
             };
             $scope.setScale = function () {
                 var v = window.prompt("Enter the measured length of ruler in meters", $scope.project._rulerMeters);
@@ -298,9 +307,6 @@ module.exports = (function (app) {
         }])
         .controller("EPCEditor", ["$scope", "_", function ($scope, _) {
             $scope.record = $scope.project.itemHash [$scope.$stateParams.epc];
-            $scope.$on("keydown", function () {
-                console.log("keydown", arguments);
-            });
             $scope.cloneTag = function () {
                 var newEpc = (window.prompt("Enter Epc for the copied tag", $scope.record.EPC) || "")
                     .trim().toUpperCase();
