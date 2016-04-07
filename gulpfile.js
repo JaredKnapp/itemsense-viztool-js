@@ -41,11 +41,11 @@ gulp.task("browserify", ["lint"], function () {
         walk(path, {
             listeners: {
                 file: function (root, stat, next) {
-                    if (stat.name.match(/[.]js$/))
-                        if (/^win/.test(process.platform))
-                            result += "require('" + root.replace(/\\/g, "\\\\") + "\\\\" + stat.name + "');\n";
-                        else
-                            result += "require('" + root + "/" + stat.name + "');\n";
+                    if(stat.name.match(/[.]js$/))
+							if(process.platform.match(/^win/))
+								result += "require('" + root.replace(/\\/g,"\\\\")+ "\\\\" + stat.name + "');\n";
+							else
+								result += "require('" + root + "/" + stat.name + "');\n";
                     next();
                 }
             }
