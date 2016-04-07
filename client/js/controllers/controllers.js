@@ -73,7 +73,16 @@ module.exports = (function (app) {
                 else
                     $scope.$state.go("floorPlan.trace");
             };
-
+            $scope.planUpload = function () {
+                if ($scope.project)
+                    return "/project/" + $scope.project.handle + "/upload/1";
+            };
+            $scope.uploadSuccess = function (flow, message) {
+                message = JSON.parse(message);
+                $scope.project.floorPlan = message.filename;
+                $scope.imageVersion += 1;
+                return $scope.project.save($scope.project);
+            };
         }])
         .factory("Requester", ["$uibModal", "_", function ($uibModal, _) {
             function openModal(options) {
@@ -148,23 +157,23 @@ module.exports = (function (app) {
             };
         }])
         .controller("FloorPlan", ["$scope", function ($scope) {
-            var imageVersion = 0;
             $scope.mainTab = {floorPlan: true};
             $scope.fields = [{i: 0, n: 'Hide'}, {i: 1, n: '3 Meters'}, {i: 2, n: '4 Meters'}, {i: 3, n: '5 Meters'}];
-            $scope.targetUrl = function () {
-                if ($scope.project)
-                    return "/project/" + $scope.project.handle + "/upload/1";
-            };
-            $scope.uploadSuccess = function (flow, message) {
-                message = JSON.parse(message);
-                $scope.project.floorPlan = message.filename;
-                imageVersion += 1;
-                return $scope.project.save($scope.project);
-            };
+            $scope.$on("keydown", function (ev, key) {
+                if($scope.$state.current.name === "floorPlan.zone"){
+                    if(key.srcElement.tagName === "BODY"){
+                        if(key.keyCode === 8 ) //backspace
+                            $scope.project.deleteZone();
+                        else if(key.keyCode === 67 && (key.metaKey || key.ctrlKey)) //Control or Command-C
+                            $scope.project.cloneZone();
+                        $scope.$apply();
+                    }
+                }
+            });
             $scope.imageSrc = function () {
                 //this doesn't hold previous version of the image, it just forces the ng-src to reload the new image
                 if ($scope.project)
-                    return "/projects/" + $scope.project.handle + "/" + $scope.project.floorPlan + "?v=" + imageVersion;
+                    return "/projects/" + $scope.project.handle + "/" + $scope.project.floorPlan + "?v=" + $scope.imageVersion;
             };
             $scope.zoomIn = function () {
                 $scope.project.zoom += 0.1;
@@ -189,12 +198,6 @@ module.exports = (function (app) {
                     $scope.$state.go("floorPlan");
                 else
                     $scope.$state.go("floorPlan.ruler");
-            };
-            $scope.trace = function () {
-                if ($scope.$state.is("floorPlan.trace"))
-                    $scope.$state.go("floorPlan");
-                else
-                    $scope.$state.go("floorPlan.trace");
             };
             $scope.setScale = function () {
                 var v = window.prompt("Enter the measured length of ruler in meters", $scope.project._rulerMeters);
@@ -298,9 +301,6 @@ module.exports = (function (app) {
         }])
         .controller("EPCEditor", ["$scope", "_", function ($scope, _) {
             $scope.record = $scope.project.itemHash [$scope.$stateParams.epc];
-            $scope.$on("keydown", function () {
-                console.log("keydown", arguments);
-            });
             $scope.cloneTag = function () {
                 var newEpc = (window.prompt("Enter Epc for the copied tag", $scope.record.EPC) || "")
                     .trim().toUpperCase();

@@ -24,12 +24,8 @@ var base = path.resolve(__dirname, "client"),
         dest: {
             mainJs: "app.js",
             mainCss: "app.css",
-			/*
-            js: path.resolve(__dirname, "public/javascripts"),
-            css: path.resolve(__dirname, "public/stylesheets")
-			*/
-            js: path.resolve(__dirname, "public","javascripts"),
-            css: path.resolve(__dirname, "public","stylesheets")
+            js: path.resolve(__dirname, "public", "javascripts"),
+            css: path.resolve(__dirname, "public", "stylesheets")
         }
     };
 
@@ -60,8 +56,8 @@ gulp.task("browserify", ["lint"], function () {
     return browserify(angulify(PATHS.src.app))
         .on("log", gutil.log)
         .bundle()
-        .on("error", function(err){
-            gutil.log(gutil.colors.magenta("Error in Browserify\n\n"), err.message,gutil.colors.magenta("\n\nBundle Cancelled\n"));
+        .on("error", function (err) {
+            gutil.log(gutil.colors.magenta("Error in Browserify\n\n"), err.message, gutil.colors.magenta("\n\nBundle Cancelled\n"));
             this.emit("end");
         })
         .pipe(source(PATHS.dest.mainJs))
@@ -70,8 +66,8 @@ gulp.task("browserify", ["lint"], function () {
 
 gulp.task("sass", function () {
     return gulp.src(PATHS.src.sassMain)
-        .pipe(sass().on("error", function(err){
-            gutil.log(gutil.colors.magenta("Error in Sass\n\n"), err.message,gutil.colors.magenta("\n\nBundle Cancelled\n"));
+        .pipe(sass().on("error", function (err) {
+            gutil.log(gutil.colors.magenta("Error in Sass\n\n"), err.message, gutil.colors.magenta("\n\nBundle Cancelled\n"));
             this.emit("end");
         }))
         .pipe(rename(PATHS.dest.mainCss))

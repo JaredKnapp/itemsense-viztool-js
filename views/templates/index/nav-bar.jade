@@ -23,6 +23,9 @@
             li.menuitem(ng-class="{disabled:!project.canConnect()}")
                a(ui-sref="present({id:project.handle})") Present Project
             li.divider
+            li.menuitem(flow-init="{target:planUpload}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow)")
+               a(flow-btn flow-attrs="{accept:'image/png,image/jpeg,image/gif'}" href="javascript:void(0);") Upload floor plan
+            li.divider
             li.menuitem
                a(href="javascript:void(0);" ng-click="about()") About
       li(uib-dropdown ng-class="{disabled:!project.recipes}")

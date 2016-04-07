@@ -147,59 +147,57 @@ module.exports = (function (app) {
             };
         }])
         .factory("Zones", ["_", "CreateJS", "TransformBuffer", function (_, createjs, transform) {
-            function toStagePoints(points, stage) {
-                return _.map(points, function (p) {
-                    return {x: stage.metersToStage(p.x, "x"), y: stage.metersToStage(p.y, "y")};
-                });
-            }
-
-            function movePointInZone(stage, point, idx, dx, dy) {
-                point.x += dx;
-                point.y += dy;
-                this.points[idx].x = stage.stageToMeters(point.x, "x");
-                this.points[idx].y = stage.stageToMeters(point.y, "y");
-            }
-
-            function addPoint(stage, zone, idx, point) {
-                this.splice(idx, 0, {x: point.x, y: point.y});
-                zone.points.splice(idx, 0, {
-                    x: stage.stageToMeters(point.x, "x"),
-                    y: stage.stageToMeters(point.y, "y"),
-                    z: 0
-                });
-            }
-
-            function removePoint(zone, idx) {
-                this.splice(idx, 1);
-                zone.points.splice(idx, 1);
-            }
-
-            function findZoneName(zones, name) {
-                return _.find(zones, function (z) {
-                    return z.name === name;
-                })
-            }
+            var util = {
+                toStagePoints: function (points, stage) {
+                    return _.map(points, function (p) {
+                        return {x: stage.metersToStage(p.x, "x"), y: stage.metersToStage(p.y, "y")};
+                    });
+                },
+                movePointInZone: function (stage, point, idx, dx, dy) {
+                    point.x += dx;
+                    point.y += dy;
+                    this.points[idx].x = stage.stageToMeters(point.x, "x");
+                    this.points[idx].y = stage.stageToMeters(point.y, "y");
+                },
+                addPoint: function (stage, zone, idx, point) {
+                    this.splice(idx, 0, {x: point.x, y: point.y});
+                    zone.points.splice(idx, 0, {
+                        x: stage.stageToMeters(point.x, "x"),
+                        y: stage.stageToMeters(point.y, "y"),
+                        z: 0
+                    });
+                },
+                removePoint: function (zone, idx) {
+                    this.splice(idx, 1);
+                    zone.points.splice(idx, 1);
+                },
+                findZoneName: function (zones, name) {
+                    return _.find(zones, function (z) {
+                        return z.name === name;
+                    });
+                }
+            };
 
             return {
                 cloneZone: function (ref, stage) {
                     var zone = _.merge({}, ref),
                         d = 0.5,
-                        name = zone.name.indexOf("_copy")===-1 ? zone.name : zone.name.split("_copy")[0];
+                        name = zone.name.indexOf("_copy") === -1 ? zone.name : zone.name.split("_copy")[0];
                     name += "_copy";
                     _.each(zone.points, function (p) {
                         p.x += d;
                         p.y += d;
                     });
                     zone.name = name;
-                    for (var i = 1; findZoneName(stage.zones, zone.name); i++)
+                    for (var i = 1; util.findZoneName(stage.zones, zone.name); i++)
                         zone.name = name + "_" + i;
                     return this.createZone(zone, stage);
                 },
                 createZone: function (zone, stage, scale) {
-                    var points = toStagePoints(zone.points, stage),
-                        moveZonePoint = movePointInZone.bind(zone, stage),
-                        addZonePoint = addPoint.bind(points, stage, zone),
-                        removeZonePoint = removePoint.bind(points, zone),
+                    var points = util.toStagePoints(zone.points, stage),
+                        moveZonePoint = util.movePointInZone.bind(zone, stage),
+                        addZonePoint = util.addPoint.bind(points, stage, zone),
+                        removeZonePoint = util.removePoint.bind(points, zone),
                         shadow = transform(points, scale),
                         colors = {
                             "fixture": "rgba(0,0,200,0.2)",
@@ -234,7 +232,7 @@ module.exports = (function (app) {
                             draw: function () {
 //                                this.drawPoly(shadowShape.graphics.clear().s("brown").ss(1, null, null, null, true).f("rgba(200,200,0,0.2)"), shadow.points);
                                 this.drawPoly(shape.graphics.clear().s("brown").ss(4, null, null, null, true)
-                                    .f(isActive ? colors.selected : colors["fixture"]), points);
+                                    .f(isActive ? colors.selected : colors.fixture), points);
                                 if (isActive)
                                     this.drawPoints();
                                 stage.update();
@@ -333,7 +331,8 @@ module.exports = (function (app) {
                             wrapper.draw();
                         }
                         else if (curPointIdx !== -1) {
-                            removeZonePoint(curPointIdx);
+                            if (points.length > 3)
+                                removeZonePoint(curPointIdx);
                             movingPoint = null;
                             shadow.points = points;
                             wrapper.draw();
