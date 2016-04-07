@@ -54,6 +54,26 @@ module.exports = (function (app) {
             $scope.uploadSuccess = function (file, message, flow, target) {
                 $scope.project.addTarget(target, JSON.parse(message));
             };
+            $scope.newZoneMap = function () {
+                if (!$scope.project)
+                    return;
+                var zoneMapName = (window.prompt("Name of new Zone Map", "") || "").trim();
+                if (!zoneMapName)
+                    return;
+                if(_.find($scope.project.zoneMaps,function(z){
+                        return z.name === zoneMapName;
+                    }))
+                    if(!window.confirm("Zone Map "+zoneMapName+" exists. do you want to clear it?"))
+                        return;
+                $scope.project.newZoneMap(zoneMapName);
+            };
+            $scope.trace = function () {
+                if ($scope.$state.is("floorPlan.trace"))
+                    $scope.$state.go("floorPlan");
+                else
+                    $scope.$state.go("floorPlan.trace");
+            };
+
         }])
         .factory("Requester", ["$uibModal", "_", function ($uibModal, _) {
             function openModal(options) {
@@ -181,15 +201,16 @@ module.exports = (function (app) {
                 if (v)
                     $scope.project.setScale(v);
             };
-            $scope.addReader = function(point){
-                $scope.$state.go("floorPlan.reader",{
-                    x: $scope.project.stageToMeters($scope.project.rulerCoords[point+ 'X'],'x'),
-                    y: $scope.project.stageToMeters($scope.project.rulerCoords[point+ 'Y'],'y')
+            $scope.addReader = function (point) {
+                $scope.$state.go("floorPlan.reader", {
+                    x: $scope.project.stageToMeters($scope.project.rulerCoords[point + 'X'], 'x'),
+                    y: $scope.project.stageToMeters($scope.project.rulerCoords[point + 'Y'], 'y')
                 });
             };
         }])
         .controller("Readers", ["$scope", function ($scope) {
             var stageReader;
+
             function makeReader() {
                 var newReader = {
                     address: "",
@@ -214,10 +235,10 @@ module.exports = (function (app) {
 
             $scope.activeReader = $scope.project.reader || makeReader();
 
-            $scope.$watch(function(){
+            $scope.$watch(function () {
                 return $scope.project.reader;
-            },function(n){
-                if(n && n !== $scope.activeReader)
+            }, function (n) {
+                if (n && n !== $scope.activeReader)
                     $scope.activeReader = n;
             });
             $scope.newReader = function () {
@@ -229,15 +250,15 @@ module.exports = (function (app) {
             };
 
             $scope.cancel = function () {
-                $scope.project.showReaders=false;
-                $scope.project.getReaders().then(function(){
-                    $scope.project.showReaders=true;
+                $scope.project.showReaders = false;
+                $scope.project.getReaders().then(function () {
+                    $scope.project.showReaders = true;
                     $scope.$state.go("floorPlan");
                 });
             };
 
-            $scope.save=function(){
-                $scope.project.postReaders($scope.activeReader).then(function(){
+            $scope.save = function () {
+                $scope.project.postReaders($scope.activeReader).then(function () {
                     $scope.$state.go("floorPlan");
                 });
             };

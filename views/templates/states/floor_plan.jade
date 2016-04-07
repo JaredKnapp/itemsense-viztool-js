@@ -14,7 +14,6 @@
                 .input-group
                     .input-group-addon Reader Fields:
                     select.form-control(ng-model="project.showReaderFields" ng-options="f.i as f.n for f in fields")
-            a.pnj-add-zone(ng-click="trace()" ng-class="{active:$state.is('floorPlan.trace')}") Add Zone
         .ui-view
     .pnj-footer(ng-if="project.mouse") {{round(project.mouse.x)}} , {{round(project.mouse.y)}}
 

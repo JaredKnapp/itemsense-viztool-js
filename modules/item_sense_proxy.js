@@ -160,6 +160,23 @@ function startProject(project) {
                 getRecipes: function () {
                     return itemsenseApi.recipes.get();
                 },
+                addZoneMap:function(data){
+                    var self=this;
+                    return itemsenseApi.zoneMaps.update(data).then(function(zmap){
+                        return self.setCurrentZoneMap(zmap.name).then(function(){
+                            return zmap;
+                        });
+                    });
+                },
+                setCurrentZoneMap:function(name){
+                    return itemsenseApi.currentZoneMap.update(name);
+                },
+                getCurrentZoneMap:function(){
+                    return itemsenseApi.currentZoneMap.get(project.facility);
+                },
+                getAllZoneMaps:function(){
+                    return itemsenseApi.zoneMaps.getAll();
+                },
                 getJobs: function (id) {
                     return itemsenseApi.jobs.get(id);
                 },
@@ -230,13 +247,22 @@ var md = {
     },
 
     connect: function () {
-        var recipes = null;
+        var payload = {};
         return project.getRecipes().then(function (r) {
-            recipes = r;
+            payload.recipes = r;
             return project.getRunningJob();
         }).then(function (job) {
             project.itemSenseJob = job;
-            return {recipes: recipes, job: job};
+            payload.job = job;
+            return project.getAllZoneMaps();
+        }).then(function(zoneMaps){
+            payload.zoneMaps = _.filter(zoneMaps,function(z){
+                return z.facility === project.project.facility;
+            });
+            return project.getCurrentZoneMap();
+        }).then(function(currentZoneMap){
+            payload.currentZoneMap = currentZoneMap;
+            return payload;
         });
     },
 
@@ -275,6 +301,21 @@ var md = {
         if (!project)
             return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
         return project.postReaders(data);
+    },
+    getZoneMaps:function(){
+        if (!project)
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
+        return project.getAllZoneMaps();
+    },
+    addZoneMap:function(data){
+        if (!project)
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
+        return project.addZoneMap(data);
+    },
+    setCurrentZoneMap:function(name){
+        if (!project)
+            return q.reject({statusCode: 500, body: "Server error: Project Not Started"});
+        return project.setCurrentZoneMap(name);
     }
 };
 

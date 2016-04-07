@@ -89,7 +89,7 @@ function resolveProjectFile(id) {
 function threadError(err, r) {
     return {
         status: err.payload.data.statusCode || r.status,
-        msg: err.payload.data.body || ""
+        msg: err.payload.data.response.body || ""
     };
 }
 
@@ -278,6 +278,33 @@ router.post("/:projectId/readers", function (req, res) {
         res.json(data.payload.data);
     }, function (err) {
         handleError(err, res, threadError);
+    });
+});
+
+router.get("/:projectId/zones",function(req,res){
+    var id = req.params.projectId;
+    thread.invoke(id, {command: "getZoneMaps"}).then(function (data) {
+        res.json(data.payload.data);
+    }, function (err) {
+        handleError(err, res, threadError);
+    });
+});
+
+router.post("/:projectId/zones",function(req,res){
+    var id=req.params.projectId;
+    thread.invoke(id,{command:"addZoneMap",data:req.body}).then(function(data){
+        res.json(data.payload.data);
+    },function(err){
+        handleError(err,res,threadError);
+    });
+});
+
+router.post("/:projectId/zones/:mapName",function(req,res){
+    var id=req.params.projectId;
+    thread.invoke(id,{command:"setCurrentZoneMap",data:req.params.mapName}).then(function(data){
+        res.json(data.payload.data);
+    },function(err){
+        handleError(err,res,threadError);
     });
 });
 
