@@ -18,11 +18,12 @@ $ npm install
 $ npm install -g gulp
 $ gulp compile
 ```
+NOTE:  Tested using node v5.8.0
 
 Once those have completed, you can now start up a server:
 ```javascript
 $ npm start
 ```
 
-Once the server executable is running, just browse to **http://localhost:3000** to see it in action.
+Once the server executable is running, just browse to **http://localhost:3000** to see it in action.  Videos on usage to be posted on youtube shortly.
 
