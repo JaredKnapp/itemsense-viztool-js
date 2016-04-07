@@ -81,9 +81,10 @@ module.exports = (function (app) {
         }])
         .factory("Reader", ["CreateJS", "ReaderModel", function (createjs, ReaderModel) {
             return {
-                create: function (ref, stage) {
+                create: function (reader, stage) {
                     var field = new createjs.Shape(),
                         device = new createjs.Shape(),
+                        ref=reader ? reader.placement : {},
                         model = ReaderModel(ref, stage),
                         zoomHandler = null,
                         color = "blue", lastX, lastY,
@@ -97,6 +98,8 @@ module.exports = (function (app) {
                                     stage.update();
                             },
                             drawFields: function () {
+                                if(reader.type !=="XARRAY")
+                                    return;
                                 var g = field.graphics.clear().s("brown").ss(1);
                                 if (stage.showReaderFields > 2)
                                     g = g.f("rgba(200,0,0,0.2)").dc(0, 0, stage.metersToCanvas(5));
@@ -108,7 +111,10 @@ module.exports = (function (app) {
                             drawDevice: function () {
                                 var l = stage.screenToCanvas(10),
                                     r = stage.screenToCanvas(3);
-                                device.graphics.clear().s("brown").ss(1).f(color).r(-l, -l, l * 2, l * 2).dc(0, -l, r);
+                                if(reader.type === "XARRAY")
+                                    device.graphics.clear().s("brown").ss(1).f(color).r(-l, -l, l * 2, l * 2).dc(0, -l, r);
+                                else
+                                    device.graphics.clear().s("brown").ss(1).f(color).dc(0,0,l);
                             },
                             draw: function (update) {
                                 this.drawFields();

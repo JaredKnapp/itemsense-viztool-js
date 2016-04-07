@@ -37,6 +37,8 @@ module.exports = (function (app) {
                         model.lastModifiedTime = i.lastModifiedTime;
                         model.x = i.x || i.xLocation;
                         model.y = i.y || i.yLocation;
+                        model.presenceConfidence = i.presenceConfidence;
+                        model.zone = i.zone;
                         if (model._x === shape.x)
                             if (model._y === shape.y)
                                     defer.resolve();
