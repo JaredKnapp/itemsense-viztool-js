@@ -603,7 +603,8 @@ module.exports = (function (app) {
                         },
                         set: function (v) {
                             zoneMap = v;
-                            this.zones = zoneMap.zones;
+                            if(v)
+                                this.zones = zoneMap.zones;
                             if (stage)
                                 stage.replaceZoneCollection();
                         }

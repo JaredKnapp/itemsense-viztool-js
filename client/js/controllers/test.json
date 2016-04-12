@@ -1,0 +1,251 @@
+{
+  "signature": "Dump configuration for job: 3f4f31cb-3c24-4b42-999a-d1494e254f9d running on http://svl.impinj.com/itemsense",
+  "timestamp": "Tue, 12 Apr 2016 17:48:54 GMT",
+  "totalJobsRunning": 1,
+  "index": 0,
+  "job": {
+    "id": "3f4f31cb-3c24-4b42-999a-d1494e254f9d",
+    "status": "RUNNING",
+    "readerNames": [
+      "xArray-CenterOfUniverse",
+      "xArray-Mead",
+      "xArray-Locks",
+      "xArray-REC-Inner",
+      "xArray-Tillicum",
+      "xArray-Corridor",
+      "xArray-InterviewArea",
+      "xArray-12045",
+      "xArray-Rainier",
+      "xArray-101",
+      "xArray-Rec-top",
+      "xArray-Rec-outer",
+      "xArray-SpaceNeedle",
+      "xArray-Rec-Middle"
+    ],
+    "connectionType": "LLRP",
+    "creationTime": "2016-04-12T17:35:46.099Z[Etc/UTC]",
+    "lastActivityTime": "2016-04-12T17:48:32.735Z",
+    "activeDuration": "PT12M42.63S",
+    "errorOccurred": false,
+    "errors": [],
+    "facilities": [
+      {
+        "name": "400_floor12"
+      }
+    ],
+    "job": {
+      "recipeName": "Tilicum_MedMotion",
+      "durationSeconds": 20000,
+      "playbackLoggingEnabled": false,
+      "presenceLoggingEnabled": false,
+      "startDelay": "PT0S",
+      "reportToDatabaseEnabled": null,
+      "reportToMessageQueueEnabled": null,
+      "reportToFileEnabled": null,
+      "facility": "400_floor12"
+    },
+    "instanceMetadata": {
+      "port": 49301,
+      "instanceId": "cd072824-a7c0-4394-bace-c68140c64317",
+      "controlUrl": "http://localhost:49301/itemsense/readermanager",
+      "connectionType": "LLRP"
+    },
+    "lastHeartbeatTime": "2016-04-12T17:48:49.407Z[Etc/UTC]"
+  },
+  "currentZoneMap": [
+    {
+      "facility": {
+        "name": "400_floor12"
+      },
+      "zoneMap": {
+        "name": "map400",
+        "status": "COMPLETE"
+      }
+    }
+  ],
+  "recipe": {
+    "name": "Tilicum_MedMotion",
+    "readerConfigurationName": null,
+    "readerConfigurations": {
+      "xArray-Tillicum": "IMPINJ_LocationConfig_2",
+      "xArray-InterviewArea": "IMPINJ_LocationConfig_2",
+      "xArray-Mead": "IMPINJ_LocationConfig_2",
+      "xArray-Rainier": "IMPINJ_LocationConfig_2"
+    },
+    "presencePipelineEnabled": false,
+    "locationReportingEnabled": true,
+    "zoneModel": "GEOGRAPHIC",
+    "minimumMovementInMeters": 1,
+    "locationUpdateIntervalInSeconds": 10,
+    "historyWindowSizeInCycles": null,
+    "computeWindowSizeInCycles": null,
+    "computeWindowTimeInSeconds": 45,
+    "locationAggegationModel": "BY_TIME"
+  },
+  "readerConfigurations": [
+    {
+      "name": "IMPINJ_LocationConfig_2",
+      "operation": "NORMAL",
+      "configuration": {
+        "readerMode": "MODE_1002",
+        "searchMode": "DUAL_TARGET",
+        "session": 2,
+        "tagPopulationEstimate": 1,
+        "transmitPowerInDbm": null,
+        "antennaDwellTimeInMs": null,
+        "tagNak": null,
+        "polarization": null,
+        "antennas": [
+          45,
+          16,
+          35,
+          14,
+          49,
+          36,
+          2,
+          31,
+          18,
+          29,
+          48,
+          19,
+          46,
+          3,
+          33,
+          52,
+          15,
+          50,
+          13,
+          32,
+          1,
+          51,
+          30,
+          17,
+          47,
+          20,
+          34,
+          4
+        ],
+        "filter": null,
+        "channelConfig": null,
+        "reportConfig": null
+      }
+    }
+  ],
+  "readerDefinitions": [
+    {
+      "name": "xArray-Tillicum",
+      "address": "xarray-11-42-0a.impinj.com",
+      "type": "XARRAY",
+      "connectionType": "LLRP",
+      "placement": {
+        "x": 13.63,
+        "y": -2.72,
+        "z": 1.9,
+        "yaw": 180,
+        "pitch": 0,
+        "roll": 0,
+        "floor": "12"
+      },
+      "facility": "400_floor12",
+      "labels": null,
+      "readerZone": "Tillicum",
+      "antennaZones": null
+    },
+    {
+      "name": "xArray-Mead",
+      "address": "xarray-11-7e-98.impinj.com",
+      "type": "XARRAY",
+      "connectionType": "LLRP",
+      "placement": {
+        "x": 25.14,
+        "y": 2.65,
+        "z": 1.9,
+        "yaw": 180,
+        "pitch": 0,
+        "roll": 0,
+        "floor": "12"
+      },
+      "facility": "400_floor12",
+      "labels": null,
+      "readerZone": "Mead",
+      "antennaZones": null
+    },
+    {
+      "name": "xArray-InterviewArea",
+      "address": "xarray-11-40-e8.impinj.com",
+      "type": "XARRAY",
+      "connectionType": "LLRP",
+      "placement": {
+        "x": 19.76,
+        "y": 4.31,
+        "z": 1.8,
+        "yaw": 180,
+        "pitch": 0,
+        "roll": 0,
+        "floor": "12"
+      },
+      "facility": "400_floor12",
+      "labels": null,
+      "readerZone": "xArray-InterviewArea",
+      "antennaZones": null
+    },
+    {
+      "name": "xArray-Rainier",
+      "address": "xarray-11-78-6c.impinj.com",
+      "type": "XARRAY",
+      "connectionType": "LLRP",
+      "placement": {
+        "x": 27.41,
+        "y": -2.87,
+        "z": 1.9,
+        "yaw": 180,
+        "pitch": 0,
+        "roll": 0,
+        "floor": "12"
+      },
+      "facility": "400_floor12",
+      "labels": null,
+      "readerZone": "Rainier",
+      "antennaZones": null
+    }
+  ],
+  "zoneMaps": [
+    {
+      "name": "map400",
+      "facility": "400_floor12",
+      "zones": [
+        {
+          "name": "newZone",
+          "floor": "12",
+          "points": [
+            {
+              "x": -25.927769784172654,
+              "y": 10.48143884892086,
+              "z": 0
+            },
+            {
+              "x": -16.427050359712222,
+              "y": 10.113669064748198,
+              "z": 0
+            },
+            {
+              "x": -6.405323741007206,
+              "y": 5.577841726618694,
+              "z": 0
+            },
+            {
+              "x": -16.856115107913677,
+              "y": 1.5323741007194167,
+              "z": 0
+            },
+            {
+              "x": -26.17294964028781,
+              "y": 1.4710791366906433,
+              "z": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

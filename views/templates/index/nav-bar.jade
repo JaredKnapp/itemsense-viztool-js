@@ -12,9 +12,9 @@
                a(href="javascript:void(0);" ng-click="select()") Open Project ...
             li.menuitem
                a(href="javascript:void(0);" ng-click="project.save()") Save Project
-            li.menuitem(ng-class="{disabled:!project.handle}" flow-init="{target:targetClasses}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow,'classes')")
+            li.menuitem(ng-class="{disabled:!project.handle}" flow-init="{target:targetClasses}" flow-files-submitted="$flow.upload()" flow-file-success="csvUploadSuccess($file,$message,$flow,'classes')")
                a(href="javascript:void(0);" flow-btn flow-attrs="{accept:'text/csv'}") Import Classification CSV
-            li.menuitem(ng-class="{disabled:!project.handle}" flow-init="{target:targetSymbols}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow,'symbols')")
+            li.menuitem(ng-class="{disabled:!project.handle}" flow-init="{target:targetSymbols}" flow-files-submitted="$flow.upload()" flow-file-success="csvUploadSuccess($file,$message,$flow,'symbols')")
                a(href="javascript:void(0);" flow-btn flow-attrs="{accept:'text/csv'}") Import Picture Map CSV
             li.menuitem.disabled
                a(href="javascript:void(0);") Export...
