@@ -170,10 +170,12 @@ module.exports = (function (app) {
                     zoneMap = null,
                     readers = null,
                     reader = null,
+                    readerLLRP = {},
                     items = null,
                     item = null,
                     showReaders = false,
                     showReaderFields = 0,
+                    showLLRP = false,
                     showItems = false,
                     pullItems = false,
                     stage = null,
@@ -603,7 +605,7 @@ module.exports = (function (app) {
                         },
                         set: function (v) {
                             zoneMap = v;
-                            if(v)
+                            if (v)
                                 this.zones = zoneMap.zones;
                             if (stage)
                                 stage.replaceZoneCollection();
@@ -667,6 +669,31 @@ module.exports = (function (app) {
                                 });
                             else if (stage)
                                 stage.showReaders(v);
+                        }
+                    },
+                    showLLRP: {
+                        enumerable: true,
+                        get: function () {
+                            return showLLRP;
+                        },
+                        set: function (v) {
+                            showLLRP = v;
+                            if (v)
+                                this.getLLRPStatus().then(status => {
+                                    this.readerLLRP = status;
+                                });
+                            else
+                                this.readerLLRP = {};
+                        }
+                    },
+                    readerLLRP: {
+                        get: function () {
+                            return readerLLRP;
+                        },
+                        set: function (v) {
+                            readerLLRP = v;
+                            if(stage)
+                                stage.markEngagedReaders(v);
                         }
                     },
                     showReaderFields: {
@@ -979,6 +1006,11 @@ module.exports = (function (app) {
                     return restCall({
                         method: "POST",
                         url: "/project/" + self.handle + "/zones/" + name
+                    });
+                },
+                getLLRPStatus(){
+                    return restCall({
+                        url:`/project/${this.handle}/llrp`
                     });
                 }
             };

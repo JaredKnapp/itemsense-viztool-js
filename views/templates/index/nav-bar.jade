@@ -40,6 +40,10 @@
                   i.pnj-menu-check(ng-show="project.showReaders")
                   |    Show Readers
             li.menu-item
+               a(href="javascript:void(0);" ng-click="project.showLLRP=!project.showLLRP")
+                  i.pnj-menu-check(ng-show="project.showLLRP")
+                  |    Show Reader Engagement
+            li.menu-item
                a(href="javascript:void(0);" ng-click="project.pullItems=!project.pullItems")
                   i.pnj-menu-check(ng-show="project.pullItems")
                   |    Pull Items
