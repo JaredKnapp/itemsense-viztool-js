@@ -130,9 +130,6 @@ function startProject(project) {
                     });
                     return readPromise;
                 },
-                startClock: function () {
-                    interval = setInterval(wrapper.readItems, 1000);
-                },
                 startJob: function (opts) {
                     var job = _.merge({
                         "recipeName": "RTL",

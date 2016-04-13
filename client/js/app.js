@@ -15,7 +15,7 @@ module.exports=(function(){
     require("../lib/bootstrap-colorpicker-module");
     window.Flow=require("../lib/flow.min.js");
     var lodash = require("../lib/lodash.min.js"),
-        buildString = "1.0.0-SNAPSHOT";
+        buildString = "2.0.0-SNAPSHOT";
     window._ = lodash;
     window.mainApp = document.body.parentElement.getAttribute("ng-app");
     return angular.module(window.mainApp,["flow","ngSanitize","ngAnimate","ui.router","ui.bootstrap","ui.tree","colorpicker.module"])
