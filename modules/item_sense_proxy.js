@@ -89,9 +89,6 @@ function createResultItem(data, tp) {
     });
 }
 
-function reportError(error) {
-    return error.statusCode ? error : {statusCode: 500, body: "OS error " + error.name + ": " + error.description};
-}
 
 function startProject(project) {
     var itemsenseApi = new ItemSense({
@@ -115,7 +112,7 @@ function startProject(project) {
                             results.last.to = true;
                         else
                             results.last = createResultItem(error, "from");
-                        return q.reject(reportError(error));
+                        return q.reject(error);
                     }).finally(function () {
                         readPromise = null;
                     });
@@ -129,7 +126,6 @@ function startProject(project) {
                         items.data = _.filter(items.data, function (i) {
                             return i.lastModifiedTime > itemSenseJob.creationTime
                         });
-                        console.log("after filter", items.data.length);
                         return items;
                     });
                     return readPromise;
