@@ -170,7 +170,7 @@ module.exports = (function (app) {
                         addZone: function (points) {
                             var self = this,
                                 zonePoints = _.map(points, function (p) {
-                                    return {x: self.stageToMeters(p.x, "x"), y: self.stageToMeters(p.y, "y"),z:0};
+                                    return {x: self.stageToMeters(p.x, "x"), y: self.stageToMeters(p.y, "y"), z: 0};
                                 }),
                                 zone = {
                                     name: "newZone",
@@ -187,11 +187,11 @@ module.exports = (function (app) {
                         },
                         deleteZone: function () {
                             var self = this,
-                                idx = _.findIndex(this.zones,function(zone){
+                                idx = _.findIndex(this.zones, function (zone) {
                                     return zone === self.zone.model;
                                 });
-                            if(idx !== -1)
-                                this.zones.splice(idx,1);
+                            if (idx !== -1)
+                                this.zones.splice(idx, 1);
                             this.zone.destroy();
                             $state.go("floorPlan");
                         },
@@ -320,7 +320,7 @@ module.exports = (function (app) {
                                     });
                                 else
                                     readers = _.map(project.readers, function (reader) {
-                                        return Reader.create(reader, self);
+                                        return Reader.create(reader, self, project.readerLLRP[reader.name]);
                                     });
                             else
                                 readers = _.reduce(readers, function (r, reader) {
@@ -386,13 +386,18 @@ module.exports = (function (app) {
                                     this.showItems(true);
                         },
                         replaceZoneCollection: function () {
-                            var self=this;
-                            _.each(zoneCollection,function(z){
+                            var self = this;
+                            _.each(zoneCollection, function (z) {
                                 z.destroy();
                             });
-                            zoneCollection = _.map(project.zones,function(z){
-                                return Zones.createZone(z,self);
+                            zoneCollection = _.map(project.zones, function (z) {
+                                return Zones.createZone(z, self);
                             });
+                        },
+                        markEngagedReaders: function (engaged) {
+                            engaged = engaged || {};
+                            _.each(readers, (r)=> r.setStatus(engaged[r.model.name]||"inactive"));
+                            this.update();
                         }
                     },
                     {

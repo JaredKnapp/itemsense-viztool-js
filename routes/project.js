@@ -308,6 +308,15 @@ router.post("/:projectId/zones/:mapName",function(req,res){
     });
 });
 
+router.get("/:projectId/llrp",function(req,res){
+    var id=req.params.projectId;
+    thread.invoke(id,{command:"getLLRPStatus"}).then(function(data){
+        res.json(data.payload.data);
+    },function(err){
+        handleError(err,res,threadError);
+    });
+});
+
 
 module.exports = router;
 

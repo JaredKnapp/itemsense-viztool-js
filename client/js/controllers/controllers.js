@@ -51,7 +51,7 @@ module.exports = (function (app) {
             $scope.targetSymbols = function () {
                 return "/project/" + $scope.project.handle + "/csv/symbols";
             };
-            $scope.uploadSuccess = function (file, message, flow, target) {
+            $scope.csvUploadSuccess = function (file, message, flow, target) {
                 $scope.project.addTarget(target, JSON.parse(message));
             };
             $scope.newZoneMap = function () {
