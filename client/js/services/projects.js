@@ -189,6 +189,7 @@ module.exports = (function (app) {
                     targets = {},
                     selection = {},
                     facility = "DEFAULT",
+                    facilities = null,
                     epcFilter = ".",
                     timeLapse = false,
                     timeLapseFlag = false,
@@ -692,7 +693,7 @@ module.exports = (function (app) {
                         },
                         set: function (v) {
                             readerLLRP = v;
-                            if(stage)
+                            if (stage)
                                 stage.markEngagedReaders(v);
                         }
                     },
@@ -785,8 +786,11 @@ module.exports = (function (app) {
                         set: function (v) {
                             facility = v;
                         }
+                    },
+                    facilities: {
+                        get: ()=> facilities,
+                        set: v => facilities = v
                     }
-
                 });
                 origin.project = project;
                 timeLapseData.setProject(project);
@@ -869,6 +873,7 @@ module.exports = (function (app) {
                     }).then(function (data) {
                         self.recipes = data.recipes || [];
                         self.job = data.job;
+                        self.facilities = _.map(data.facilities, f=>f.name);
                         self.zoneMaps = data.zoneMaps || [];
                         self.zoneMap = _.find(data.zoneMaps, function (z) {
                             return z.name === data.currentZoneMap.name;
@@ -1010,8 +1015,19 @@ module.exports = (function (app) {
                 },
                 getLLRPStatus(){
                     return restCall({
-                        url:`/project/${this.handle}/llrp`
+                        url: `/project/${this.handle}/llrp`
                     });
+                },
+                getFacilities(){
+                    return restCall({
+                        method:"POST",
+                        data:{
+                            url:this.itemSense,
+                            user: this.user,
+                            password: this.password
+                        },
+                        url: `/project/${this.handle}/facilities`
+                    }).then(facilities => this.facilities = _.map(facilities, f=> f.name));
                 }
             };
         }])

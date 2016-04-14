@@ -7,17 +7,9 @@
 var q = require("q"),
     _ = require("lodash"),
     request = require("request"),
-    ItemSense = require("itemsense-node"),
+    util = require("./util"),
     project = null;
 
-
-function makeUrl(u) {
-    if (u.indexOf("http") === -1)
-        u = "http://" + u;
-    if (u.lastIndexOf("/") === u.length - 1)
-        u = u.substr(0, u.length - 1);
-    return u;
-}
 
 function wrapResults() {
     var counter = 0,
@@ -89,14 +81,8 @@ function createResultItem(data, tp) {
     });
 }
 
-
 function startProject(project) {
-    var itemsenseApi = new ItemSense({
-        itemsenseUrl: makeUrl(project.itemSense.trim() + '/itemsense'),
-        username: project.user || 'admin',
-        password: project.password || 'admindefault'
-    });
-
+    const itemsenseApi = util.connectToItemsense(project.itemSense.trim(), project.user, project.password);
     var readPromise = null, interval = null, itemSenseJob = null,
         results = wrapResults(),
         wrapper = Object.create({
@@ -171,6 +157,7 @@ function startProject(project) {
                 getAllZoneMaps: function () {
                     return itemsenseApi.zoneMaps.getAll();
                 },
+                getFacilities: ()=> itemsenseApi.facilities.get(),
                 getJobs: function (id) {
                     return itemsenseApi.jobs.get(id);
                 },
@@ -314,6 +301,9 @@ var md = {
             return project.getCurrentZoneMap();
         }).then(function (currentZoneMap) {
             payload.currentZoneMap = currentZoneMap;
+            return project.getFacilities();
+        }).then(function (facilities) {
+            payload.facilities = facilities;
             return payload;
         });
     },
@@ -327,7 +317,8 @@ var md = {
     getZoneMaps: () => notStarted() || project.getAllZoneMaps(),
     addZoneMap: data => notStarted() || project.addZoneMap(data),
     setCurrentZoneMap: data => notStarted() || project.setCurrentZoneMap(data),
-    getLLRPStatus: () => notStarted() || project.getLLRPStatus()
+    getLLRPStatus: () => notStarted() || project.getLLRPStatus(),
+    getFacilities: () => notStarted() || project.getFacilities()
 };
 
 module.exports = md;

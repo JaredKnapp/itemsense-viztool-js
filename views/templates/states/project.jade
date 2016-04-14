@@ -13,8 +13,9 @@ form.container.form-group(name="projectForm")
         .input-group-addon Password:
         input.form-control(type="password" name="pass" ng-model="project.password" required)
     .input-group
-        .input-group-addon Facility:
-        input.form-control(type="text" name="pass" ng-model="project.facility" required)
+        .input-group-addon.pnj-label-link(ng-click="getFacilities()") Facility:
+        input.form-control(type="text" name="pass" ng-model="project.facility" required ng-if="!project.facilities")
+        select.form-control(ng-if="project.facilities" ng-options="v for v in project.facilities " ng-model="project.facility" ng-change="project.connect()")
     .input-group
         .input-group-addon Floor:
         input.form-control(type="text" name="pass" ng-model="project.floorName" required)
