@@ -155,6 +155,12 @@ module.exports = (function (app) {
                     return "Last job cancelled at " + last.toLocaleString() + " after " + activity + " seconds";
                 return "Started " + start.toLocaleString() + " scheduled for " + job.job.durationSeconds + " seconds";
             };
+            $scope.getFacilities = function(){
+                if($scope.project.itemSense && $scope.project.user && $scope.project.password)
+                    $scope.project.getFacilities();
+                else
+                    window.alert("Url and credentials are required to get list of facilities");
+            };
         }])
         .controller("FloorPlan", ["$scope", function ($scope) {
             $scope.mainTab = {floorPlan: true};

@@ -13,6 +13,7 @@ const express = require("express"),
     thread = require("../modules/thread"),
     csv = require("../modules/csv-classes"),
     q = require("q"),
+    util = require("../modules/util"),
     router = express.Router();
 
 
@@ -130,7 +131,7 @@ function setupDestination(req, key) {
 
 function uploadCSV(key, req, res) {
     const destination = `epc-${key}.${getMime(req.file)}`,
-        target = path.resolve(setupDestination(req, "epc"),destination);
+        target = path.resolve(setupDestination(req, "epc"), destination);
     if (getChunk(target, req.file.path, req.body))
         csv[key](target).then((result)=>res.json(result),
             (err) => {
@@ -217,5 +218,14 @@ router.post("/:projectId/zones/:itemId", threadCall.bind(null, "setCurrentZoneMa
 
 router.get("/:projectId/llrp", threadCall.bind(null, "getLLRPStatus", false));
 
+router.get("/:projectId/facilities", threadCall.bind(null, "getFacilities", false));
+
+router.post("/:projectId/facilities", function (req, res) {
+    const itemsenseApi = util.connectToItemsense(req.body.url,req.body.user,req.body.password);
+    return itemsenseApi.facilities.get().then(
+        facilities => res.json(facilities),
+        err => handleError(err,res,threadError)
+    );
+});
 module.exports = router;
 
