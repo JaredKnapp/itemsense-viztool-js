@@ -6,8 +6,9 @@
         .pnj-label-75 Meters:
         input.form-control(type="number" ng-model="project._rulerMeters" step="0.1")
     .input-group
-        .pnj-label-75.pnj-label-link(ng-click="setScale()") Scale:
+        .pnj-label-75 Scale:
         input.form-control(type="number" ng-model="project._scale")
+        span.input-group-addon.pnj-label-link(ng-click="setScale()") Set
 table.table
     thead
         tr
