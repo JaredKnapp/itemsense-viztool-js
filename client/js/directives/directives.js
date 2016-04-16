@@ -24,8 +24,8 @@ module.exports = (function (app) {
         .directive("presentation", ["Presenter", function (presenter) {
             return {
                 restrict: "A",
-                link:function(scope,el){
-                    var scene=presenter(scope,el);
+                link: function (scope, el) {
+                    var scene = presenter(scope, el);
                     scene.update();
                 }
             };
@@ -88,6 +88,42 @@ module.exports = (function (app) {
                     var content = circleContent(scope, attrs.iconText),
                         circle = appendCircle(el, attrs.iconLabel, content);
                     circle.html(content.element);
+                }
+            };
+        }])
+        .directive("contenteditable", [function () {
+            return {
+                restrict: "A",
+                require: "ngModel",
+                link: function (scope, element, attrs, ngModel) {
+                    const step = isNaN(attrs.step) ? 1 : parseFloat(attrs.step);
+
+                    function read() {
+                        ngModel.$setViewValue(element.html());
+                    }
+
+                    function val() {
+                        const value = element.html();
+                        return isNaN(value) ? 0 : parseFloat(value);
+                    }
+
+                    ngModel.$render = function () {
+                        element.html(ngModel.$viewValue || "");
+                    };
+
+                    element.bind("blur", function () {
+                        scope.$apply(read);
+                    });
+                    element.bind("keyup", function (ev) {
+                        if (ev.keyCode === 38) { //arrow up
+                            element.html(val() + step);
+                            scope.$apply(read);
+                        }
+                        else if (ev.keyCode === 40){ //arrow down
+                            element.html(val() - step);
+                            scope.$apply(read);
+                        }
+                    });
                 }
             };
         }]);

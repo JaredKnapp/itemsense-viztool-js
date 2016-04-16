@@ -114,7 +114,45 @@ module.exports = (function (app) {
                 });
             };
         }])
-        .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", function (_, projectOrigin, $interval) {
+        .factory("zonePointModel", ["_", function (_) {
+            function decorate(point, project) {
+                Object.defineProperties(point, {
+                    _x: {
+                        configurable: true,
+                        get(){
+                            return project.stage ? project.stage.metersToStage(point.x, "x") : point.x;
+                        },
+                        set(v){
+                            point.x = Math.round10(project.stage ? project.stage.stageToMeters(v, "x") : v);
+                        }
+                    },
+                    _y: {
+                        configurable: true,
+                        get(){
+                            return project.stage ? project.stage.metersToStage(point.y, "y") : point.y;
+                        },
+                        set(v){
+                            point.y = Math.round10(project.stage ? project.stage.stageToMeters(v, "y") : v);
+                        }
+                    }
+                });
+            }
+
+            return (ref, project) => _.map(ref || [], point => decorate(point, project));
+        }])
+        .factory("ProjectZones", ["zonePointModel",function (zonePointModel) {
+            return (project) => {
+                let zones = [],
+                    zone = null,
+                    tracePoints = null,
+                    zoneMaps = null,
+                    zoneMap = null;
+                Object.defineProperties(project, {
+
+                });
+            }
+        }])
+        .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", "zonePointModel", function (_, projectOrigin, $interval, zonePointModel) {
             function TimeLapseData() {
                 var base = [], project = null, self = this;
                 this.add = function addItems(items, timeLapse) {
@@ -166,6 +204,7 @@ module.exports = (function (app) {
                     scale = 1.0,
                     zones = [],
                     zone = null,
+                    tracePoints = null,
                     zoneMaps = null,
                     zoneMap = null,
                     readers = null,
@@ -206,15 +245,14 @@ module.exports = (function (app) {
                             this.zoom = stage.widthZoom();
                     },
                     cloneZone: function () {
-                        stage.cloneZone();
+                        if (stage) stage.cloneZone();
                     },
                     deleteZone: function () {
-                        stage.deleteZone();
+                        if (stage) stage.deleteZone();
                     },
                     setTolerance: function () {
-                        if (!this.zone.tolerance)
-                            return;
-                        stage.setTolerance(this.zone.tolerance);
+                        if (stage && this.zone && this.zone.tolerance)
+                            stage.setTolerance(this.zone.tolerance);
                     },
                     canShowItems: function () {
                         return items && items.data.length;
@@ -515,7 +553,7 @@ module.exports = (function (app) {
                             return zone;
                         },
                         set: function (v) {
-                            zone = v;
+                            zone = zoneEditor(v, this);
                         }
                     },
                     floorName: {
@@ -790,6 +828,10 @@ module.exports = (function (app) {
                     facilities: {
                         get: ()=> facilities,
                         set: v => facilities = v
+                    },
+                    tracePoints: {
+                        get: () => tracePoints,
+                        set: v => tracePoints = v
                     }
                 });
                 origin.project = project;
@@ -1020,9 +1062,9 @@ module.exports = (function (app) {
                 },
                 getFacilities(){
                     return restCall({
-                        method:"POST",
-                        data:{
-                            url:this.itemSense,
+                        method: "POST",
+                        data: {
+                            url: this.itemSense,
                             user: this.user,
                             password: this.password
                         },

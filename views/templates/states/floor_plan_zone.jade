@@ -4,3 +4,16 @@
         input.form-control(type="text" ng-model="project.zone.name")
     i.pnj-delete(title="delete" ng-click="project.deleteZone()")
     i.pnj-clone(title="duplicate" ng-click="project.cloneZone()")
+table.table
+    thead
+        tr
+            th Point
+            th X
+            th Y
+    tbody
+        tr(ng-repeat="point in project.zone.points")
+            td {{$index}}
+            td {{point.x}}
+            td {{point.y}}
+
+

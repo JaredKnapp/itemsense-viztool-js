@@ -549,6 +549,11 @@ module.exports = (function (app) {
                                 else
                                     timeLapse.clear(true);
                             }
+                        },
+                        tracePoints:{
+                            set:function(v){
+                                project.tracePoints=v;
+                            }
                         }
                     });
             canvas.width = bkWidth;

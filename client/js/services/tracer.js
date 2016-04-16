@@ -6,94 +6,119 @@
 "use strict";
 
 module.exports = (function (app) {
-    app.factory("Tracer", ["$q", "_", "CreateJS", function ($q, _, createjs) {
-            var stage, points = [], defer,
-                shape = new createjs.Shape();
-            return Object.create({
-                mousedown: function (ev) {
-                    var zoom = stage.zoom,
-                        lastPoint = this.lastPoint,
-                        point = {x: ev.stageX / zoom, y: ev.stageY / zoom};
-                    if (ev.nativeEvent.button === 2)
-                        points.pop();
-                    if (!lastPoint || this.lineSegment(lastPoint, point) > 10)
-                        points.push(point);
-                    this.draw();
-                },
-                pressmove: function (ev) {
-                    if (!points.length) return;
-                    if (points.length === 1)
-                        points.push({x: this.firstPoint.x, y: this.firstPoint.y});
-                    var zoom = stage.zoom;
-                    this.lastPoint.x = ev.stageX / zoom;
-                    this.lastPoint.y = ev.stageY / zoom;
-                    this.draw();
-                },
-                dblclick: function () {
-                    points.pop();
-                    stage.removeChild(shape);
-                    stage.update();
-                    if (points.length < 3)
-                        defer.reject(points);
-                    else
-                        defer.resolve(points);
-                    defer = null;
-                },
-                lineSegment: function (p1, p2) {
-                    return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-                },
-                trace: function (stg) {
-                    defer = $q.defer();
-                    points = [];
-                    stage = stg;
-                    shape.name = "Tracer";
-                    stage.addChild(shape);
-                    return defer.promise;
-                },
-                cancel: function () {
-                    stage.removeChild(shape);
-                    stage.update();
-                    if (defer)
-                        defer.reject(points);
-                },
-                draw: function () {
-                    _.reduce(points, function (r, p, i) {
-                        return i ? r.lineTo(p.x, p.y) : r.moveTo(p.x, p.y);
-                    }, shape.graphics.clear().s("brown").ss(4, null, null, null, true));
-                    stage.update();
-                }
-            }, {
-                stage: {
-                    enumerable: false,
-                    get: function () {
-                        return stage;
-                    },
-                    set: function (v) {
-                        stage = v;
+    app.factory("TracerPoint", [function () {
+        return function (ref, stage, tracer) {
+            Object.defineProperties(ref, {
+                X: {
+                    get: () => Math.round10(stage.stageToMeters(ref.x, "x"), -3),
+                    set: (v) => {
+                        v = isNaN(v) ? 0 : parseFloat(v);
+                        ref.x = stage.metersToStage(v, "x");
+                        tracer.draw(true);
                     }
                 },
-                points: {
-                    enumerable: true,
-                    get: function () {
-                        return points;
-                    },
-                    set: function (v) {
-                        points = v;
-                    }
-                },
-                lastPoint: {
-                    enumerable: false,
-                    get: function () {
-                        return points[points.length - 1];
-                    }
-                },
-                firstPoint: {
-                    enumerable: false,
-                    get: function () {
-                        return points[0];
+                Y: {
+                    get: () => Math.round10(stage.stageToMeters(ref.y, "y"), -3),
+                    set: (v) => {
+                        v = isNaN(v) ? 0 : parseFloat(v);
+                        ref.y = stage.metersToStage(v, "y");
+                        tracer.draw(true);
                     }
                 }
             });
+            return ref;
+        }
+    }]).factory("Tracer", ["$q", "_", "CreateJS", "TracerPoint", function ($q, _, createjs, TracerPoint) {
+            var stage, points = [], defer,
+                shape = new createjs.Shape(),
+                wrapper = Object.create({
+                    mousedown: function (ev) {
+                        var zoom = stage.zoom,
+                            lastPoint = this.lastPoint,
+                            point = TracerPoint({x: ev.stageX / zoom, y: ev.stageY / zoom}, stage, wrapper);
+                        if (ev.nativeEvent.button === 2)
+                            points.pop();
+                        if (!lastPoint || this.lineSegment(lastPoint, point) > 10)
+                            points.push(point);
+                        this.draw();
+                    },
+                    pressmove: function (ev) {
+                        if (!points.length) return;
+                        if (points.length === 1)
+                            points.push(TracerPoint({x: this.firstPoint.x, y: this.firstPoint.y}, stage,wrapper));
+                        var zoom = stage.zoom;
+                        this.lastPoint.x = ev.stageX / zoom;
+                        this.lastPoint.y = ev.stageY / zoom;
+                        this.draw();
+                    },
+                    dblclick: function () {
+                        points.pop();
+                        stage.removeChild(shape);
+                        stage.tracePoints = [];
+                        stage.update();
+                        if (points.length < 3)
+                            defer.reject(points);
+                        else
+                            defer.resolve(points);
+                        defer = null;
+                    },
+                    lineSegment: function (p1, p2) {
+                        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+                    },
+                    trace: function (stg) {
+                        defer = $q.defer();
+                        points = [];
+                        stage = stg;
+                        stage.tracePoints = points;
+                        shape.name = "Tracer";
+                        stage.addChild(shape);
+                        return defer.promise;
+                    },
+                    cancel: function () {
+                        stage.removeChild(shape);
+                        stage.update();
+                        if (defer)
+                            defer.reject(points);
+                    },
+                    draw: function () {
+                        _.reduce(points, function (r, p, i) {
+                            return i ? r.lineTo(p.x, p.y) : r.moveTo(p.x, p.y);
+                        }, shape.graphics.clear().s("brown").ss(4, null, null, null, true));
+                        stage.update();
+                    }
+                }, {
+                    stage: {
+                        enumerable: false,
+                        get: function () {
+                            return stage;
+                        },
+                        set: function (v) {
+                            stage = v;
+                        }
+                    },
+                    points: {
+                        enumerable: true,
+                        get: function () {
+                            return points;
+                        },
+                        set: function (v) {
+                            points = v;
+                        }
+                    },
+                    lastPoint: {
+                        enumerable: false,
+                        get: function () {
+                            return points[points.length - 1];
+                        }
+                    },
+                    firstPoint: {
+                        enumerable: false,
+                        get: function () {
+                            return points[0];
+                        }
+                    }
+                });
+            return wrapper;
         }])
         .factory("TransformBuffer", ["_", function (_) {
             return function (pts, scale) {
@@ -156,14 +181,14 @@ module.exports = (function (app) {
                 movePointInZone: function (stage, point, idx, dx, dy) {
                     point.x += dx;
                     point.y += dy;
-                    this.points[idx].x = stage.stageToMeters(point.x, "x");
-                    this.points[idx].y = stage.stageToMeters(point.y, "y");
+                    this.points[idx].x = Math.round10(stage.stageToMeters(point.x, "x"),-3);
+                    this.points[idx].y = Math.round10(stage.stageToMeters(point.y, "y"),-3);
                 },
                 addPoint: function (stage, zone, idx, point) {
                     this.splice(idx, 0, {x: point.x, y: point.y});
                     zone.points.splice(idx, 0, {
-                        x: stage.stageToMeters(point.x, "x"),
-                        y: stage.stageToMeters(point.y, "y"),
+                        x: Math.round10(stage.stageToMeters(point.x, "x"),-3),
+                        y: Math.round10(stage.stageToMeters(point.y, "y"),-3),
                         z: 0
                     });
                 },
@@ -288,6 +313,7 @@ module.exports = (function (app) {
                         });
                         shadow.points = points;
                         wrapper.draw();
+                        stage.scope.$apply();
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
@@ -329,6 +355,7 @@ module.exports = (function (app) {
                             addZonePoint(halfPoint.i + 1, halfPoint);
                             shadow.points = points;
                             wrapper.draw();
+                            stage.scope.$apply();
                         }
                         else if (curPointIdx !== -1) {
                             if (points.length > 3)
@@ -336,6 +363,7 @@ module.exports = (function (app) {
                             movingPoint = null;
                             shadow.points = points;
                             wrapper.draw();
+                            stage.scope.$apply();
                         }
                         ev.preventDefault();
                         ev.stopPropagation();
@@ -350,6 +378,7 @@ module.exports = (function (app) {
                         moveZonePoint(movingPoint, movingPointIdx, dx, dy);
                         shadow.points = points;
                         wrapper.draw();
+                        stage.scope.$apply();
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
