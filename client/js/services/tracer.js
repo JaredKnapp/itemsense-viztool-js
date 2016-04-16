@@ -7,28 +7,29 @@
 
 module.exports = (function (app) {
     app.factory("TracerPoint", [function () {
-        return function (ref, stage, tracer) {
-            Object.defineProperties(ref, {
-                X: {
-                    get: () => Math.round10(stage.stageToMeters(ref.x, "x"), -3),
-                    set: (v) => {
-                        v = isNaN(v) ? 0 : parseFloat(v);
-                        ref.x = stage.metersToStage(v, "x");
-                        tracer.draw(true);
+            return function (ref, stage, tracer) {
+                Object.defineProperties(ref, {
+                    X: {
+                        get: () => Math.round10(stage.stageToMeters(ref.x, "x"), -3),
+                        set: (v) => {
+                            v = isNaN(v) ? 0 : parseFloat(v);
+                            ref.x = stage.metersToStage(v, "x");
+                            tracer.draw(true);
+                        }
+                    },
+                    Y: {
+                        get: () => Math.round10(stage.stageToMeters(ref.y, "y"), -3),
+                        set: (v) => {
+                            v = isNaN(v) ? 0 : parseFloat(v);
+                            ref.y = stage.metersToStage(v, "y");
+                            tracer.draw(true);
+                        }
                     }
-                },
-                Y: {
-                    get: () => Math.round10(stage.stageToMeters(ref.y, "y"), -3),
-                    set: (v) => {
-                        v = isNaN(v) ? 0 : parseFloat(v);
-                        ref.y = stage.metersToStage(v, "y");
-                        tracer.draw(true);
-                    }
-                }
-            });
-            return ref;
-        }
-    }]).factory("Tracer", ["$q", "_", "CreateJS", "TracerPoint", function ($q, _, createjs, TracerPoint) {
+                });
+                return ref;
+            };
+        }])
+        .factory("Tracer", ["$q", "_", "CreateJS", "TracerPoint", function ($q, _, createjs, TracerPoint) {
             var stage, points = [], defer,
                 shape = new createjs.Shape(),
                 wrapper = Object.create({
@@ -45,7 +46,7 @@ module.exports = (function (app) {
                     pressmove: function (ev) {
                         if (!points.length) return;
                         if (points.length === 1)
-                            points.push(TracerPoint({x: this.firstPoint.x, y: this.firstPoint.y}, stage,wrapper));
+                            points.push(TracerPoint({x: this.firstPoint.x, y: this.firstPoint.y}, stage, wrapper));
                         var zoom = stage.zoom;
                         this.lastPoint.x = ev.stageX / zoom;
                         this.lastPoint.y = ev.stageY / zoom;
@@ -171,224 +172,235 @@ module.exports = (function (app) {
                 });
             };
         }])
-        .factory("Zones", ["_", "CreateJS", "TransformBuffer", function (_, createjs, transform) {
-            var util = {
-                toStagePoints: function (points, stage) {
-                    return _.map(points, function (p) {
-                        return {x: stage.metersToStage(p.x, "x"), y: stage.metersToStage(p.y, "y")};
-                    });
-                },
-                movePointInZone: function (stage, point, idx, dx, dy) {
-                    point.x += dx;
-                    point.y += dy;
-                    this.points[idx].x = Math.round10(stage.stageToMeters(point.x, "x"),-3);
-                    this.points[idx].y = Math.round10(stage.stageToMeters(point.y, "y"),-3);
-                },
-                addPoint: function (stage, zone, idx, point) {
-                    this.splice(idx, 0, {x: point.x, y: point.y});
-                    zone.points.splice(idx, 0, {
-                        x: Math.round10(stage.stageToMeters(point.x, "x"),-3),
-                        y: Math.round10(stage.stageToMeters(point.y, "y"),-3),
-                        z: 0
-                    });
-                },
-                removePoint: function (zone, idx) {
-                    this.splice(idx, 1);
-                    zone.points.splice(idx, 1);
-                },
-                findZoneName: function (zones, name) {
-                    return _.find(zones, function (z) {
-                        return z.name === name;
-                    });
-                }
-            };
+        .factory("ZonePoints", ["_", function (_) {
+            function makePoint(wrapper, stage, p, type) {
+                type = type || "full";
+                return Object.create({}, {
+                    ref: {
+                        get: () => p
+                    },
+                    type: {
+                        get: () => type
+                    },
+                    x: {
+                        get: () => stage.metersToStage(p.x, "x"),
+                        set: (v) => p.x = Math.round10(stage.stageToMeters(v, "x"))
+                    },
+                    y: {
+                        get: () => stage.metersToStage(p.y, "y"),
+                        set: (v) => p.y = Math.round10(stage.stageToMeters(v, "y"))
+                    },
+                    _x: {
+                        get: () => p.x,
+                        set: (v) => {
+                            p.x = isNaN(v) ? p.x : parseFloat(v);
+                            wrapper.draw(true);
+                        }
+                    },
+                    _y: {
+                        get: () => p.y,
+                        set: (v) => {
+                            p.y = isNaN(v) ? p.y : parseFloat(v);
+                            wrapper.draw(true);
+                        }
+                    }
+                });
+            }
+
+            function halfPoint(points, i) {
+                const p1 = points[i],
+                    p2 = points[i + 1] || points[0];
+                return {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2, z: (p1.z + p2.z) / 2};
+            }
+
+            return (zone, stage, wrapper) => _.reduce(zone.points, (r, p, i) => {
+                r.push(makePoint(wrapper, stage, p, zone));
+                r.push(makePoint(wrapper, stage, halfPoint(zone.points, i), zone, "half"));
+                return r;
+            }, []);
+        }])
+        .factory("Zones", ["_", "CreateJS", "ZonePoints", function (_, createjs, ZonePoints) {
+            function createModel(zone, points) {
+                return Object.create({
+                    clone(delta){
+                        delta = delta || 0.2;
+                        return _.reduce(points, (r, p)=> {
+                            if (p.type === "full")
+                                r.push({
+                                    x: p.ref.x + delta,
+                                    y: p.ref.y + delta,
+                                    z: p.ref.z
+                                });
+                            return r;
+                        }, []);
+                    }
+                }, {
+                    name: {
+                        get: () => zone.name,
+                        set: v => zone.name = v
+                    },
+                    floor: {
+                        get: () => zone.floor,
+                        ser: v => zone.floor = v
+                    },
+                    points: {
+                        get: () => points
+                    }
+                });
+            }
 
             return {
-                cloneZone: function (ref, stage) {
-                    var zone = _.merge({}, ref),
-                        d = 0.5,
-                        name = zone.name.indexOf("_copy") === -1 ? zone.name : zone.name.split("_copy")[0];
-                    name += "_copy";
-                    _.each(zone.points, function (p) {
-                        p.x += d;
-                        p.y += d;
-                    });
-                    zone.name = name;
-                    for (var i = 1; util.findZoneName(stage.zones, zone.name); i++)
-                        zone.name = name + "_" + i;
-                    return this.createZone(zone, stage);
-                },
-                createZone: function (zone, stage, scale) {
-                    var points = util.toStagePoints(zone.points, stage),
-                        moveZonePoint = util.movePointInZone.bind(zone, stage),
-                        addZonePoint = util.addPoint.bind(points, stage, zone),
-                        removeZonePoint = util.removePoint.bind(points, zone),
-                        shadow = transform(points, scale),
-                        colors = {
+                createZone: function (zone, stage) {
+                    const colors = {
                             "fixture": "rgba(0,0,200,0.2)",
-                            "blocker": "rgba(250,180,60,0.2",
                             selected: "rgba(180,250,60,0.2)"
                         },
                         shape = new createjs.Shape(),
-                        editor = new createjs.Shape(),
-                        shadowShape = new createjs.Shape(),
-                        lastX, lastY, isActive = false, movingPoint = null, movingPointIdx = -1, zoomHandler = null,
+                        editor = new createjs.Shape();
+                    let points, lastX, lastY, model,
+                        isActive = false, movingPoint = null, zoomHandler = null,
                         wrapper = Object.create({
-                            activate: function () {
+                            activate() {
                                 isActive = true;
-                                stage.addChild(shadowShape);
                                 stage.addChild(shape);
                                 stage.addChild(editor);
                                 this.draw();
                                 stage.dispatchEvent(new createjs.Event("newZone").set({zone: wrapper}));
                             },
-                            destroy: function () {
-                                stage.removeChild(shadowShape);
+                            destroy() {
                                 stage.removeChild(shape);
                                 stage.removeChild(editor);
                                 stage.off("Zoom", zoomHandler);
                                 stage.update();
                             },
-                            deactivate: function () {
+                            deactivate() {
                                 isActive = false;
                                 stage.removeChild(editor);
                                 this.draw();
                             },
-                            draw: function () {
-//                                this.drawPoly(shadowShape.graphics.clear().s("brown").ss(1, null, null, null, true).f("rgba(200,200,0,0.2)"), shadow.points);
+                            draw() {
                                 this.drawPoly(shape.graphics.clear().s("brown").ss(4, null, null, null, true)
                                     .f(isActive ? colors.selected : colors.fixture), points);
                                 if (isActive)
                                     this.drawPoints();
                                 stage.update();
                             },
-                            setTolerance: function (scale) {
-                                shadow.scale = scale;
-                                this.draw();
-                            },
-                            drawPoly: function (g, pts) {
+                            drawPoly(g, pts) {
                                 _.reduce(pts, function (r, p, i) {
                                     return i ? r.lt(p.x, p.y) : r.mt(p.x, p.y);
                                 }, g).lt(pts[0].x, pts[0].y);
                             },
-                            drawPoints: function () {
-                                var radius = stage.screenToCanvas(4),
-                                    lastP = null;
+                            drawPoints() {
+                                const radius = stage.screenToCanvas(4);
                                 _.reduce(points, function (r, p) {
-                                        var g = r.s("brown").ss(4, null, null, null, true).f("brown").dc(p.x, p.y, radius).es().ef();
-                                        if (lastP)
-                                            g = g.s("brown").ss(2, null, null, null, true).f("white").dc((p.x + lastP.x) / 2, (p.y + lastP.y) / 2, radius * 0.75).es().ef();
-                                        lastP = p;
-                                        return g;
-                                    }, editor.graphics.clear())
-                                    .s("brown").ss(2, null, null, null, true).f("white").dc((points[0].x + lastP.x) / 2, (points[0].y + lastP.y) / 2, radius * 0.75).es().ef();
+                                    if (p.type === "full")
+                                        return r.s("brown").ss(4, null, null, null, true).f("brown").dc(p.x, p.y, radius).es().ef();
+                                    return r.s("brown").ss(2, null, null, null, true).f("white").dc(p.x, p.y, radius * 0.75).es().ef();
+                                }, editor.graphics.clear());
+                            },
+                            removePoint(point) {
+                                if (zone.points.length < 4) return;
+                                zone.points = _.reduce(this.points, function (r, p) {
+                                    if (p.type === "full" && p !== point)
+                                        r.push(p.ref);
+                                    return r;
+                                }, []);
+                                points = ZonePoints(zone.points, stage, this);
+                                this.draw();
+
+                            },
+                            convertPoint(point) {
+                                zone.points = _.reduce(this.points, (r, p) => {
+                                    if (p.type === "full" || p === point)
+                                        r.push(p.ref);
+                                    return r;
+                                }, []);
+                                points = ZonePoints(zone.points, stage, this);
+                                this.draw();
                             }
+
                         }, {
                             model: {
-                                enumerable: false,
-                                get: function () {
-                                    return zone;
-                                }
+                                get: () => model
+                            },
+                            points: {
+                                get: () => points
+                            },
+                            zone: {
+                                get: () => zone
                             }
                         });
-                    shape.on("mousedown", function (ev) {
+                    points = ZonePoints(zone.points, stage, wrapper);
+                    model = createModel(zone, points);
+                    shape.on("mousedown", (ev) => {
                         lastX = ev.stageX;
                         lastY = ev.stageY;
-                        if (!isActive)
-                            wrapper.activate();
+                        if (!isActive)  wrapper.activate();
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
-                    shape.on("pressmove", function (ev) {
-                        if (!isActive)
-                            return;
-                        var zoom = stage.zoom,
-                            dx = (ev.stageX - lastX) / zoom,
-                            dy = (ev.stageY - lastY) / zoom;
-                        lastX = ev.stageX;
-                        lastY = ev.stageY;
-                        if (isNaN(dx)) return;
-                        _.each(points, function (p, i) {
-                            moveZonePoint(p, i, dx, dy);
-                        });
-                        shadow.points = points;
-                        wrapper.draw();
-                        stage.scope.$apply();
-                        ev.preventDefault();
-                        ev.stopPropagation();
+                    shape.on("pressmove", (ev) => {
+                        if (isActive) {
+                            const zoom = stage.zoom,
+                                dx = (ev.stageX - lastX) / zoom,
+                                dy = (ev.stageY - lastY) / zoom;
+                            lastX = ev.stageX;
+                            lastY = ev.stageY;
+                            if (isNaN(dx)) return;
+                            _.each(points, (p) => {
+                                p.x += dx;
+                                p.y += dy;
+                            });
+                            wrapper.draw();
+                            stage.scope.$apply();
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                        }
                     });
+
+
                     editor.on("mousedown", function (ev) {
-                        var x = ev.localX,
-                            y = ev.localY,
-                            cutoff = stage.screenToCanvas(6);
-                        movingPointIdx = _.findIndex(points, function (p) {
+                        const x = ev.localX, y = ev.localY, cutoff = stage.screenToCanvas(6);
+                        movingPoint = _.find(points, p => {
                             if (Math.abs(p.x - x) < cutoff)
                                 if (Math.abs(p.y - y) < cutoff)
                                     return true;
                         });
-                        if (movingPointIdx !== -1)
-                            movingPoint = points[movingPointIdx];
                         lastX = ev.stageX;
                         lastY = ev.stageY;
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
                     editor.on("dblclick", function (ev) {
-                        var x = ev.localX,
-                            y = ev.localY,
-                            cutoff = stage.screenToCanvas(6),
-                            halfPoints = _.map(points, function (p, i) {
-                                var j = points[i + 1] ? i + 1 : 0;
-                                return {x: (p.x + points[j].x) / 2, y: (p.y + points[j].y) / 2, i: i};
-                            }),
-                            halfPoint = _.find(halfPoints, function (p) {
-                                if (Math.abs(p.x - x) < cutoff)
-                                    if (Math.abs(p.y - y) < cutoff)
-                                        return true;
-                            }),
-                            curPointIdx = _.findIndex(points, function (p) {
-                                if (Math.abs(p.x - x) < cutoff)
-                                    if (Math.abs(p.y - y) < cutoff)
-                                        return true;
-                            });
-                        if (halfPoint) {
-                            addZonePoint(halfPoint.i + 1, halfPoint);
-                            shadow.points = points;
-                            wrapper.draw();
-                            stage.scope.$apply();
-                        }
-                        else if (curPointIdx !== -1) {
-                            if (points.length > 3)
-                                removeZonePoint(curPointIdx);
-                            movingPoint = null;
-                            shadow.points = points;
-                            wrapper.draw();
+                        if (movingPoint) {
+                            if (movingPoint.type === "full")
+                                wrapper.removePoint(movingPoint);
+                            else
+                                wrapper.convertPoint(movingPoint);
                             stage.scope.$apply();
                         }
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
                     editor.on("pressmove", function (ev) {
-                        if (!movingPoint) return;
+                        if (!movingPoint || movingPoint.type !== "full") return;
                         var zoom = stage.zoom,
                             dx = (ev.stageX - lastX) / zoom,
                             dy = (ev.stageY - lastY) / zoom;
                         lastX = ev.stageX;
                         lastY = ev.stageY;
-                        moveZonePoint(movingPoint, movingPointIdx, dx, dy);
-                        shadow.points = points;
+                        movingPoint.x += dx;
+                        movingPoint.y += dy;
                         wrapper.draw();
                         stage.scope.$apply();
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
                     shape.name = "Zone";
-                    shadowShape.name = "Zone";
                     editor.name = "Zone";
                     zoomHandler = stage.on("Zoom", function () {
                         wrapper.draw();
                     });
-                    stage.addChild(shadowShape);
                     stage.addChild(shape);
                     wrapper.draw();
                     return wrapper;
