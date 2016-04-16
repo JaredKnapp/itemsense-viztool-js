@@ -13,13 +13,8 @@ module.exports = (function (app) {
             };
         }
 
-        return (project) => {
-            let zones = [],
-                zone = null,
-                tracePoints = null,
-                zoneMaps = null,
-                zoneMap = null;
-            Object.defineProperties(project, {
+        function wrap(project) {
+            return {
                 updateZones: (project, zone) => {
                     project.zones = project.zones.concat(zone);
                     return zone;
@@ -44,8 +39,25 @@ module.exports = (function (app) {
                         points: this.zone.clone()
                     }));
                 },
-                deleteZone: () => project.stage ? project.stage.deleteZone() : null,
-                newZoneMap: name => this.addZoneMap(newZoneMap(name, this)),
+                deleteZone(){
+                    return project.stage ? project.stage.deleteZone() : null;
+                },
+                newZoneMap(name) {
+                    this.addZoneMap(newZoneMap(name, this));
+                }
+            };
+        }
+
+        return (project) => {
+            let zones = [],
+                zone = null,
+                tracePoints = null,
+                zoneMaps = null,
+                zoneMap = null;
+
+            _.each(wrap(project), (fn, key)=>project[key] = fn);
+
+            Object.defineProperties(project, {
                 zone: {
                     get: () => zone,
                     set: v => zone = v
@@ -62,7 +74,7 @@ module.exports = (function (app) {
                     set: v => zoneMaps = v
                 },
                 _zoneMap: {
-                    get: () => this.zoneMap,
+                    get: () => zoneMap,
                     set: function (v) {
                         this.zoneMap = v;
                         this.setCurrentZoneMap(zoneMap.name);

@@ -178,10 +178,12 @@ module.exports = (function (app) {
                         deleteZone: function () {
                             var self = this,
                                 idx = _.findIndex(this.zones, function (zone) {
-                                    return zone === self.zone.model;
+                                    return zone === self.zone.model.ref;
                                 });
-                            if (idx !== -1)
+                            if (idx !== -1){
                                 this.zones.splice(idx, 1);
+                                zoneCollection.splice(idx,1);
+                            }
                             this.zone.destroy();
                             $state.go("floorPlan");
                         },
@@ -274,9 +276,6 @@ module.exports = (function (app) {
                             if (this.activeTweens <= 0)
                                 if ($state.current.name.indexOf("floorPlan") === 0)
                                     stage.update();
-                        },
-                        setTolerance: function (v) {
-                            this.zone.setTolerance(v);
                         },
                         updateReader: function (reader) {
                             var target = _.find(readers, function (r) {
@@ -373,15 +372,6 @@ module.exports = (function (app) {
                                 if (!project.pullItems)
                                     this.showItems(true);
                         },
-                        replaceZoneCollection: function () {
-                            var self = this;
-                            _.each(zoneCollection, function (z) {
-                                z.destroy();
-                            });
-                            zoneCollection = _.map(project.zones, function (z) {
-                                return Zones.createZone(z, self);
-                            });
-                        },
                         markEngagedReaders: function (engaged) {
                             engaged = engaged || {};
                             _.each(readers, (r)=> r.setStatus(engaged[r.model.name] || "inactive"));
@@ -465,7 +455,7 @@ module.exports = (function (app) {
                             get: function () {
                                 return project.zones;
                             },
-                            set: (v) => {
+                            set(v){
                                 _.each(zoneCollection || [], zone => zone.destroy());
                                 zoneCollection = _.map(v || [], zone => Zones.createZone(zone, this));
                             }

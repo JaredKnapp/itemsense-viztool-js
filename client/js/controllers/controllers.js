@@ -11,6 +11,9 @@ module.exports = (function (app) {
             $scope.about = function () {
                 Requester.about();
             };
+            $scope.selectZoneMap = function () {
+                Requester.selectZoneMap().then(zoneMap => $scope.project._zoneMap = zoneMap);
+            };
             $scope.select = function () {
                 $http({
                     url: "/project",
@@ -60,10 +63,10 @@ module.exports = (function (app) {
                 var zoneMapName = (window.prompt("Name of new Zone Map", "") || "").trim();
                 if (!zoneMapName)
                     return;
-                if(_.find($scope.project.zoneMaps,function(z){
+                if (_.find($scope.project.zoneMaps, function (z) {
                         return z.name === zoneMapName;
                     }))
-                    if(!window.confirm("Zone Map "+zoneMapName+" exists. do you want to clear it?"))
+                    if (!window.confirm("Zone Map " + zoneMapName + " exists. do you want to clear it?"))
                         return;
                 $scope.project.newZoneMap(zoneMapName);
             };
@@ -117,6 +120,12 @@ module.exports = (function (app) {
                             projects: projects
                         }
                     });
+                },
+                selectZoneMap: function () {
+                    return openModal({
+                        templateUrl: "/templates/requesters/select_zone_map",
+                        controller: "SelectZoneMap"
+                    });
                 }
             };
         }])
@@ -137,6 +146,18 @@ module.exports = (function (app) {
                     $modal.dismiss("close");
                 };
             }])
+        .controller("SelectZoneMap", ["$scope", "$uibModalInstance", "params", function ($scope, $modal) {
+            $scope.selectZoneMap = function (zoneMap) {
+                $modal.close(zoneMap);
+            };
+            $scope.deleteZoneMap = function(zoneMap,$event){
+                $scope.project.deleteZoneMap(zoneMap);
+                $event.stopPropagation();
+            };
+            $scope.cancel = function () {
+                $modal.dismiss("close");
+            };
+        }])
         .controller("ProjectState", ["$scope", function ($scope) {
             $scope.mainTab = {project: true};
 
@@ -155,8 +176,8 @@ module.exports = (function (app) {
                     return "Last job cancelled at " + last.toLocaleString() + " after " + activity + " seconds";
                 return "Started " + start.toLocaleString() + " scheduled for " + job.job.durationSeconds + " seconds";
             };
-            $scope.getFacilities = function(){
-                if($scope.project.itemSense && $scope.project.user && $scope.project.password)
+            $scope.getFacilities = function () {
+                if ($scope.project.itemSense && $scope.project.user && $scope.project.password)
                     $scope.project.getFacilities();
                 else
                     window.alert("Url and credentials are required to get list of facilities");
@@ -166,11 +187,11 @@ module.exports = (function (app) {
             $scope.mainTab = {floorPlan: true};
             $scope.fields = [{i: 0, n: 'Hide'}, {i: 1, n: '3 Meters'}, {i: 2, n: '4 Meters'}, {i: 3, n: '5 Meters'}];
             $scope.$on("keydown", function (ev, key) {
-                if($scope.$state.current.name === "floorPlan.zone"){
-                    if(key.srcElement.tagName === "BODY"){
-                        if(key.keyCode === 8 ) //backspace
+                if ($scope.$state.current.name === "floorPlan.zone") {
+                    if (key.srcElement.tagName === "BODY") {
+                        if (key.keyCode === 8) //backspace
                             $scope.project.deleteZone();
-                        else if(key.keyCode === 67 && (key.metaKey || key.ctrlKey)) //Control or Command-C
+                        else if (key.keyCode === 67 && (key.metaKey || key.ctrlKey)) //Control or Command-C
                             $scope.project.cloneZone();
                         $scope.$apply();
                     }

@@ -60,8 +60,8 @@
       li(uib-dropdown ng-class="{disabled:!project.recipes}")
          a(uib-dropdown-toggle href="javascript:void(0);") Zones
          ul(uib-dropdown-menu)
-            li.menu-item.disabled
-               a(href="javascript:void(0);") Current: {{project.zoneMap.name}}
+            li.menu-item
+               a(href="javascript:void(0);" ng-click="selectZoneMap()") Current: {{project.zoneMap.name}}
             li.menu-item
                a(href="javascript:void(0);" ng-click="newZoneMap()") New ZoneMap...
             li.menu-item

@@ -148,6 +148,9 @@ function startProject(project) {
                         });
                     });
                 },
+                deleteZoneMap: function(data){
+                    return itemsenseApi.zoneMaps.delete(data);
+                },
                 setCurrentZoneMap: function (name) {
                     return itemsenseApi.currentZoneMap.update(name);
                 },
@@ -315,6 +318,7 @@ var md = {
     getItems: () => notStarted() || project.getItems(),
     postReaders: data => notStarted() || project.postReaders(data),
     getZoneMaps: () => notStarted() || project.getAllZoneMaps(),
+    deleteZoneMap: (data) => notStarted() || project.deleteZoneMap(data),
     addZoneMap: data => notStarted() || project.addZoneMap(data),
     setCurrentZoneMap: data => notStarted() || project.setCurrentZoneMap(data),
     getLLRPStatus: () => notStarted() || project.getLLRPStatus(),

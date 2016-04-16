@@ -121,57 +121,6 @@ module.exports = (function (app) {
                 });
             return wrapper;
         }])
-        .factory("TransformBuffer", ["_", function (_) {
-            return function (pts, scale) {
-                function setCenter() {
-                    var c = _.reduce(pts, function (r, p) {
-                        return {x: r.x + p.x, y: r.y + p.y};
-                    });
-                    c.x /= pts.length;
-                    c.y /= pts.length;
-                    return c;
-                }
-
-                function updatePoints(center, scale) {
-                    return _.map(pts, function (p) {
-                        return {
-                            x: ((p.x - center.x) * scale) + center.x,
-                            y: ((p.y - center.y) * scale) + center.y
-                        };
-                    });
-                }
-
-                function setScale(v) {
-                    return Math.max(Math.abs(parseFloat(v) || 1.0), 1.0);
-                }
-
-                scale = setScale(scale);
-                var center = setCenter(),
-                    points = updatePoints(center, scale);
-
-                return Object.create({}, {
-                    scale: {
-                        get: function () {
-                            return scale;
-                        },
-                        set: function (v) {
-                            scale = setScale(v);
-                            points = updatePoints(center, scale);
-                        }
-                    },
-                    points: {
-                        get: function () {
-                            return points;
-                        },
-                        set: function (v) {
-                            pts = v;
-                            center = setCenter();
-                            points = updatePoints(center, scale);
-                        }
-                    }
-                });
-            };
-        }])
         .factory("ZonePoints", ["_", function (_) {
             function makePoint(wrapper, stage, p, type) {
                 type = type || "full";
@@ -184,23 +133,23 @@ module.exports = (function (app) {
                     },
                     x: {
                         get: () => stage.metersToStage(p.x, "x"),
-                        set: (v) => p.x = Math.round10(stage.stageToMeters(v, "x"))
+                        set: (v) => p.x = Math.round10(stage.stageToMeters(v, "x"), -3)
                     },
                     y: {
                         get: () => stage.metersToStage(p.y, "y"),
-                        set: (v) => p.y = Math.round10(stage.stageToMeters(v, "y"))
+                        set: (v) => p.y = Math.round10(stage.stageToMeters(v, "y"), -3)
                     },
                     _x: {
                         get: () => p.x,
                         set: (v) => {
-                            p.x = isNaN(v) ? p.x : parseFloat(v);
+                            p.x = isNaN(v) ? p.x || 0 : parseFloat(v);
                             wrapper.draw(true);
                         }
                     },
                     _y: {
                         get: () => p.y,
                         set: (v) => {
-                            p.y = isNaN(v) ? p.y : parseFloat(v);
+                            p.y = isNaN(v) ? p.y || 0 : parseFloat(v);
                             wrapper.draw(true);
                         }
                     }
@@ -214,8 +163,8 @@ module.exports = (function (app) {
             }
 
             return (zone, stage, wrapper) => _.reduce(zone.points, (r, p, i) => {
-                r.push(makePoint(wrapper, stage, p, zone));
-                r.push(makePoint(wrapper, stage, halfPoint(zone.points, i), zone, "half"));
+                r.push(makePoint(wrapper, stage, p));
+                r.push(makePoint(wrapper, stage, halfPoint(zone.points, i), "half"));
                 return r;
             }, []);
         }])
@@ -233,8 +182,14 @@ module.exports = (function (app) {
                                 });
                             return r;
                         }, []);
+                    },
+                    update(pts){
+                        points = pts;
                     }
                 }, {
+                    ref:{
+                        get: () => zone
+                    },
                     name: {
                         get: () => zone.name,
                         set: v => zone.name = v
@@ -287,14 +242,22 @@ module.exports = (function (app) {
                             },
                             drawPoly(g, pts) {
                                 _.reduce(pts, function (r, p, i) {
-                                    return i ? r.lt(p.x, p.y) : r.mt(p.x, p.y);
+                                    if (!i) return r.mt(p.x, p.y);
+                                    return p.type === "full" ? r.lt(p.x, p.y) : r;
                                 }, g).lt(pts[0].x, pts[0].y);
+                            },
+                            updateHalfPoint(p,i){
+                                const p1 = i ? points[i - 1] : points[points.length - 1],
+                                    p2 = points[i + 1] || points[0];
+                                p.x = (p1.x + p2.x) / 2;
+                                p.y = (p1.y + p2.y) / 2;
                             },
                             drawPoints() {
                                 const radius = stage.screenToCanvas(4);
-                                _.reduce(points, function (r, p) {
+                                _.reduce(points, (r, p, i) => {
                                     if (p.type === "full")
                                         return r.s("brown").ss(4, null, null, null, true).f("brown").dc(p.x, p.y, radius).es().ef();
+                                    this.updateHalfPoint(p,i);
                                     return r.s("brown").ss(2, null, null, null, true).f("white").dc(p.x, p.y, radius * 0.75).es().ef();
                                 }, editor.graphics.clear());
                             },
@@ -305,7 +268,8 @@ module.exports = (function (app) {
                                         r.push(p.ref);
                                     return r;
                                 }, []);
-                                points = ZonePoints(zone.points, stage, this);
+                                points = ZonePoints(zone, stage, this);
+                                model.update(points);
                                 this.draw();
 
                             },
@@ -315,7 +279,8 @@ module.exports = (function (app) {
                                         r.push(p.ref);
                                     return r;
                                 }, []);
-                                points = ZonePoints(zone.points, stage, this);
+                                points = ZonePoints(zone, stage, this);
+                                model.update(points);
                                 this.draw();
                             }
 
@@ -330,7 +295,7 @@ module.exports = (function (app) {
                                 get: () => zone
                             }
                         });
-                    points = ZonePoints(zone.points, stage, wrapper);
+                    points = ZonePoints(zone, stage, wrapper);
                     model = createModel(zone, points);
                     shape.on("mousedown", (ev) => {
                         lastX = ev.stageX;

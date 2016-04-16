@@ -216,6 +216,8 @@ router.post("/:projectId/zones", threadCall.bind(null, "addZoneMap", true));
 
 router.post("/:projectId/zones/:itemId", threadCall.bind(null, "setCurrentZoneMap", false));
 
+router.delete("/:projectId/zones/:itemId", threadCall.bind(null, "deleteZoneMap", false));
+
 router.get("/:projectId/llrp", threadCall.bind(null, "getLLRPStatus", false));
 
 router.get("/:projectId/facilities", threadCall.bind(null, "getFacilities", false));

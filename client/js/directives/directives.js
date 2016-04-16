@@ -92,6 +92,10 @@ module.exports = (function (app) {
             };
         }])
         .directive("contenteditable", [function () {
+            function ignoreEvent(ev){
+                ev.stopPropagation();
+                ev.preventDefault();
+            }
             return {
                 restrict: "A",
                 require: "ngModel",
@@ -108,21 +112,35 @@ module.exports = (function (app) {
                     }
 
                     ngModel.$render = function () {
-                        element.html(ngModel.$viewValue || "");
+                        element.html(ngModel.$viewValue || 0);
                     };
 
                     element.bind("blur", function () {
                         scope.$apply(read);
                     });
-                    element.bind("keyup", function (ev) {
+                    element.bind("keydown", function (ev) {
                         if (ev.keyCode === 38) { //arrow up
-                            element.html(val() + step);
+                            element.html(Math.round10(val() + step, -3));
                             scope.$apply(read);
                         }
-                        else if (ev.keyCode === 40){ //arrow down
-                            element.html(val() - step);
+                        else if (ev.keyCode === 40) { //arrow down
+                            element.html(Math.round10(val() - step, -3));
                             scope.$apply(read);
                         }
+                        else if(ev.keyCode === 13){
+                            element[0].blur();
+                            ignoreEvent(ev);
+                        }
+                        else if(ev.keyCode === 27){
+                            element.html("escape");
+                            element[0].blur();
+                            ignoreEvent(ev);
+                        }
+                    });
+
+                    element.bind("keypress",function(ev){
+                        if(ev.charCode < 45 || ev.charCode > 57 || ev.charCode === 47)
+                            return ignoreEvent(ev);
                     });
                 }
             };
