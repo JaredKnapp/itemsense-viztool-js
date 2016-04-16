@@ -196,7 +196,7 @@ module.exports = (function (app) {
                     },
                     floor: {
                         get: () => zone.floor,
-                        ser: v => zone.floor = v
+                        set: v => zone.floor = v
                     },
                     points: {
                         get: () => points
