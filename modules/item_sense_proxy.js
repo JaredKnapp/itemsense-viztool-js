@@ -135,7 +135,7 @@ function startProject(project) {
                     return itemsenseApi.readerDefinitions.update(data);
                 },
                 getReaders: function () {
-                    return itemsenseApi.readerDefinitions.get().then(list => list || []);
+                    return itemsenseApi.readerDefinitions.get().then(list => _.filter(list ||[], this.inProject));
                 },
                 getRecipes: function (recipeName) {
                     return itemsenseApi.recipes.get(recipeName);
@@ -176,7 +176,7 @@ function startProject(project) {
                 getLLRPStatus() {
                     const result = {};
                     return this.getReaders().then(readers=> {
-                        result.readers = _.filter(readers, this.inProject);
+                        result.readers = readers;
                         return this.getRunningJob();
                     }).then(job => {
                         result.job = itemSenseJob = job;
