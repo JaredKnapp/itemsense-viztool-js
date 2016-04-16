@@ -88,24 +88,19 @@ module.exports=(function(app) {
                 });
             },
             getReaders: function () {
-                var self = this;
                 return restCall({
-                    url: "/project/" + self.handle + "/readers"
-                }).then(function (readers) {
-                    if (self.floorName)
-                        readers = _.filter(readers, function (r) {
-                            return r.placement.floor === self.floorName;
-                        });
-                    self.readers = readers;
-                    if (self.stage)
-                        self.stage.showReaders(self.showReaders);
-                    return self;
+                    url: `/project/${this.handle}/readers`
+                }).then((readers) => {
+                    this.readers = readers;
+                    if (this.stage)
+                        this.stage.showReaders(this.showReaders);
+                    return this;
                 });
             },
             postReaders: function (reader) {
                 var self = this;
                 return restCall({
-                    url: "/project/" + self.handle + "/readers",
+                    url: `/project/${this.handle}/readers`,
                     method: "POST",
                     data: reader
                 }).then(function () {

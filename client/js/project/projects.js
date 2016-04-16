@@ -114,634 +114,559 @@ module.exports = (function (app) {
                 });
             };
         }])
-        .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", "ProjectZones", function (_, projectOrigin, $interval, ProjectZones) {
-            function TimeLapseData() {
-                var base = [], project = null, self = this;
-                this.add = function addItems(items, timeLapse) {
-                    var item = _.find(items.data, function (i) {
-                        return i.epc === timeLapse;
-                    });
-                    base.unshift(item);
-                    if (base.length > 20)
-                        base.pop();
-                };
-                this.replace = function (items, timeLapse) {
-                    if (timeLapse)
-                        self.add(items, timeLapse);
-                    else
-                        base = [];
-                };
-                this.getBase = function () {
-                    return base;
-                };
-                this.getTimeLapse = function () {
-                    var map = _.reduce(base, function (r, i) {
-                        if (!i) return r;
-                        var key = i.xLocation + "_" + i.yLocation;
-                        if (!r[key])
-                            r[key] = {x: i.xLocation, y: i.yLocation, value: 0};
-                        r[key].value += 1;
-                        return r;
-                    }, {});
-                    return _.map(map, function (i) {
-                        return i;
-                    });
-                };
-                this.setProject = function (p) {
-                    project = p;
-                };
-            }
+        .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", "ProjectZones", "ProjectReaders",
+            function (_, projectOrigin, $interval, ProjectZones, ProjectReaders) {
+                function TimeLapseData() {
+                    var base = [], project = null, self = this;
+                    this.add = function addItems(items, timeLapse) {
+                        var item = _.find(items.data, function (i) {
+                            return i.epc === timeLapse;
+                        });
+                        base.unshift(item);
+                        if (base.length > 20)
+                            base.pop();
+                    };
+                    this.replace = function (items, timeLapse) {
+                        if (timeLapse)
+                            self.add(items, timeLapse);
+                        else
+                            base = [];
+                    };
+                    this.getBase = function () {
+                        return base;
+                    };
+                    this.getTimeLapse = function () {
+                        var map = _.reduce(base, function (r, i) {
+                            if (!i) return r;
+                            var key = i.xLocation + "_" + i.yLocation;
+                            if (!r[key])
+                                r[key] = {x: i.xLocation, y: i.yLocation, value: 0};
+                            r[key].value += 1;
+                            return r;
+                        }, {});
+                        return _.map(map, function (i) {
+                            return i;
+                        });
+                    };
+                    this.setProject = function (p) {
+                        project = p;
+                    };
+                }
 
-            return function (ref) {
-                ref = JSON.parse(JSON.stringify(ref || {}));
-                var zoom = null,
-                    floorPlan = null,
-                    floorPlanVersion = 1,//just to force the reload of floorplan. doesn't actually keep version
-                    floorName = null,
-                    origin = projectOrigin(ref),
-                    shouldSave = true,
-                    name = "",
-                    itemSense = "",
-                    rulerLength = 1,
-                    scale = 1.0,
-                    readers = null,
-                    reader = null,
-                    readerLLRP = {},
-                    items = null,
-                    item = null,
-                    showReaders = false,
-                    showReaderFields = 0,
-                    showLLRP = false,
-                    showItems = false,
-                    pullItems = false,
-                    stage = null,
-                    mouse = null,
-                    recipes = null,
-                    recipe = null,
-                    duration = 20,
-                    job = null,
-                    jobInterval = null,
-                    jobMonitor = false,
-                    targets = {},
-                    selection = {},
-                    facility = "DEFAULT",
-                    facilities = null,
-                    epcFilter = ".",
-                    timeLapse = false,
-                    timeLapseFlag = false,
-                    timeLapseData = new TimeLapseData();
+                return function (ref) {
+                    ref = JSON.parse(JSON.stringify(ref || {}));
+                    var zoom = null,
+                        floorPlan = null,
+                        floorPlanVersion = 1,//just to force the reload of floorplan. doesn't actually keep version
+                        floorName = null,
+                        origin = projectOrigin(ref),
+                        shouldSave = true,
+                        name = "",
+                        itemSense = "",
+                        rulerLength = 1,
+                        scale = 1.0,
+                        items = null,
+                        item = null,
+                        showItems = false,
+                        pullItems = false,
+                        stage = null,
+                        mouse = null,
+                        recipes = null,
+                        recipe = null,
+                        duration = 20,
+                        job = null,
+                        jobInterval = null,
+                        jobMonitor = false,
+                        targets = {},
+                        selection = {},
+                        facility = "DEFAULT",
+                        facilities = null,
+                        epcFilter = ".",
+                        timeLapse = false,
+                        timeLapseFlag = false,
+                        timeLapseData = new TimeLapseData();
 
-                var project = Object.create({
-                        disconnect: function () {
-                            if (stage)
-                                stage.disconnect();
-                            stage = null;
-                        },
-                        zoomWidth: function () {
-                            if (stage)
-                                this.zoom = stage.widthZoom();
-                        },
-                        canShowItems: function () {
-                            return items && items.data.length;
-                        },
-                        canPullItems: function () {
-                            return this.isJobRunning();
-                        },
-                        canConnect: function () {
-                            if (this.handle)
-                                if (this.itemSense)
-                                    if (this.itemSense.trim())
-                                        return true;
-                            return false;
-                        },
-                        isJobRunning: function () {
-                            if (!job)
-                                return false;
-                            if (_.find(["COMPLETE", "STOPPED"], function (c) {
-                                    return c === job.status;
-                                }))
-                                return false;
-                            if (jobMonitor)
-                                return true;
-                            if (this.jobShouldHaveFinished())
-                                this.jobMonitor = true;
-                            return true;
-                        },
-                        jobShouldHaveFinished: function () {
-                            if (!job)
-                                return false;
-                            var start = new Date(job.creationTime.substr(0, 24)).getTime(),
-                                now = new Date().getTime(),
-                                elapsed = (now - start) / 1000,
-                                duration = job.job.durationSeconds;
-                            return elapsed > duration;
-                        },
-                        baseChanged: function () {
-                            this.showItems = false;
-                            this.pullItems = false;
-                            this.showReaders = false;
-                            this.jobMonitor = false;
-                            this.readers = null;
-                            this.items = null;
-                            this.recipes = null;
-                            this.recipe = null;
-                            this.job = null;
-                        },
-                        setOrigin: function (x, y) {
-                            if (stage)
-                                stage.setOrigin(x, y);
-                        },
-                        addTarget: function (k, data) {
-                            if (k === "symbols")
-                                targets.symbols = data;
-                            else {
-                                targets.hash = data.hash;
-                                targets.classes = data.classes;
-                            }
-                        },
-                        symbolImage: function (fileName) {
-                            return "/projects/" + this.handle + "/symbols/" + fileName;
-                        },
-                        getSymbol: function (epc) {
-                            try {
-                                return this.symbols[this.itemHash[epc].Category.toLowerCase()];
-                            } catch (e) {
-                                return null;
-                            }
-                        },
-                        preparePresentation: function (stage, bitmap) {
-                            this.jobMonitor = false;
-                            this.pullItems = false;
-                            this.showReaders = false;
-                            this.showItems = false;
-                            this.updateSelection = function () {
-                                stage.removeAllChildren();
-                                stage.addChild(bitmap);
-                                _.each(stage.items, function (i) {
-                                    i.destroy();
-                                });
-                                stage.items = {};
-                                if (stage.itemData)
-                                    stage.showItems(stage.itemData);
-                                stage.update();
-                            };
-                        },
-                        stageToMeters: function (v, axis) {
-                            return this.stage ? this.stage.stageToMeters(v, axis) : v;
-                        },
-                        setScale: function (v) {
-                            if (v === null)
-                                this.scale = null;
-                            else
-                                this.scale = this.rulerLength / v;
-                        },
-                        updateReader: function (reader) {
-                            if (stage)
-                                stage.updateReader(reader);
-                        }
-                    },
-                    {
-                        stage: {
-                            get: function () {
-                                return stage;
-                            },
-                            set: function (v) {
-                                if (v === stage)
-                                    return;
+                    var project = Object.create({
+                            disconnect: function () {
                                 if (stage)
                                     stage.disconnect();
-                                if (v)
-                                    v.connect(this);
-                                stage = v;
-                            }
-                        },
-                        shouldSave: {
-                            get: function () {
-                                return shouldSave;
+                                stage = null;
                             },
-                            set: function (v) {
-                                shouldSave = v;
-                            }
-                        },
-                        floorPlanUrl: {
-                            get: function () {
-                                return "/projects/" + this.handle + "/" + floorPlan + "?v=" + floorPlanVersion;
-                            }
-                        },
-                        rulerCoords: {
-                            get: function () {
-                                return stage ? stage.rulerCoords : null;
-                            }
-                        },
-                        rulerLength: {
-                            get: function () {
-                                return rulerLength;
-                            },
-                            set: function (v) {
-                                rulerLength = v;
-                            }
-                        },
-                        _rulerLength: {
-                            get: function () {
-                                if (!this.rulerLength)
-                                    return this.rulerLength;
-                                return Math.round10(this.rulerLength, -3);
-                            },
-                            set: function (v) {
-                                this.rulerLength = v;
+                            zoomWidth: function () {
                                 if (stage)
-                                    stage.setRulerLength(v);
-                            }
-                        },
-                        _rulerMeters: {
-                            get: function () {
-                                if (this.scale === null)
-                                    return null;
-                                return Math.round10(this.rulerLength / this.scale, -3);
+                                    this.zoom = stage.widthZoom();
                             },
-                            set: function (v) {
+                            canShowItems: function () {
+                                return items && items.data.length;
+                            },
+                            canPullItems: function () {
+                                return this.isJobRunning();
+                            },
+                            canConnect: function () {
+                                if (this.handle)
+                                    if (this.itemSense)
+                                        if (this.itemSense.trim())
+                                            return true;
+                                return false;
+                            },
+                            isJobRunning: function () {
+                                if (!job)
+                                    return false;
+                                if (_.find(["COMPLETE", "STOPPED"], function (c) {
+                                        return c === job.status;
+                                    }))
+                                    return false;
+                                if (jobMonitor)
+                                    return true;
+                                if (this.jobShouldHaveFinished())
+                                    this.jobMonitor = true;
+                                return true;
+                            },
+                            jobShouldHaveFinished: function () {
+                                if (!job)
+                                    return false;
+                                var start = new Date(job.creationTime.substr(0, 24)).getTime(),
+                                    now = new Date().getTime(),
+                                    elapsed = (now - start) / 1000,
+                                    duration = job.job.durationSeconds;
+                                return elapsed > duration;
+                            },
+                            baseChanged: function () {
+                                this.showItems = false;
+                                this.pullItems = false;
+                                this.showReaders = false;
+                                this.jobMonitor = false;
+                                this.readers = null;
+                                this.items = null;
+                                this.recipes = null;
+                                this.recipe = null;
+                                this.job = null;
+                            },
+                            setOrigin: function (x, y) {
+                                if (stage)
+                                    stage.setOrigin(x, y);
+                            },
+                            addTarget: function (k, data) {
+                                if (k === "symbols")
+                                    targets.symbols = data;
+                                else {
+                                    targets.hash = data.hash;
+                                    targets.classes = data.classes;
+                                }
+                            },
+                            symbolImage: function (fileName) {
+                                return "/projects/" + this.handle + "/symbols/" + fileName;
+                            },
+                            getSymbol: function (epc) {
+                                try {
+                                    return this.symbols[this.itemHash[epc].Category.toLowerCase()];
+                                } catch (e) {
+                                    return null;
+                                }
+                            },
+                            preparePresentation: function (stage, bitmap) {
+                                this.jobMonitor = false;
+                                this.pullItems = false;
+                                this.showReaders = false;
+                                this.showItems = false;
+                                this.updateSelection = function () {
+                                    stage.removeAllChildren();
+                                    stage.addChild(bitmap);
+                                    _.each(stage.items, function (i) {
+                                        i.destroy();
+                                    });
+                                    stage.items = {};
+                                    if (stage.itemData)
+                                        stage.showItems(stage.itemData);
+                                    stage.update();
+                                };
+                            },
+                            stageToMeters: function (v, axis) {
+                                return this.stage ? this.stage.stageToMeters(v, axis) : v;
+                            },
+                            setScale: function (v) {
                                 if (v === null)
-                                    return null;
-                                this._rulerLength = v * this.scale;
-                            }
-                        },
-                        _scale: {
-                            get: function () {
-                                if (this.scale === null)
-                                    return null;
-                                return Math.round10(this.scale, -3);
-                            },
-                            set: function (v) {
-                                this.scale = v;
-                            }
-                        },
-                        readers: {
-                            get: function () {
-                                return readers;
-                            },
-                            set: function (v) {
-                                readers = v;
-                            }
-                        },
-                        items: {
-                            get: function () {
-                                return items;
-                            },
-                            set: function (v) {
-                                if (timeLapse)
-                                    timeLapseData.add(v, timeLapse);
+                                    this.scale = null;
                                 else
+                                    this.scale = this.rulerLength / v;
+                            }
+                        },
+                        {
+                            stage: {
+                                get: function () {
+                                    return stage;
+                                },
+                                set: function (v) {
+                                    if (v === stage)
+                                        return;
+                                    if (stage)
+                                        stage.disconnect();
+                                    if (v)
+                                        v.connect(this);
+                                    stage = v;
+                                }
+                            },
+                            shouldSave: {
+                                get: function () {
+                                    return shouldSave;
+                                },
+                                set: function (v) {
+                                    shouldSave = v;
+                                }
+                            },
+                            floorPlanUrl: {
+                                get: function () {
+                                    return "/projects/" + this.handle + "/" + floorPlan + "?v=" + floorPlanVersion;
+                                }
+                            },
+                            rulerCoords: {
+                                get: function () {
+                                    return stage ? stage.rulerCoords : null;
+                                }
+                            },
+                            rulerLength: {
+                                get: function () {
+                                    return rulerLength;
+                                },
+                                set: function (v) {
+                                    rulerLength = v;
+                                }
+                            },
+                            _rulerLength: {
+                                get: function () {
+                                    if (!this.rulerLength)
+                                        return this.rulerLength;
+                                    return Math.round10(this.rulerLength, -3);
+                                },
+                                set: function (v) {
+                                    this.rulerLength = v;
+                                    if (stage)
+                                        stage.setRulerLength(v);
+                                }
+                            },
+                            _rulerMeters: {
+                                get: function () {
+                                    if (this.scale === null)
+                                        return null;
+                                    return Math.round10(this.rulerLength / this.scale, -3);
+                                },
+                                set: function (v) {
+                                    if (v === null)
+                                        return null;
+                                    this._rulerLength = v * this.scale;
+                                }
+                            },
+                            _scale: {
+                                get: function () {
+                                    if (this.scale === null)
+                                        return null;
+                                    return Math.round10(this.scale, -3);
+                                },
+                                set: function (v) {
+                                    this.scale = v;
+                                }
+                            },
+                            items: {
+                                get: function () {
+                                    return items;
+                                },
+                                set: function (v) {
+                                    if (timeLapse)
+                                        timeLapseData.add(v, timeLapse);
+                                    else
+                                        timeLapseData.replace(items, timeLapse);
+                                    items = v;
+                                }
+                            },
+                            headMapFlag: {
+                                get: function () {
+                                    return timeLapseFlag;
+                                },
+                                set: function (v) {
+                                    timeLapseFlag = v;
+                                }
+                            },
+                            timeLapse: {
+                                enumerable: true,
+                                get: function () {
+                                    return timeLapse;
+                                },
+                                set: function (v) {
+                                    timeLapse = v;
                                     timeLapseData.replace(items, timeLapse);
-                                items = v;
-                            }
-                        },
-                        headMapFlag: {
-                            get: function () {
-                                return timeLapseFlag;
+                                    if (stage)
+                                        stage.timeLapse = v;
+                                }
                             },
-                            set: function (v) {
-                                timeLapseFlag = v;
-                            }
-                        },
-                        timeLapse: {
-                            enumerable: true,
-                            get: function () {
-                                return timeLapse;
+                            timeLapseData: {
+                                get: function () {
+                                    return timeLapseData;
+                                },
+                                set: function (v) {
+                                    timeLapseData.replace(v);
+                                }
                             },
-                            set: function (v) {
-                                timeLapse = v;
-                                timeLapseData.replace(items, timeLapse);
-                                if (stage)
-                                    stage.timeLapse = v;
-                            }
-                        },
-                        timeLapseData: {
-                            get: function () {
-                                return timeLapseData;
+                            mouse: {
+                                get: function () {
+                                    return mouse;
+                                },
+                                set: function (v) {
+                                    mouse = v;
+                                }
                             },
-                            set: function (v) {
-                                timeLapseData.replace(v);
-                            }
-                        },
-                        mouse: {
-                            get: function () {
-                                return mouse;
+                            item: {
+                                get: function () {
+                                    return item;
+                                },
+                                set: function (v) {
+                                    this.timeLapseFlag = false;
+                                    this.timeLapse = false;
+                                    item = v;
+                                }
                             },
-                            set: function (v) {
-                                mouse = v;
-                            }
-                        },
-                        reader: {
-                            get: function () {
-                                return reader;
+                            recipes: {
+                                get: function () {
+                                    return recipes;
+                                },
+                                set: function (v) {
+                                    recipes = v;
+                                }
                             },
-                            set: function (v) {
-                                reader = v;
-                            }
-                        },
-                        item: {
-                            get: function () {
-                                return item;
+                            job: {
+                                get: function () {
+                                    return job;
+                                },
+                                set: function (v) {
+                                    job = v;
+                                }
                             },
-                            set: function (v) {
-                                this.timeLapseFlag = false;
-                                this.timeLapse = false;
-                                item = v;
-                            }
-                        },
-                        recipes: {
-                            get: function () {
-                                return recipes;
+                            jobInterval: {
+                                get: function () {
+                                    return jobInterval;
+                                },
+                                set: function (v) {
+                                    if (jobInterval && jobInterval !== v)
+                                        $interval.cancel(jobInterval);
+                                    jobInterval = v;
+                                    jobMonitor = v ? true : false;
+                                }
                             },
-                            set: function (v) {
-                                recipes = v;
-                            }
-                        },
-                        job: {
-                            get: function () {
-                                return job;
+                            jobMonitor: {
+                                enumerable: true,
+                                get: function () {
+                                    return jobMonitor;
+                                },
+                                set: function (v) {
+                                    if (this.job)
+                                        this.jobInterval = v ? this.monitorJob() : null;
+                                    else
+                                        jobMonitor = v;
+                                }
                             },
-                            set: function (v) {
-                                job = v;
-                            }
-                        },
-                        jobInterval: {
-                            get: function () {
-                                return jobInterval;
+                            floorName: {
+                                enumerable: true,
+                                get: function () {
+                                    return floorName;
+                                },
+                                set: function (v) {
+                                    floorName = v;
+                                }
                             },
-                            set: function (v) {
-                                if (jobInterval && jobInterval !== v)
-                                    $interval.cancel(jobInterval);
-                                jobInterval = v;
-                                jobMonitor = v ? true : false;
-                            }
-                        },
-                        jobMonitor: {
-                            enumerable: true,
-                            get: function () {
-                                return jobMonitor;
+                            showItems: {
+                                enumerable: true,
+                                get: function () {
+                                    return showItems;
+                                },
+                                set: function (v) {
+                                    showItems = v;
+                                    if (stage && this.items)
+                                        stage.showItems(v);
+                                }
                             },
-                            set: function (v) {
-                                if (this.job)
-                                    this.jobInterval = v ? this.monitorJob() : null;
-                                else
-                                    jobMonitor = v;
-                            }
-                        },
-                        floorName: {
-                            enumerable: true,
-                            get: function () {
-                                return floorName;
+                            pullItems: {
+                                enumerable: true,
+                                get: function () {
+                                    return pullItems;
+                                },
+                                set: function (v) {
+                                    pullItems = v;
+                                    if (stage && this.recipes)
+                                        stage.pullItems(v);
+                                }
                             },
-                            set: function (v) {
-                                floorName = v;
-                            }
-                        },
-                        showItems: {
-                            enumerable: true,
-                            get: function () {
-                                return showItems;
+                            handle: {
+                                enumerable: true,
+                                get: function () {
+                                    return (this.name || "").trim().replace(/[^-a-zA-Z0-9_.]/g, "_");
+                                }
                             },
-                            set: function (v) {
-                                showItems = v;
-                                if (stage && this.items)
-                                    stage.showItems(v);
-                            }
-                        },
-                        pullItems: {
-                            enumerable: true,
-                            get: function () {
-                                return pullItems;
+                            name: {
+                                enumerable: true,
+                                get: function () {
+                                    return name;
+                                },
+                                set: function (v) {
+                                    this.shouldSave = true;
+                                    name = v;
+                                }
                             },
-                            set: function (v) {
-                                pullItems = v;
-                                if (stage && this.recipes)
-                                    stage.pullItems(v);
-                            }
-                        },
-                        handle: {
-                            enumerable: true,
-                            get: function () {
-                                return (this.name || "").trim().replace(/[^-a-zA-Z0-9_.]/g, "_");
-                            }
-                        },
-                        name: {
-                            enumerable: true,
-                            get: function () {
-                                return name;
+                            itemSense: {
+                                enumerable: true,
+                                get: function () {
+                                    return itemSense;
+                                },
+                                set: function (v) {
+                                    itemSense = v;
+                                    this.baseChanged(v);
+                                }
                             },
-                            set: function (v) {
-                                this.shouldSave = true;
-                                name = v;
-                            }
-                        },
-                        itemSense: {
-                            enumerable: true,
-                            get: function () {
-                                return itemSense;
+                            zoom: {
+                                enumerable: true,
+                                get: function () {
+                                    return zoom;
+                                },
+                                set: function (v) {
+                                    zoom = v;
+                                    if (stage)
+                                        stage.zoom = v;
+                                }
                             },
-                            set: function (v) {
-                                itemSense = v;
-                                this.baseChanged(v);
-                            }
-                        },
-                        zoom: {
-                            enumerable: true,
-                            get: function () {
-                                return zoom;
+                            floorPlan: {
+                                enumerable: true,
+                                get: function () {
+                                    return floorPlan;
+                                },
+                                set: function (v) {
+                                    this.shouldSave = true;
+                                    floorPlan = v;
+                                    floorPlanVersion += 1;
+                                    if (stage)
+                                        stage.setFloorPlan(this.floorPlanUrl);
+                                }
                             },
-                            set: function (v) {
-                                zoom = v;
-                                if (stage)
-                                    stage.zoom = v;
-                            }
-                        },
-                        floorPlan: {
-                            enumerable: true,
-                            get: function () {
-                                return floorPlan;
+                            origin: {
+                                enumerable: true,
+                                get: function () {
+                                    return origin;
+                                },
+                                set: function (v) {
+                                    this.shouldSave = true;
+                                    origin = v;
+                                    if (stage)
+                                        stage.origin = v;
+                                }
                             },
-                            set: function (v) {
-                                this.shouldSave = true;
-                                floorPlan = v;
-                                floorPlanVersion += 1;
-                                if (stage)
-                                    stage.setFloorPlan(this.floorPlanUrl);
-                            }
-                        },
-                        origin: {
-                            enumerable: true,
-                            get: function () {
-                                return origin;
+                            scale: {
+                                enumerable: true,
+                                get: function () {
+                                    return scale;
+                                },
+                                set: function (v) {
+                                    scale = v;
+                                }
                             },
-                            set: function (v) {
-                                this.shouldSave = true;
-                                origin = v;
-                                if (stage)
-                                    stage.origin = v;
-                            }
-                        },
-                        scale: {
-                            enumerable: true,
-                            get: function () {
-                                return scale;
+                            recipe: {
+                                enumerable: true,
+                                get: function () {
+                                    return recipe;
+                                },
+                                set: function (v) {
+                                    recipe = v;
+                                }
                             },
-                            set: function (v) {
-                                scale = v;
-                            }
-                        },
-                        showReaders: {
-                            enumerable: true,
-                            get: function () {
-                                return showReaders;
+                            duration: {
+                                enumerable: true,
+                                get: function () {
+                                    return duration;
+                                },
+                                set: function (v) {
+                                    duration = v;
+                                }
                             },
-                            set: function (v) {
-                                showReaders = v;
-                                if (v && !readers && this.recipes)
-                                    this.getReaders().catch(function () {
-                                        showReaders = false;
-                                    });
-                                else if (stage)
-                                    stage.showReaders(v);
-                            }
-                        },
-                        showLLRP: {
-                            enumerable: true,
-                            get: function () {
-                                return showLLRP;
+                            targets: {
+                                enumerable: true,
+                                get: function () {
+                                    return targets;
+                                },
+                                set: function (v) {
+                                    targets = v;
+                                }
                             },
-                            set: function (v) {
-                                showLLRP = v;
-                                if (v)
-                                    this.getLLRPStatus().then(status => {
-                                        this.readerLLRP = status;
-                                    });
-                                else
-                                    this.readerLLRP = {};
-                            }
-                        },
-                        readerLLRP: {
-                            get: function () {
-                                return readerLLRP;
+                            symbols: {
+                                get: function () {
+                                    return targets.symbols;
+                                },
+                                set: function (v) {
+                                    targets.symbols = v;
+                                }
                             },
-                            set: function (v) {
-                                readerLLRP = v;
-                                if (stage)
-                                    stage.markEngagedReaders(v);
-                            }
-                        },
-                        showReaderFields: {
-                            enumerable: true,
-                            get: function () {
-                                return showReaderFields;
+                            itemHash: {
+                                get: function () {
+                                    return targets.hash;
+                                },
+                                set: function (v) {
+                                    targets.hash = v;
+                                }
                             },
-                            set: function (v) {
-                                showReaderFields = v;
-                                if (stage && showReaders)
-                                    stage.showReaders(true);
-                            }
-                        },
-                        recipe: {
-                            enumerable: true,
-                            get: function () {
-                                return recipe;
+                            classes: {
+                                get: function () {
+                                    return targets.classes;
+                                },
+                                set: function (v) {
+                                    targets.classes = v;
+                                }
                             },
-                            set: function (v) {
-                                recipe = v;
-                            }
-                        },
-                        duration: {
-                            enumerable: true,
-                            get: function () {
-                                return duration;
+                            selection: {
+                                get: function () {
+                                    return selection;
+                                },
+                                set: function (v) {
+                                    selection = v;
+                                }
                             },
-                            set: function (v) {
-                                duration = v;
-                            }
-                        },
-                        targets: {
-                            enumerable: true,
-                            get: function () {
-                                return targets;
+                            epcFilter: {
+                                enumerable: true,
+                                get: function () {
+                                    return epcFilter || ".";
+                                },
+                                set: function (v) {
+                                    epcFilter = (v || "").trim() || ".";
+                                    if (stage)
+                                        stage.setEpcFilter(epcFilter);
+                                }
                             },
-                            set: function (v) {
-                                targets = v;
-                            }
-                        },
-                        symbols: {
-                            get: function () {
-                                return targets.symbols;
+                            facility: {
+                                enumerable: true,
+                                get: function () {
+                                    return facility || "DEFAULT";
+                                },
+                                set: function (v) {
+                                    facility = v;
+                                }
                             },
-                            set: function (v) {
-                                targets.symbols = v;
+                            facilities: {
+                                get: ()=> facilities,
+                                set: v => facilities = v
                             }
-                        },
-                        itemHash: {
-                            get: function () {
-                                return targets.hash;
-                            },
-                            set: function (v) {
-                                targets.hash = v;
-                            }
-                        },
-                        classes: {
-                            get: function () {
-                                return targets.classes;
-                            },
-                            set: function (v) {
-                                targets.classes = v;
-                            }
-                        },
-                        selection: {
-                            get: function () {
-                                return selection;
-                            },
-                            set: function (v) {
-                                selection = v;
-                            }
-                        },
-                        epcFilter: {
-                            enumerable: true,
-                            get: function () {
-                                return epcFilter || ".";
-                            },
-                            set: function (v) {
-                                epcFilter = (v || "").trim() || ".";
-                                if (stage)
-                                    stage.setEpcFilter(epcFilter);
-                            }
-                        },
-                        facility: {
-                            enumerable: true,
-                            get: function () {
-                                return facility || "DEFAULT";
-                            },
-                            set: function (v) {
-                                facility = v;
-                            }
-                        },
-                        facilities: {
-                            get: ()=> facilities,
-                            set: v => facilities = v
+                        });
+                    ProjectZones(project);
+                    ProjectReaders(project);
+                    origin.project = project;
+                    timeLapseData.setProject(project);
+                    if (ref.itemSense)
+                        itemSense = ref.itemSense; //set itemsense url separately because it resets the object
+                    delete ref.origin;
+                    delete ref.itemSense;
+                    _.each(ref || {}, function (v, k) {
+                        try {
+                            project[k] = v;
+                        } catch (e) {
+                            //just skip over read only properties
                         }
                     });
-                ProjectZones(project);
-                origin.project = project;
-                timeLapseData.setProject(project);
-                if (ref.itemSense)
-                    itemSense = ref.itemSense; //set itemsense url separately because it resets the object
-                delete ref.origin;
-                delete ref.itemSense;
-                _.each(ref || {}, function (v, k) {
-                    try {
-                        project[k] = v;
-                    } catch (e) {
-                        //just skip over read only properties
-                    }
-                });
-                return project;
-            };
-        }])
+                    return project;
+                };
+            }])
         .factory("Project", ["_", "ProjectObject", "Server",
             function (_, projectObject, server) {
                 return {
