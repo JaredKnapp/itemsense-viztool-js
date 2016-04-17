@@ -167,6 +167,8 @@ module.exports = (function (app) {
                         scale = 1.0,
                         items = null,
                         item = null,
+                        itemSource = "Direct Connection",
+                        nodeRedEndPoint = null,
                         showItems = false,
                         pullItems = false,
                         stage = null,
@@ -647,6 +649,16 @@ module.exports = (function (app) {
                             facilities: {
                                 get: ()=> facilities,
                                 set: v => facilities = v
+                            },
+                            itemSource:{
+                                enumerable: true,
+                                get:() => itemSource,
+                                set: v => itemSource = v
+                            },
+                            nodeRedEndPoint:{
+                                enumerable: true,
+                                get:() => nodeRedEndPoint,
+                                set: v => nodeRedEndPoint = v
                             }
                         });
                     ProjectZones(project);

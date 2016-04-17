@@ -36,6 +36,16 @@ form.container.form-group(name="projectForm")
                 |   {{projectInfo()}}
         button.pnj-cancel(ng-click="project.startJob()" ng-disabled="!canStart()" ng-show="!project.isJobRunning()") Start Job
         button.pnj-cancel(ng-click="project.stopJob()" ng-show="project.isJobRunning()" ng-disabled="!project.jobMonitor") Cancel Job
+    .clearfix(style="margin-bottom:20px;")
+    .form-group
+        .input-group
+            .input-group-addon Data Source:
+            select.form-control(ng-options="v for v in ['Direct Connection','Node Red Flow']" ng-model="project.itemSource")
+    .form-group(ng-if="project.itemSource === 'Node Red Flow'")
+        .input-group
+            .input-group-addon Node Red Endpoint:
+            input.form-control(type="url" name="redpoint" ng-model="project.nodeRedEndPoint" ng-trim="true")
+    .clearfix
     .form-group
         button.pnj-save(ng-click="project.connect()" ng-disabled="!projectForm.$valid" ng-show="!project.recipes") Connect
 

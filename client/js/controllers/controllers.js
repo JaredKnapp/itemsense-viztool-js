@@ -8,21 +8,29 @@
 module.exports = (function (app) {
 
     app.controller("topLevel", ["$scope", "Requester", "$http", "_", function ($scope, Requester, $http, _) {
+            function selectProject() {
+                return $scope.project.get().then(list => Requester.selectProject(list));
+            }
+
             $scope.about = function () {
                 Requester.about();
             };
             $scope.selectZoneMap = function () {
-                Requester.selectZoneMap().then(zoneMap => $scope.project._zoneMap = zoneMap);
+                Requester.selectZoneMap()
+                    .then(zoneMap => $scope.project.setCurrentZoneMap(zoneMap.name)
+                        .then(()=>$scope.project._zoneMap = zoneMap));
+            };
+            $scope.deleteProject = function () {
+                selectProject().then((prj) => {
+                    if (window.confirm(`Are you sure you want to delete the ${prj.name} project?\n all floorplan and data will be deleted.`))
+                        $scope.project.deleteProject(prj).then(()=> {
+                            if (prj.handle === $scope.project.handle)
+                                $scope.$state.go("project", {id: "newProject"}, {reload: true});
+                        });
+                });
             };
             $scope.select = function () {
-                $http({
-                    url: "/project",
-                    method: "GET"
-                }).then(function (response) {
-                    return Requester.selectProject(response.data);
-                }).then(function (prj) {
-                    $scope.$state.go("project", {id: prj.handle}, {reload: true});
-                });
+                selectProject().then(prj => $scope.$state.go("project", {id: prj.handle}, {reload: true}));
             };
             $scope.setEpcFilter = function () {
                 if (!$scope.project)
@@ -142,6 +150,17 @@ module.exports = (function (app) {
                 $scope.selectProject = function (project) {
                     $modal.close(project);
                 };
+                $scope.deleteProject = (prj, $event) => {
+                    if (window.confirm(`Are you sure you want to delete the ${prj.name} project?\n all floorplan and data will be deleted.`))
+                        $scope.project.deleteProject(prj).then((list) => {
+                            $scope.projects = list;
+                            if (prj.handle === $scope.project.handle) {
+                                $scope.$state.go("project", {id: "newProject"}, {reload: true});
+                                $modal.dismiss("close");
+                            }
+                        });
+                    $event.stopPropagation();
+                };
                 $scope.cancel = function () {
                     $modal.dismiss("close");
                 };
@@ -150,7 +169,7 @@ module.exports = (function (app) {
             $scope.selectZoneMap = function (zoneMap) {
                 $modal.close(zoneMap);
             };
-            $scope.deleteZoneMap = function(zoneMap,$event){
+            $scope.deleteZoneMap = function (zoneMap, $event) {
                 $scope.project.deleteZoneMap(zoneMap);
                 $event.stopPropagation();
             };

@@ -54,6 +54,7 @@ function threadError(err, r) {
 }
 
 function fileError(err, r) {
+    console.log(err);
     return {
         status: err.code === "ENOENT" ? 404 : r.status,
         msg: err.message || r.msg
@@ -79,6 +80,12 @@ function saveProject(fileName, body) {
     return defer.promise;
 }
 
+function deleteFile(fileName) {
+    var defer = q.defer();
+    fs.remove(fileName, defer.makeNodeResolver());
+    return defer.promise;
+}
+
 function readProject(fileName) {
     var defer = q.defer();
     fs.readJSON(fileName, defer.makeNodeResolver());
@@ -95,11 +102,9 @@ router.get("/", function (req, res) {
 
 router.post("/", function (req, res) {
     var fileName = path.resolve(getProjectDir(req.body.handle), "project.json");
-    saveProject(fileName, req.body).then(function (result) {
-        res.json(result);
-    }, function (err) {
-        handleError(err, res, fileError);
-    })
+    saveProject(fileName, req.body)
+        .then(()=> thread.updateProcess (req.body))
+        .then(result=> res.json(result), err => handleError(err,res,fileError));
 });
 
 router.get("/:projectId", function (req, res) {
@@ -110,7 +115,16 @@ router.get("/:projectId", function (req, res) {
     });
 });
 
-
+router.delete("/:projectId",function(req,res){
+    const id =req.params.projectId;
+    deleteFile(getProjectDir(id)).then(()=>{
+        thread.stopProcess(id).catch(()=>{});
+    }).then(function(result){
+        res.json(result);
+    },function(err){
+        handleError(err,res,fileError);
+    });
+});
 const getMime = file => file.mimetype.substr(file.mimetype.lastIndexOf("/") + 1);
 
 function getChunk(target, temp, flow) {

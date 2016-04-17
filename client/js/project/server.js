@@ -43,7 +43,7 @@ module.exports=(function(app) {
         return {
             get: function (id) {
                 return restCall({
-                    url: "/project/" + id
+                    url: "/project/" + (id || "")
                 });
             },
             save: function () {
@@ -52,13 +52,13 @@ module.exports=(function(app) {
                     method: "POST",
                     url: "/project/",
                     data: self
-                }).then(function (data) {
-                    if (self.zoneMap)
-                        return self.addZoneMap(self.zoneMap).then(function () {
-                            return data;
-                        });
-                    return data;
                 });
+            },
+            deleteProject(data){
+                return restCall({
+                    method:"DELETE",
+                    url: `/project/${data.handle}`
+                }).then(()=>restCall({url:"/project"}));
             },
             connect: function () {
                 var self = this;
@@ -193,8 +193,10 @@ module.exports=(function(app) {
                     url: "/project/" + self.handle + "/zones",
                     data: data
                 }).then(function (zoneMap) {
+                    self.zoneMaps = _.filter(self.zoneMaps,z=>z.name !== zoneMap.name).concat([zoneMap]);
                     self.zoneMap = zoneMap;
                     self.zones = zoneMap.zones;
+                    return self.setCurrentZoneMap(zoneMap.name);
                 });
             },
             deleteZoneMap: function(zoneMap){

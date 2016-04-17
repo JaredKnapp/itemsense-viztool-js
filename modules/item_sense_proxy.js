@@ -103,10 +103,32 @@ function startProject(project) {
                         readPromise = null;
                     });
                 },
+                restCall(opts, user, password){
+                    const defer = q.defer(),
+                        options = _.extend({method:"GET",json:true},opts),
+                        req = request(options, function (err, response, body) {
+                            if (err)
+                                defer.reject(err);
+                            else if (response.statusCode > 399)
+                                defer.reject(response);
+                            else
+                                defer.resolve(body);
+                        });
+                    if (user)
+                        req.auth(user,password);
+                    return defer.promise;
+                },
+                getNodeRedFlow(){
+                    console.log("getting from red");
+                    return this.restCall({url:project.nodeRedEndPoint});
+                },
                 getItems: function () {
                     if (readPromise)
                         return readPromise;
-                    readPromise = wrapper.stash(itemsenseApi.items.get({pageSize: 1000})).then(function (items) {
+                    const data = (project.itemSource === "Direct Connection")
+                        ? itemsenseApi.items.get({pageSize: 1000})
+                        : this.getNodeRedFlow();
+                    readPromise = wrapper.stash(data).then(function (items) {
                         if (!itemSenseJob)
                             return q.reject({statusCode: 500, body: "Job not started"});
                         items.data = _.filter(items.data, function (i) {
@@ -135,7 +157,7 @@ function startProject(project) {
                     return itemsenseApi.readerDefinitions.update(data);
                 },
                 getReaders: function () {
-                    return itemsenseApi.readerDefinitions.get().then(list => _.filter(list ||[], this.inProject));
+                    return itemsenseApi.readerDefinitions.get().then(list => _.filter(list || [], this.inProject));
                 },
                 getRecipes: function (recipeName) {
                     return itemsenseApi.recipes.get(recipeName);
@@ -143,12 +165,14 @@ function startProject(project) {
                 addZoneMap: function (data) {
                     var self = this;
                     return itemsenseApi.zoneMaps.update(data).then(function (zmap) {
-                        return self.setCurrentZoneMap(zmap.name).then(function () {
-                            return zmap;
-                        });
+                        if (!itemSenseJob)
+                            return self.setCurrentZoneMap(zmap.name).then(function () {
+                                return zmap;
+                            });
+                        return zmap;
                     });
                 },
-                deleteZoneMap: function(data){
+                deleteZoneMap: function (data) {
                     return itemsenseApi.zoneMaps.delete(data);
                 },
                 setCurrentZoneMap: function (name) {
@@ -209,19 +233,10 @@ function startProject(project) {
                         .then(homePage => this.isReaderOccupied(homePage) ? reader.name : null)
                 },
                 getReaderHomePage(reader) {
-                    var defer = q.defer();
-                    request({
+                    return this.restCall({
                         url: `http://${reader.address}/cgi-bin/index.cgi`,
                         method: "GET"
-                    }, function (err, response, body) {
-                        if (err)
-                            defer.reject(err);
-                        if (response.statusCode > 399)
-                            defer.reject(response);
-                        else
-                            defer.resolve(body);
-                    }).auth(project.readerUser || "root", project.readerPassword || "impinj");
-                    return defer.promise;
+                    },project.readerUser || "root", project.readerPassword || "impinj" );
                 },
                 isReaderOccupied(homePage) {
                     const match = homePage.match(/Table_Contents_Left..LLRP Status[^T]+Table_Contents_Right..([^<]+)/);
