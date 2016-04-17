@@ -3,6 +3,7 @@
  * Item sense interface implementation
  *
  */
+"use strict";
 
 var q = require("q"),
     _ = require("lodash"),
@@ -81,6 +82,126 @@ function createResultItem(data, tp) {
     });
 }
 
+class ConfigDump {
+
+    constructor(itemsenseApi,project) {
+        this.itemsenseApi = itemsenseApi;
+        this.project =project;
+        this.readerConfigs = {};
+        this.readerDefinitions = {};
+    }
+
+    static createTemplate(type) {
+        return type === "job" ? {
+            signature:"",
+            timestamp: new Date().toUTCString(),
+            job: null,
+            currentZoneMaps: [],
+            recipe: null,
+            readerConfigurations: [],
+            readerDefinitions: [],
+            zoneMaps: []
+        } : {
+            signature:"",
+            timestamp: new Date().toUTCString(),
+            recipes: null,
+            readerConfigurations: null,
+            readerDefinitions: null,
+            zoneMaps: null,
+            facilities: null,
+            currentZoneMaps: []
+        };
+    }
+
+    dumpAll() {
+        const result = ConfigDump.createTemplate("all");
+        result.signature = `Dump configuration for Itemsense Instance: ${this.project.itemSense}`;
+        return this.itemsenseApi.recipes.getAll()
+            .then((recipes) => {
+                result.recipes = recipes;
+                return this.itemsenseApi.readerConfigurations.getAll();
+            })
+            .then((readerConfigurations) => {
+                result.readerConfigurations = readerConfigurations;
+                return this.itemsenseApi.readerDefinitions.getAll();
+            })
+            .then((readerDefinitions) => {
+                result.readerDefinitions = readerDefinitions;
+                return this.itemsenseApi.zoneMaps.getAll();
+            })
+            .then((zoneMaps) => {
+                result.zoneMaps = zoneMaps;
+                return this.itemsenseApi.facilities.getAll();
+            })
+            .then((facilities) => {
+                result.facilities = facilities;
+                return q.all(this.saveCurrentZoneMaps(result,facilities));
+            }).then(()=>result);
+
+    }
+
+    dumpJob(id) {
+        const result = ConfigDump.createTemplate("job");
+        result.signature = `Dump configuration for job: ${id} running on ${this.project.itemSense}`;
+        return this.itemsenseApi.jobs.get(id).then((job) => {
+                result.job = job;
+                return this.itemsenseApi.recipes.get(job.job.recipeName);
+            })
+            .then((recipe)=> {
+                result.recipe = recipe;
+                return this.populateReaderInfo(result);
+            })
+            .then(()=> q.all(this.saveReaderInfo(result)))
+            .then(()=> q.all(this.saveCurrentZoneMaps(result, result.job.facilities)))
+            .then(()=> q.all(this.saveZoneMaps(result)))
+            .then(()=> result);
+    }
+
+    populateReaderInfo(data) {
+        const recipe = data.recipe, job = data.job;
+        if (recipe.readerConfigurationName) {
+            this.readerConfigs[recipe.readerConfigurationName] = true;
+            _.each(job.readerNames, reader => this.readerDefinitions[reader] = true);
+        }
+        _.each(recipe.readerConfigurations, (readerConfig, name) => {
+            this.readerConfigs[readerConfig] = true;
+            this.readerDefinitions[name] = true;
+        });
+    }
+
+    saveReaderInfo(result) {
+        const promises = [],
+            readerConfigs = this.readerConfigs,
+            readerDefinitions = this.readerDefinitions,
+            itemsense = this.itemsenseApi;
+        _.each(readerConfigs, (v, configName) => {
+            promises.push(itemsense.readerConfigurations.get(configName)
+                .then(conf=> result.readerConfigurations.push(conf)));
+        });
+        _.each(readerDefinitions, (v, readerName) => {
+            promises.push(itemsense.readerDefinitions.get(readerName)
+                .then(def => result.readerDefinitions.push(def)));
+        });
+        return promises;
+    }
+
+    saveCurrentZoneMaps(result, facilities) {
+        return _.map(facilities, (facility) => {
+            return this.itemsenseApi.currentZoneMap.get(facility.name)
+                .then((zonemap) => result.currentZoneMaps.push({
+                    facility: facility,
+                    zoneMap: zonemap
+                }));
+
+        });
+    }
+
+    saveZoneMaps(result) {
+        return _.map(result.currentZoneMap, (zone) => this.itemsenseApi.zoneMaps.get(zone.zoneMap.name)
+            .then(zoneMap => result.zoneMaps.push(zoneMap)));
+    }
+}
+
 function startProject(project) {
     const itemsenseApi = util.connectToItemsense(project.itemSense.trim(), project.user, project.password);
     var readPromise = null, interval = null, itemSenseJob = null,
@@ -93,7 +214,6 @@ function startProject(project) {
                         results.last = createResultItem(data.items, "at");
                         return results.last;
                     }, function (error) {
-                        console.log("item promise failed", error);
                         if (results.last.at)
                             results.last.to = true;
                         else
@@ -105,7 +225,7 @@ function startProject(project) {
                 },
                 restCall(opts, user, password){
                     const defer = q.defer(),
-                        options = _.extend({method:"GET",json:true},opts),
+                        options = _.extend({method: "GET", json: true}, opts),
                         req = request(options, function (err, response, body) {
                             if (err)
                                 defer.reject(err);
@@ -115,12 +235,11 @@ function startProject(project) {
                                 defer.resolve(body);
                         });
                     if (user)
-                        req.auth(user,password);
+                        req.auth(user, password);
                     return defer.promise;
                 },
                 getNodeRedFlow(){
-                    console.log("getting from red");
-                    return this.restCall({url:project.nodeRedEndPoint});
+                    return this.restCall({url: project.nodeRedEndPoint});
                 },
                 getItems: function () {
                     if (readPromise)
@@ -137,6 +256,12 @@ function startProject(project) {
                         return items;
                     });
                     return readPromise;
+                },
+                dumpConfig(){
+                    const worker = new ConfigDump(itemsenseApi, project);
+                    if (itemSenseJob && !this.isComplete(itemSenseJob))
+                        return worker.dumpJob(itemSenseJob.id);
+                    return worker.dumpAll();
                 },
                 startJob: function (opts) {
                     var job = _.merge({
@@ -236,7 +361,7 @@ function startProject(project) {
                     return this.restCall({
                         url: `http://${reader.address}/cgi-bin/index.cgi`,
                         method: "GET"
-                    },project.readerUser || "root", project.readerPassword || "impinj" );
+                    }, project.readerUser || "root", project.readerPassword || "impinj");
                 },
                 isReaderOccupied(homePage) {
                     const match = homePage.match(/Table_Contents_Left..LLRP Status[^T]+Table_Contents_Right..([^<]+)/);
@@ -244,7 +369,7 @@ function startProject(project) {
                 },
                 isComplete: function (job) {
                     return job ? _.find(["COMPLETE", "STOPPED"], function (c) {
-                        return job.status.indexOf(c) !== -1;
+                        return job.status.startsWith(c);
                     }) : true;
                 },
                 stopInterval: function () {
@@ -257,13 +382,18 @@ function startProject(project) {
 
                     return this.getJobs(id).then(function (job) {
                         if (itemSenseJob && job.id === itemSenseJob.id)
-                            if (self.isComplete(job))
+                            if (self.isComplete(job)){
                                 self.stopInterval();
+                                itemSenseJob = null
+                            }
                         return job;
                     });
                 },
                 stopJob: function (id) {
-                    return itemsenseApi.jobs.stop(id);
+                    return itemsenseApi.jobs.stop(id).then(()=>{
+                        if(id === itemSenseJob.id)
+                            itemSenseJob = null;
+                    });
                 }
             },
             {
@@ -329,6 +459,7 @@ var md = {
     monitorJob: data => notStarted() || project.monitorJob(data),
     stopJob: data => notStarted() || project.stopJob(data),
     startJob: data => notStarted() || project.startJob(data),
+    dumpConfig: () => notStarted() || project.dumpConfig(),
     getReaders: () => notStarted() || project.getReaders(),
     getItems: () => notStarted() || project.getItems(),
     postReaders: data => notStarted() || project.postReaders(data),

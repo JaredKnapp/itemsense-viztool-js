@@ -18,8 +18,8 @@
                a(href="javascript:void(0);" flow-btn flow-attrs="{accept:'text/csv'}") Import Classification CSV
             li.menuitem(ng-class="{disabled:!project.handle}" flow-init="{target:targetSymbols}" flow-files-submitted="$flow.upload()" flow-file-success="csvUploadSuccess($file,$message,$flow,'symbols')")
                a(href="javascript:void(0);" flow-btn flow-attrs="{accept:'text/csv'}") Import Picture Map CSV
-            li.menuitem.disabled
-               a(href="javascript:void(0);") Export...
+            li.menuitem(ng-class="{disabled: !project.recipes}")
+               a(ng-href="/project/{{project.handle}}/dump" target="_self" download="itemsense-configuration.json") Export...
             li.menuitem(ng-show="!project.recipes" ng-class="{disabled:!project.canConnect()}")
                a(href="javascript:void(0);" ng-click="project.connect()") Connect to Item Sense
             li.menuitem(ng-class="{disabled:!project.canConnect()}")

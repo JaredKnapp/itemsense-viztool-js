@@ -243,5 +243,8 @@ router.post("/:projectId/facilities", function (req, res) {
         err => handleError(err,res,threadError)
     );
 });
+
+router.get("/:projectId/dump", threadCall.bind(null, "dumpConfig", false));
+
 module.exports = router;
 
