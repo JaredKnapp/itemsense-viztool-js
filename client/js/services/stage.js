@@ -278,9 +278,7 @@ module.exports = (function (app) {
                                     stage.update();
                         },
                         updateReader: function (reader) {
-                            var target = _.find(readers, function (r) {
-                                return r.ref === reader.placement;
-                            });
+                            var target = _.find(readers, (r) => r.ref === reader.placement);
                             if (target)
                                 target.draw(true);
 
