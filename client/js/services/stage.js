@@ -533,7 +533,7 @@ module.exports = (function (app) {
                 const x = Math.round10(wrapper.canvasToMeters(ev.offsetX,"x"),-2),
                     y = Math.round10(wrapper.canvasToMeters(ev.offsetY,"y"),-2);
                     mouseDiv = mouseDiv || document.querySelector("#mouseCoords");
-                if(wrapper.scale)
+                if(wrapper.zoom)
                     mouseDiv.innerHTML = `${x}, ${y}`;
             };
             canvas.onmouseout = function(){
