@@ -172,7 +172,6 @@ module.exports = (function (app) {
                         showItems = false,
                         pullItems = false,
                         stage = null,
-                        mouse = null,
                         recipes = null,
                         recipe = null,
                         duration = 20,
@@ -406,14 +405,6 @@ module.exports = (function (app) {
                                 },
                                 set: function (v) {
                                     timeLapseData.replace(v);
-                                }
-                            },
-                            mouse: {
-                                get: function () {
-                                    return mouse;
-                                },
-                                set: function (v) {
-                                    mouse = v;
                                 }
                             },
                             item: {

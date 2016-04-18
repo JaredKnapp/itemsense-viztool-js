@@ -68,22 +68,6 @@ module.exports = (function (app) {
                                     return $state.go("floorPlan");
                                 scope.$apply();
                             });
-                            events.pressmove = stage.on("pressmove", function (ev) {
-                                if ($state.current.name === "floorPlan.origin")
-                                    self.origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
-                                else if ($state.current.name === "floorPlan.trace")
-                                    Tracer.pressmove(ev);
-                                else
-                                    project.mouse = {
-                                        x: self.stageToMeters(ev.stageX / self.zoom, "x"),
-                                        y: self.stageToMeters(ev.stageY / self.zoom, "y")
-                                    };
-                                scope.$apply();
-                            });
-                            events.pressup = stage.on("pressup", function () {
-                                project.mouse = null;
-                                scope.$apply();
-                            });
 
                             events.dblclick = stage.on("dblclick", function (ev) {
                                 if ($state.current.name === "floorPlan.trace")
@@ -128,6 +112,9 @@ module.exports = (function (app) {
                             if (self.project && !self.origin.x)
                                 self.origin = self.visibleCenter();
                             self.update();
+                        },
+                        canvasToMeters(v,axis){
+                            return this.stageToMeters(this.screenToCanvas(v),axis);
                         },
                         screenToCanvas: function (v) {
                             return v / this.zoom;
@@ -536,6 +523,19 @@ module.exports = (function (app) {
             canvas.width = bkWidth;
             canvas.height = bkHeight;
             canvas.setAttribute("oncontextmenu", "return false;");
+            let mouseDiv = null;
+            canvas.onmousemove = function(ev){
+                const x = Math.round10(wrapper.canvasToMeters(ev.offsetX,"x"),-2),
+                    y = Math.round10(wrapper.canvasToMeters(ev.offsetY,"y"),-2);
+                    mouseDiv = mouseDiv || document.querySelector("#mouseCoords");
+                mouseDiv.innerHTML = `${x}, ${y}`;
+            };
+            canvas.onmouseout = function(){
+                mouseDiv = mouseDiv || document.querySelector("#mouseCoords");
+                if(mouseDiv)
+                    mouseDiv.innerHTML="";
+                mouseDiv = null;
+            };
             wrapper.initLayers();
             stage.addChild(main);
             wrapper.addChild(Origin.shape);
