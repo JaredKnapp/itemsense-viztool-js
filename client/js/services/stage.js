@@ -533,7 +533,8 @@ module.exports = (function (app) {
                 const x = Math.round10(wrapper.canvasToMeters(ev.offsetX,"x"),-2),
                     y = Math.round10(wrapper.canvasToMeters(ev.offsetY,"y"),-2);
                     mouseDiv = mouseDiv || document.querySelector("#mouseCoords");
-                mouseDiv.innerHTML = `${x}, ${y}`;
+                if(wrapper.scale)
+                    mouseDiv.innerHTML = `${x}, ${y}`;
             };
             canvas.onmouseout = function(){
                 mouseDiv = mouseDiv || document.querySelector("#mouseCoords");
