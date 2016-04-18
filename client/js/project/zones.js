@@ -26,24 +26,24 @@ module.exports = (function (app) {
                     return counter === undefined ? base : `${base}_copy_${counter + 1}`;
                 },
                 addZone: (points) => {
-                    return this.updateZones(project, {
+                    return project.updateZones(project, {
                         name: project.cloneZoneName("newZone"),
                         floor: project.floorName,
                         points: points
                     });
                 },
                 cloneZone(){
-                    this.stage.selectZone(this.updateZones(this, {
-                        name: this.cloneZoneName(this.zone.name),
-                        floor: this.floorName,
-                        points: this.zone.clone()
+                    project.stage.selectZone(project.updateZones(project, {
+                        name: project.cloneZoneName(project.zone.name),
+                        floor: project.floorName,
+                        points: project.zone.clone()
                     }));
                 },
                 deleteZone(){
                     return project.stage ? project.stage.deleteZone() : null;
                 },
                 newZoneMap(name) {
-                    this.addZoneMap(newZoneMap(name, this));
+                    project.addZoneMap(newZoneMap(name, project));
                 }
             };
         }
