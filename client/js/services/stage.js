@@ -198,7 +198,12 @@ module.exports = (function (app) {
                             if (!this.containsShape(Ruler.shape))
                                 this.addChild(Ruler.shape);
                             if (!Ruler.coords.startX)
-                                Ruler.coords.init(this.visibleCenter(), 50);
+                                this.putRulerInCenter();
+                            Ruler.draw(true);
+                            this.rulerLength = Ruler.length;
+                        },
+                        putRulerInCenter(){
+                            Ruler.coords.init(this.visibleCenter(),20);
                             Ruler.draw(true);
                             this.rulerLength = Ruler.length;
                         },

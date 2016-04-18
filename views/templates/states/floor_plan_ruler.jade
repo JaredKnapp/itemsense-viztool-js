@@ -34,5 +34,6 @@ table.table
                 input(type="checkbox" ng-model="project.rulerCoords.fix[1]" ng-click="project.rulerCoords.fix[0] =  project.rulerCoords.fix[1] ? false : project.rulerCoords.fix[0]")
             td
                 button.btn.btn-primary(ng-click="addReader('end')" ng-disabled="!project.readers") Put
+button.btn.btn-default(ng-click="project.stage.putRulerInCenter()") Move to Center of View
 .ui-view
 
