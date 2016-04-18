@@ -69,6 +69,14 @@ module.exports = (function (app) {
                                 scope.$apply();
                             });
 
+                            events.pressmove = stage.on("pressmove", function (ev) {
+                                if ($state.current.name === "floorPlan.origin")
+                                    self.origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
+                                else if ($state.current.name === "floorPlan.trace")
+                                    Tracer.pressmove(ev);
+                                scope.$apply();
+                            });
+
                             events.dblclick = stage.on("dblclick", function (ev) {
                                 if ($state.current.name === "floorPlan.trace")
                                     Tracer.dblclick(ev);
