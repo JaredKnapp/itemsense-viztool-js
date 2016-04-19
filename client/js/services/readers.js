@@ -88,7 +88,7 @@ module.exports = (function (app) {
                         device = new createjs.Shape(),
                         ref = reader ? reader.placement : {},
                         model = ReaderModel(ref, stage),
-                        zoomHandler = null,
+                        zoomHandler = null, moved = false,
                         prevColor = engaged ? colors[engaged] : colors.disengage,
                         color = prevColor,
                         lastX, lastY,
@@ -182,6 +182,7 @@ module.exports = (function (app) {
                         wrapper.activate();
                         lastX = ev.stageX;
                         lastY = ev.stageY;
+                        moved = false;
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
@@ -192,8 +193,18 @@ module.exports = (function (app) {
                         wrapper.draw(true);
                         lastX = ev.stageX;
                         lastY = ev.stageY;
+                        moved = true;
                         if (stage.scope)
                             stage.scope.$apply();
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                    });
+                    device.on("pressup",function(ev){
+                        if(!moved) return;
+                        stage.dispatchEvent(new createjs.Event("shouldSave").set({subject:"readers"}));
+                        stage.scope.$apply();
+                        ev.preventDefault();
+                        ev.stopPropagation();
                     });
                     stage.addChild(field);
                     stage.addChild(device);
