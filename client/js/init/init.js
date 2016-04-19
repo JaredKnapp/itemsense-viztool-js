@@ -162,7 +162,8 @@ module.exports = (function (app) {
                     templateUrl: "/templates/states/floor_plan",
                     controller: "FloorPlan"
                 }).state("floorPlan.origin", {
-                    templateUrl: "/templates/states/floor_plan_origin"
+                    templateUrl: "/templates/states/floor_plan_origin",
+                    controller:"Origin"
                 }).state("floorPlan.ruler", {
                     templateUrl: "/templates/states/floor_plan_ruler"
                 }).state("floorPlan.trace", {

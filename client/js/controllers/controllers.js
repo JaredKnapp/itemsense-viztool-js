@@ -269,6 +269,11 @@ module.exports = (function (app) {
                 });
             };
         }])
+        .controller("Origin",["$scope",function($scope){
+            $scope.$watch("originForm.$pristine",function(n){
+                if(!n) $scope.$emit("shouldSave","general");
+            });
+        }])
         .controller("Readers", ["$scope", function ($scope) {
             var stageReader;
 

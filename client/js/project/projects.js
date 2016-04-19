@@ -245,6 +245,7 @@ module.exports = (function (app) {
                                 this.job = null;
                             },
                             setOrigin: function (x, y) {
+                                shouldSave.general = true;
                                 if (stage)
                                     stage.setOrigin(x, y);
                             },
