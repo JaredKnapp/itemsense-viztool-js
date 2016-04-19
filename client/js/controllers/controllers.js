@@ -16,8 +16,8 @@ module.exports = (function (app) {
                 Requester.about();
             };
             $scope.selectZoneMap = function () {
-                if($scope.project.shouldSave.zones)
-                    if(!window.confirm("Changes to Current ZoneMap will be lost. Continue?"))
+                if ($scope.project.shouldSave.zones)
+                    if (!window.confirm("Changes to Current ZoneMap will be lost. Continue?"))
                         return;
                 Requester.selectZoneMap()
                     .then(zoneMap => $scope.project.setCurrentZoneMap(zoneMap.name)
@@ -42,14 +42,14 @@ module.exports = (function (app) {
                 if (newFilter === null)
                     return;
                 $scope.project.epcFilter = newFilter;
-                $scope.$emit("shouldSave","general");
+                $scope.$emit("shouldSave", "general");
             };
             $scope.setFloorName = function () {
                 if (!$scope.project)
                     return;
                 var floorName = window.prompt("Set Floor Name for the project", $scope.project.floorName || "");
                 if (floorName === null) return;
-                $scope.$emit("shouldSave","general");
+                $scope.$emit("shouldSave", "general");
                 $scope.project.floorName = floorName;
             };
             $scope.canStart = function () {
@@ -69,7 +69,7 @@ module.exports = (function (app) {
             };
             $scope.csvUploadSuccess = function (file, message, flow, target) {
                 $scope.project.addTarget(target, JSON.parse(message));
-                $scope.$emit("shouldSave","general");
+                $scope.$emit("shouldSave", "general");
             };
             $scope.newZoneMap = function () {
                 if (!$scope.project)
@@ -83,7 +83,7 @@ module.exports = (function (app) {
                     if (!window.confirm("Zone Map " + zoneMapName + " exists. do you want to clear it?"))
                         return;
                 $scope.project.newZoneMap(zoneMapName);
-                $scope.$emit("shouldSave","general");
+                $scope.$emit("shouldSave", "general");
             };
             $scope.trace = function () {
                 if ($scope.$state.is("floorPlan.trace"))
@@ -99,12 +99,12 @@ module.exports = (function (app) {
                 message = JSON.parse(message);
                 $scope.project.floorPlan = message.filename;
                 $scope.imageVersion += 1;
-                $scope.$emit("shouldSave","general");
+                $scope.$emit("shouldSave", "general");
             };
-            $scope.toggle=function(prop,ignore){
+            $scope.toggle = function (prop, ignore) {
                 $scope.project[prop] = !$scope.project[prop];
-                if(!ignore)
-                    $scope.$emit("shouldSave","general");
+                if (!ignore)
+                    $scope.$emit("shouldSave", "general");
             };
         }])
         .factory("Requester", ["$uibModal", "_", function ($uibModal, _) {
@@ -213,8 +213,8 @@ module.exports = (function (app) {
                 else
                     window.alert("Url and credentials are required to get list of facilities");
             };
-            $scope.$watch("projectForm.$pristine",function(n){
-                if(!n) $scope.$emit("shouldSave","general");
+            $scope.$watch("projectForm.$pristine", function (n) {
+                if (!n) $scope.$emit("shouldSave", "general");
             })
         }])
         .controller("FloorPlan", ["$scope", function ($scope) {
@@ -262,8 +262,9 @@ module.exports = (function (app) {
             };
             $scope.setScale = function () {
                 var v = window.prompt("Enter the measured length of ruler in meters", $scope.project._rulerMeters);
-                if (v)
-                    $scope.project.setScale(v);
+                if (!v) return;
+                $scope.$emit("shouldSave", "general");
+                $scope.project.setScale(v);
             };
             $scope.addReader = function (point) {
                 $scope.$state.go("floorPlan.reader", {
@@ -272,9 +273,9 @@ module.exports = (function (app) {
                 });
             };
         }])
-        .controller("Origin",["$scope",function($scope){
-            $scope.$watch("originForm.$pristine",function(n){
-                if(!n) $scope.$emit("shouldSave","general");
+        .controller("Origin", ["$scope", function ($scope) {
+            $scope.$watch("originForm.$pristine", function (n) {
+                if (!n) $scope.$emit("shouldSave", "general");
             });
         }])
         .controller("Readers", ["$scope", function ($scope) {
@@ -298,15 +299,15 @@ module.exports = (function (app) {
                     }
                 };
                 $scope.project.readers.push(newReader);
-                $scope.$emit("shouldSave","readers");
+                $scope.$emit("shouldSave", "readers");
                 stageReader = $scope.project.stage ? $scope.project.stage.addReader(newReader) : null;
                 return newReader;
             }
 
             $scope.activeReader = $scope.project.reader || makeReader();
 
-            $scope.$watch("readerForm.$pristine",function(n){
-                if(!n) $scope.$emit("shouldSave","readers");
+            $scope.$watch("readerForm.$pristine", function (n) {
+                if (!n) $scope.$emit("shouldSave", "readers");
             });
             $scope.$watch(function () {
                 return $scope.project.reader;
