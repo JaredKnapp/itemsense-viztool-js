@@ -101,6 +101,11 @@ module.exports = (function (app) {
                 $scope.imageVersion += 1;
                 return $scope.project.save($scope.project);
             };
+            $scope.toggle=function(prop,ignore){
+                $scope.project[prop] = !$scope.project[prop];
+                if(!ignore)
+                    $scope.$emit("shouldSave","general");
+            };
         }])
         .factory("Requester", ["$uibModal", "_", function ($uibModal, _) {
             function openModal(options) {
