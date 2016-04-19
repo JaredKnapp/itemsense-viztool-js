@@ -6,8 +6,8 @@
 "use strict";
 
 module.exports = (function (app) {
-    app.factory("Presenter", ["CreateJS", "$interval", "Item", "_", "$timeout", "PresenterZones",
-            function (createjs, $interval, Item, _, $timeout, prepareZones) {
+    app.factory("Presenter", ["CreateJS", "$interval", "Item", "_", "$timeout",
+            function (createjs, $interval, Item, _, $timeout) {
                 return function (scope, el) {
                     var project = scope.project,
                         canvas = document.createElement("canvas"),
@@ -16,7 +16,6 @@ module.exports = (function (app) {
                         bkWidth, bkHeight, zoomX, zoomY, zoom,
                         minX, minY, maxX, maxY,
                         interval, items = {}, activeTweens = 0, itemData, item,
-                        zones = null,
                         wrapper = Object.create({
                             update: function () {
                                 if (this.activeTweens <= 0)
@@ -69,14 +68,7 @@ module.exports = (function (app) {
                                 });
                             },
                             correctXY: function (tags) {
-                                return _.map(tags, function (t) {
-                                    _.each(zones, function (z) {
-                                        z.entreat(t);
-                                    });
-                                    t.x = Math.max(minX, Math.min(t.xLocation, maxX));
-                                    t.y = Math.max(minY, Math.min(t.yLocation, maxY));
-                                    return t;
-                                });
+                                return tags; //no correction performed on client. use node-red flows to correct at server.
                             },
                             showItems: function (itemData) {
                                 var self = this;
@@ -207,7 +199,6 @@ module.exports = (function (app) {
                         main.setTransform(0, 0, wrapper.zoom, wrapper.zoom);
                         stage.update();
                         project.preparePresentation(wrapper,bitmap);
-                        zones = prepareZones(project.zones, wrapper);
                         return project.connect();
                     }).then(function () {
                         interval = $interval(wrapper.tick, 5000);
@@ -229,165 +220,5 @@ module.exports = (function (app) {
                     });
                     return wrapper;
                 };
-            }])
-        .factory("PresenterLines", [function () {
-            // this uses the solution outlined in http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect to find intersections
-            function subtractPoint(p2, p1) {
-                return {
-                    x: p2.x - p1.x,
-                    y: p2.y - p1.y
-                };
-            }
-
-            function crossProduct(p1, p2) {
-                return (p1.x * p2.y) - (p1.y * p2.x);
-            }
-
-            function getU(uNum, dnom, a, s) {
-                if (dnom === 0)
-                    return null;
-                var u = uNum / dnom,
-                    t = crossProduct(a, s) / dnom;
-                return (u < 0 || t < 0 || t > 1.0) ? null : u;
-            }
-
-            return function (p1, p2, center) {
-                var r = subtractPoint(p2, p1),
-                    a = subtractPoint(center, p1),
-                    uNum = crossProduct(a, r);
-                return Object.create({
-                    doesIntersect: function (p) {
-                        var s = subtractPoint(p, center),
-                            dnom = crossProduct(r, s),
-                            u = getU(uNum, dnom, a, s);
-                        return u ? {
-                            x: s.x * u,
-                            y: s.y * u
-                        } : null;
-                    }
-                }, {});
-            };
-        }])
-        .factory("PresenterZones", ["_", "CreateJS", "PresenterLines", function (_, createjs, lineObject) {
-            function drawShape(shape, pts) {
-                var g = shape.graphics.clear().s("brown").f("red");
-                _.reduce(pts, function (r, p, i) {
-                    return i ? r.lt(p.x, p.y) : r.mt(p.x, p.y);
-                }, g).lt(pts[0].x, pts[0].y);
-                return shape;
-            }
-
-            function getCenterPoint(z) {
-                var center = _.reduce(z.points, function (r, p) {
-                    r.x += p.x;
-                    r.y += p.y;
-                    return r;
-                }, {x: 0, y: 0});
-                center.x /= z.points.length;
-                center.y /= z.points.length;
-                return center;
-            }
-
-            function getLineObjects(z, center) {
-                return _.reduce(z.points.concat(z.points[0]), function (r, p, i) {
-                    if (i === 0)
-                        return r;
-                    r.push(lineObject(z.points[i - 1], p, center));
-                    return r;
-                }, []);
-            }
-/*
-            function getShadowPoints(z, center) {
-                return _.map(z.points, function (p) {
-                    return {
-                        x: center.x + ((p.x - center.x) * z.tolerance),
-                        y: center.y + ((p.y - center.y) * z.tolerance)
-                    };
-                });
-            }
-*/
-            function prepareZone(z, stage) {
-                var center = getCenterPoint(z),
-                    lines = getLineObjects(z, center),
-//                    shadow = drawShape(new createjs.Shape(), getShadowPoints(z, center)),
-                    shape = drawShape(new createjs.Shape(), z.points);
-
-                return Object.create({
-
-                    moveToIntersection: function (intersection, p) {
-                        if (!intersection) return false;
-                        var offset = z.type === "blocker" ? 1 + (Math.random() * (z.tolerance - 1)) : Math.random();
-                        p.x = stage.stageToMeters(center.x + (intersection.x * offset), "x");
-                        p.y = stage.stageToMeters(center.y + (intersection.y * offset), "y");
-                        return true;
-                    },
-
-                    moveToNewPosition: function (q, p) {
-                        for (var i = 0; i < lines.length; i++)
-                            if (this.moveToIntersection(lines[i].doesIntersect(q), p))
-                                return;
-                    },
-                    appliesToFixture: function (p) {
-                        var pObject = stage.project.itemHash[p.epc];
-                        var pSymbols = _.map(pObject, function (v) {
-                            return v;
-                        });
-                        return _.find(z.include, function (include) {
-                            return _.find(pSymbols, function (symbol) {
-                                return symbol === include;
-                            });
-                        });
-                    },
-                    hits: function (p) {
-                        return false && p; //disable zone fixtures and blockers for now
-                        /*
-                        if (shape.hitTest(p.x, p.y))
-                            return z.type === "blocker";
-                        if (z.type === "blocker")
-                            return false;
-                        if (shadow.hitTest(p.x, p.y))
-                            return this.appliesToFixture(p);
-                        */
-                    },
-
-                    entreat: function (p) {
-                        var q = {
-                            x: stage.metersToStage(p.x, "x"),
-                            y: stage.metersToStage(p.y, "y"),
-                            epc: p.epc
-                        };
-                        if (this.hits(q))
-                            this.moveToNewPosition(q, p);
-                    }
-                }, {
-                    shape: {
-                        get: function () {
-                            return shape;
-                        }
-                    },
-                    zone: {
-                        get: function () {
-                            return z;
-                        }
-                    },
-                    center: {
-                        get: function () {
-                            return center;
-                        }
-                    }
-                });
-            }
-
-            return function (zones, stage) {
-                return _.map(zones, function (z) {
-                    return prepareZone(z, stage);
-                }).sort(function(a,b){
-                    if(a.type === b.type)
-                        return 0;
-                    if(a.type === "blocker")
-                        return -1;
-                    return 1;
-                });
-            };
-        }]);
+            }]);
 })(angular.module(window.mainApp));

@@ -1,0 +1,18 @@
+h3 New Zone
+ul
+    li Left click for new points
+    li Right click to remove points
+    li Double click to close shape
+table.table
+    thead
+        tr
+            th Point
+            th X
+            th Y
+    tbody
+        tr(ng-repeat="point in project.tracePoints")
+            th {{$index +1}}
+            td(contenteditable="true" ng-model="point.X" step="0.1")
+            td(contenteditable="true" ng-model="point.Y" step="0.1")
+
+

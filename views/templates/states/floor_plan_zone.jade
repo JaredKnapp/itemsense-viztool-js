@@ -4,3 +4,21 @@
         input.form-control(type="text" ng-model="project.zone.name")
     i.pnj-delete(title="delete" ng-click="project.deleteZone()")
     i.pnj-clone(title="duplicate" ng-click="project.cloneZone()")
+h4 Edit Zone
+ul
+    li DblClick on filled point to delete
+    li DblClick on hollow point to add new
+    li Drag point to change shape
+table.table
+    thead
+        tr
+            th Point
+            th X
+            th Y
+    tbody
+        tr(ng-repeat="point in project.zone.points" ng-if="point.type === 'full'")
+            td {{($index/2)+1}}
+            td(contenteditable="true" ng-model="point._x" step="0.1")
+            td(contenteditable="true" ng-model="point._y" step="0.1")
+
+

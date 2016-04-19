@@ -25,7 +25,10 @@ process.on("message", function (msg) {
         process.send({serial: msg.serial, payload: {type: "ok", data: response}});
     }, function (error) {
         console.log("catching error", error);
-        var data=(error.statusCode)? error : {statusCode:500, body:"OS error "+error.name +": "+error.description};
+        var data = (error.statusCode) ? error : {
+            statusCode: 500,
+            response: {body: "OS error " + error.name + ": " + (error.description || error.message)}
+        };
         process.send({serial: msg.serial, payload: {type: "error", data: data}});
     });
 });
