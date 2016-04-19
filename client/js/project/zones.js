@@ -17,6 +17,7 @@ module.exports = (function (app) {
             return {
                 updateZones: (project, zone) => {
                     project.zones = project.zones.concat(zone);
+                    project.shouldSave.zones = true;
                     return zone;
                 },
                 cloneZoneName: function (name) {
@@ -40,6 +41,7 @@ module.exports = (function (app) {
                     }));
                 },
                 deleteZone(){
+                    
                     return project.stage ? project.stage.deleteZone() : null;
                 },
                 newZoneMap(name) {

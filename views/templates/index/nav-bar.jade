@@ -70,5 +70,7 @@
                a(href="javascript:void(0);" ng-click="trace()")
                   i.pnj-menu-check(ng-show="$state.is('floorPlan.trace')")
                   |    Add Zone
+      li(uib-dropdown ng-class="{disabled:!project.recipes}")
+         a(uib-dropdown-toggle href="javascript:void(0);") {{project.shouldSave}}
    .pnj-job-control(ng-show="project.job" from-template="index/job_control")
 

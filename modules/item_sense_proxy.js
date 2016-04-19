@@ -239,23 +239,25 @@ function startProject(project) {
                     return defer.promise;
                 },
                 getNodeRedFlow(){
-                    return this.restCall({url: project.nodeRedEndPoint});
+                    readPromise= wrapper.stash(wrapper.restCall({url: project.nodeRedEndPoint}))
+                        .catch(error=>{console.log(error); return q.reject(error)});
+                    return readPromise;
                 },
-                getItems: function () {
-                    if (readPromise)
-                        return readPromise;
-                    const data = (project.itemSource === "Direct Connection")
-                        ? itemsenseApi.items.get({pageSize: 1000})
-                        : this.getNodeRedFlow();
-                    readPromise = wrapper.stash(data).then(function (items) {
+                getDirect(){
+                    readPromise = wrapper.stash(itemsenseApi.items.get({pageSize: 1000})).then(function (items) {
                         if (!itemSenseJob)
-                            return q.reject({statusCode: 500, body: "Job not started"});
+                            return q.reject({statusCode: 500, response:{body: "Job not started"}});
                         items.data = _.filter(items.data, function (i) {
                             return i.lastModifiedTime > itemSenseJob.creationTime
                         });
                         return items;
                     });
                     return readPromise;
+                },
+                getItems: function () {
+                    if (readPromise)
+                        return readPromise;
+                    return project.itemSource === "Direct Connection" ? this.getDirect() : this.getNodeRedFlow();
                 },
                 dumpConfig(){
                     const worker = new ConfigDump(itemsenseApi, project);
@@ -424,7 +426,7 @@ function startProject(project) {
     return wrapper;
 }
 
-const notStarted = ()=> project ? null : q.reject({statusCode: 500, body: "Server error: Project Not Started"});
+const notStarted = ()=> project ? null : q.reject({statusCode: 500, response:{body: "Server error: Project Not Started"}});
 
 var md = {
 
@@ -445,6 +447,11 @@ var md = {
         }).then(function (zoneMaps) {
             payload.zoneMaps = _.filter(zoneMaps, function (z) {
                 return z.facility === project.project.facility;
+            });
+            payload.zoneMaps.forEach(function(zoneMap){
+                zoneMap.zones = _.filter(zoneMap.zones,function(zone){
+                    return zone.floor === undefined || zone.floor === project.project.floorName;
+                })
             });
             return project.getCurrentZoneMap();
         }).then(function (currentZoneMap) {

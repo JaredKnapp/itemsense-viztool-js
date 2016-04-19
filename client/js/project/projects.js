@@ -160,7 +160,7 @@ module.exports = (function (app) {
                         floorPlanVersion = 1,//just to force the reload of floorplan. doesn't actually keep version
                         floorName = null,
                         origin = projectOrigin(ref),
-                        shouldSave = true,
+                        shouldSave = {},
                         name = "",
                         itemSense = "",
                         rulerLength = 1,
@@ -171,6 +171,7 @@ module.exports = (function (app) {
                         nodeRedEndPoint = null,
                         showItems = false,
                         pullItems = false,
+                        pullInterval = 5,
                         stage = null,
                         recipes = null,
                         recipe = null,
@@ -379,7 +380,7 @@ module.exports = (function (app) {
                                     items = v;
                                 }
                             },
-                            headMapFlag: {
+                            timeLapseFlag: {
                                 get: function () {
                                     return timeLapseFlag;
                                 },
@@ -388,7 +389,6 @@ module.exports = (function (app) {
                                 }
                             },
                             timeLapse: {
-                                enumerable: true,
                                 get: function () {
                                     return timeLapse;
                                 },
@@ -465,6 +465,13 @@ module.exports = (function (app) {
                                     floorName = v;
                                 }
                             },
+                            pullInterval: {
+                                enumerable:true,
+                                get:()=>pullInterval,
+                                set:function (v){
+                                    pullInterval = Math.max(v,5);
+                                }
+                            },
                             showItems: {
                                 enumerable: true,
                                 get: function () {
@@ -499,7 +506,6 @@ module.exports = (function (app) {
                                     return name;
                                 },
                                 set: function (v) {
-                                    this.shouldSave = true;
                                     name = v;
                                 }
                             },
@@ -530,7 +536,6 @@ module.exports = (function (app) {
                                     return floorPlan;
                                 },
                                 set: function (v) {
-                                    this.shouldSave = true;
                                     floorPlan = v;
                                     floorPlanVersion += 1;
                                     if (stage)
@@ -543,7 +548,6 @@ module.exports = (function (app) {
                                     return origin;
                                 },
                                 set: function (v) {
-                                    this.shouldSave = true;
                                     origin = v;
                                     if (stage)
                                         stage.origin = v;
@@ -644,12 +648,16 @@ module.exports = (function (app) {
                             itemSource:{
                                 enumerable: true,
                                 get:() => itemSource,
-                                set: v => itemSource = v
+                                set: function (v){
+                                    itemSource = v;
+                                }
                             },
                             nodeRedEndPoint:{
                                 enumerable: true,
                                 get:() => nodeRedEndPoint,
-                                set: v => nodeRedEndPoint = v
+                                set: function (v){
+                                    nodeRedEndPoint = v;
+                                }
                             }
                         });
                     ProjectZones(project);

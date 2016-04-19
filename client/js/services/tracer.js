@@ -76,6 +76,7 @@ module.exports = (function (app) {
                         return defer.promise;
                     },
                     cancel: function () {
+                        shape.graphics.clear();
                         stage.removeChild(shape);
                         stage.update();
                         if (defer)
@@ -213,7 +214,8 @@ module.exports = (function (app) {
                         shape = new createjs.Shape(),
                         editor = new createjs.Shape();
                     let points, lastX, lastY, model,
-                        isActive = false, movingPoint = null, zoomHandler = null,
+                        isActive = false, hasdragged = false, movingPoint = null, zoomHandler = null,
+                        movingPointDragged = false,
                         wrapper = Object.create({
                             activate() {
                                 isActive = true;
@@ -301,6 +303,7 @@ module.exports = (function (app) {
                         lastX = ev.stageX;
                         lastY = ev.stageY;
                         if (!isActive)  wrapper.activate();
+                        hasdragged = false;
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
@@ -318,11 +321,19 @@ module.exports = (function (app) {
                             });
                             wrapper.draw();
                             stage.scope.$apply();
+                            hasdragged = true;
                             ev.preventDefault();
                             ev.stopPropagation();
                         }
                     });
-
+                    shape.on("pressup",function(ev){
+                        if(hasdragged){
+                            stage.dispatchEvent(new createjs.Event("shouldSave").set({subject: "zones"}));
+                            stage.scope.$apply();
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                        }
+                    });
 
                     editor.on("mousedown", function (ev) {
                         const x = ev.localX, y = ev.localY, cutoff = stage.screenToCanvas(6);
@@ -333,11 +344,13 @@ module.exports = (function (app) {
                         });
                         lastX = ev.stageX;
                         lastY = ev.stageY;
+                        movingPointDragged = false;
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
                     editor.on("dblclick", function (ev) {
                         if (movingPoint) {
+                            stage.dispatchEvent(new createjs.Event("shouldSave").set({subject: "zones"}));
                             if (movingPoint.type === "full")
                                 wrapper.removePoint(movingPoint);
                             else
@@ -357,6 +370,14 @@ module.exports = (function (app) {
                         movingPoint.x += dx;
                         movingPoint.y += dy;
                         wrapper.draw();
+                        movingPointDragged = true;
+                        stage.scope.$apply();
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                    });
+                    editor.on("pressup", function(ev){
+                        if (!movingPointDragged) return;
+                        stage.dispatchEvent(new createjs.Event("shouldSave").set({subject: "zones"}));
                         stage.scope.$apply();
                         ev.preventDefault();
                         ev.stopPropagation();

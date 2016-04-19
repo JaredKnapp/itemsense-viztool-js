@@ -177,6 +177,7 @@ module.exports = (function (app) {
                                 });
                             if (idx !== -1){
                                 this.zones.splice(idx, 1);
+                                this.scope.$emit("shouldSave","zones");
                                 zoneCollection.splice(idx,1);
                             }
                             this.zone.destroy();
@@ -330,11 +331,13 @@ module.exports = (function (app) {
                             this.update();
                         },
                         pullItems: function (v) {
-                            if (v)
+                            if (v){
                                 itemInterval = itemInterval || $interval(function () {
                                         if ($state.current.name.indexOf("floorPlan") === 0)
                                             project.getItems();
-                                    }, 5000);
+                                    }, project.pullInterval * 1000);
+                                project.getItems();
+                            }
                             else {
                                 $interval.cancel(itemInterval);
                                 itemInterval = null;
@@ -572,6 +575,9 @@ module.exports = (function (app) {
             });
             stage.on("newItem", function (ev) {
                 switchFocus(ev, "item");
+            });
+            stage.on("shouldSave",function(ev){
+                wrapper.scope.$emit("shouldSave",ev.subject);
             });
             createjs.Ticker.setFPS(30);
             createjs.Ticker.addEventListener("tick", function () {

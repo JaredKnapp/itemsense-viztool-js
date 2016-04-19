@@ -83,6 +83,11 @@ module.exports = (function (app) {
                     if (toState.name.indexOf("floorPlan.") > -1)
                         $rootScope.$broadcast("StartPlanState", toState.name.substr("floorPlan.".length));
                 });
+                $rootScope.$on("shouldSave",function(ev,data){
+                    console.log("Should Save", ev, data);
+                    project.shouldSave[data || "general"] = true;
+                    console.log("Should Save", data);
+                });
                 $rootScope.sanitize = function (s) {
                     return (s||"").trim().replace(/[^-a-zA-Z0-9._]/g, "_");
                 };

@@ -52,7 +52,7 @@ module.exports=(function(app) {
                     method: "POST",
                     url: "/project/",
                     data: self
-                });
+                }).then(() => self.shouldSave={});
             },
             deleteProject(data){
                 return restCall({
@@ -79,9 +79,11 @@ module.exports=(function(app) {
                     }) : null;
                     self.duration = data.job ? data.job.job.durationSeconds : 20;
                     if (self.job) {
-                        self.jobMonitor = self.jobMonitor;
-                        self.pullItems = self.pullItems;
+                        self.jobMonitor = !!self.jobMonitor;
+                        self.pullItems = !!self.pullItems;
                     }
+                    else if(self.itemSource !== "Direct Connection")
+                        self.pullItems = !!self.pullItems;
                     if (self.showReaders && !self.readers)
                         return self.getReaders();
                     return self;
@@ -181,7 +183,7 @@ module.exports=(function(app) {
                 }, opts)).then(function (items) {
                     self.items = items;
                     self.showItems = self.showItems;
-                    if (!self.isJobRunning())
+                    if (!self.isJobRunning() && self.itemSource === "Direct Connection")
                         self.pullItems = false;
                     return items;
                 });

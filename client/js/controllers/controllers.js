@@ -278,12 +278,16 @@ module.exports = (function (app) {
                     }
                 };
                 $scope.project.readers.push(newReader);
+                $scope.$emit("shouldSave","readers");
                 stageReader = $scope.project.stage ? $scope.project.stage.addReader(newReader) : null;
                 return newReader;
             }
 
             $scope.activeReader = $scope.project.reader || makeReader();
 
+            $scope.$watch("readerForm.$pristine",function(n){
+                if(!n) $scope.$emit("shouldSave","readers");
+            });
             $scope.$watch(function () {
                 return $scope.project.reader;
             }, function (n) {
