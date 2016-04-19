@@ -16,6 +16,9 @@ module.exports = (function (app) {
                 Requester.about();
             };
             $scope.selectZoneMap = function () {
+                if($scope.project.shouldSave.zones)
+                    if(!window.confirm("Changes to Current ZoneMap will be lost. Continue?"))
+                        return;
                 Requester.selectZoneMap()
                     .then(zoneMap => $scope.project.setCurrentZoneMap(zoneMap.name)
                         .then(()=>$scope.project._zoneMap = zoneMap));
@@ -39,13 +42,15 @@ module.exports = (function (app) {
                 if (newFilter === null)
                     return;
                 $scope.project.epcFilter = newFilter;
+                $scope.$emit("shouldSave","general");
             };
             $scope.setFloorName = function () {
                 if (!$scope.project)
                     return;
                 var floorName = window.prompt("Set Floor Name for the project", $scope.project.floorName || "");
-                if (floorName !== null)
-                    $scope.project.floorName = floorName;
+                if (floorName === null) return;
+                $scope.$emit("shouldSave","general");
+                $scope.project.floorName = floorName;
             };
             $scope.canStart = function () {
                 if (!$scope.project)
@@ -64,6 +69,7 @@ module.exports = (function (app) {
             };
             $scope.csvUploadSuccess = function (file, message, flow, target) {
                 $scope.project.addTarget(target, JSON.parse(message));
+                $scope.$emit("shouldSave","general");
             };
             $scope.newZoneMap = function () {
                 if (!$scope.project)
@@ -77,6 +83,7 @@ module.exports = (function (app) {
                     if (!window.confirm("Zone Map " + zoneMapName + " exists. do you want to clear it?"))
                         return;
                 $scope.project.newZoneMap(zoneMapName);
+                $scope.$emit("shouldSave","general");
             };
             $scope.trace = function () {
                 if ($scope.$state.is("floorPlan.trace"))

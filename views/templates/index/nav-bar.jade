@@ -34,23 +34,23 @@
          a(uib-dropdown-toggle href="javascript:void(0);") View
          ul(uib-dropdown-menu)
             li.menu-item
-               a(href="javascript:void(0);" ng-click="project.jobMonitor=!project.jobMonitor")
+               a(href="javascript:void(0);" ng-click="toggle('jobMonitor')")
                   i.pnj-menu-check(ng-show="project.jobMonitor")
                   |    Monitor Job
             li.menu-item
-               a(href="javascript:void(0);" ng-click="project.showReaders=!project.showReaders")
+               a(href="javascript:void(0);" ng-click="toggle('showReaders')")
                   i.pnj-menu-check(ng-show="project.showReaders")
                   |    Show Readers
             li.menu-item
-               a(href="javascript:void(0);" ng-click="project.showLLRP=!project.showLLRP")
+               a(href="javascript:void(0);" ng-click="toggle('showLLRP')")
                   i.pnj-menu-check(ng-show="project.showLLRP")
                   |    Show Reader Engagement
             li.menu-item
-               a(href="javascript:void(0);" ng-click="project.pullItems=!project.pullItems")
+               a(href="javascript:void(0);" ng-click="toggle('pullItems')")
                   i.pnj-menu-check(ng-show="project.pullItems")
                   |    Pull Items
             li.menu-item(ng-class="{disabled:!project.items}")
-               a(href="javascript:void(0);" ng-click="project.showItems=!project.showItems")
+               a(href="javascript:void(0);" ng-click="toggle('showItems')")
                   i.pnj-menu-check(ng-show="project.showItems")
                   |    Show Items
             li.menu-item
