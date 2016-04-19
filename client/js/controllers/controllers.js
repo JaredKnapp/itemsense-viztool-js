@@ -99,7 +99,7 @@ module.exports = (function (app) {
                 message = JSON.parse(message);
                 $scope.project.floorPlan = message.filename;
                 $scope.imageVersion += 1;
-                return $scope.project.save($scope.project);
+                $scope.$emit("shouldSave","general");
             };
             $scope.toggle=function(prop,ignore){
                 $scope.project[prop] = !$scope.project[prop];
@@ -213,6 +213,9 @@ module.exports = (function (app) {
                 else
                     window.alert("Url and credentials are required to get list of facilities");
             };
+            $scope.$watch("projectForm.$pristine",function(n){
+                if(!n) $scope.$emit("shouldSave","general");
+            })
         }])
         .controller("FloorPlan", ["$scope", function ($scope) {
             $scope.mainTab = {floorPlan: true};

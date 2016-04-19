@@ -59,7 +59,7 @@ module.exports = (function (app) {
                             self.offAll();
                             events.mousedown = stage.on("mousedown", function (ev) {
                                 if ($state.current.name === "floorPlan.origin")
-                                    self.origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
+                                    self._origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
                                 else if ($state.current.name === "floorPlan.trace")
                                     Tracer.mousedown(ev);
                                 else if ($state.current.name === "floorPlan.ruler")
@@ -71,7 +71,7 @@ module.exports = (function (app) {
 
                             events.pressmove = stage.on("pressmove", function (ev) {
                                 if ($state.current.name === "floorPlan.origin")
-                                    self.origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
+                                    self._origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
                                 else if ($state.current.name === "floorPlan.trace")
                                     Tracer.pressmove(ev);
                                 scope.$apply();
@@ -118,7 +118,7 @@ module.exports = (function (app) {
                             });
                             self.scope = scope;
                             if (self.project && !self.origin.x)
-                                self.origin = self.visibleCenter();
+                                self._origin = self.visibleCenter();
                             self.update();
                         },
                         canvasToMeters(v,axis){
@@ -381,7 +381,6 @@ module.exports = (function (app) {
                     },
                     {
                         floorPlan: {
-                            enumerable: false,
                             get: function () {
                                 return floorPlan;
                             },
@@ -398,7 +397,18 @@ module.exports = (function (app) {
                                 if (!this.containsShape(timeLapse.shape))
                                     this.addChild(timeLapse.shape);
                                 project.zoom = this.zoom || this.widthZoom();
-                                this.origin = this.origin.x === undefined ? this.visibleCenter() : this.origin;
+                                console.log("floorplan");
+                                if(this.origin.x === undefined)
+                                    this._origin = this.visibleCenter();
+                                else
+                                    Origin.draw(true);
+                            }
+                        },
+                        _origin:{
+                            get:()=>project.origin,
+                            set: function(v){
+                                this.origin = v;
+                                this.scope.$emit("shouldSave","general");
                             }
                         },
                         origin: {

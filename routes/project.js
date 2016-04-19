@@ -169,7 +169,7 @@ router.get("/:projectId/upload/*", (req, res) => res.sendStatus(204));
 
 router.post("/:projectId/upload/:itemId", upload.single("file"), function (req, res) {
     const destination = `floorplan-${req.params.itemId}.${getMime(req.file)}`,
-        target = path.resolve(req.file.destination, req.params.projectId, destination);
+        target = path.resolve(setupDestination(req,""), destination);
     getChunk(target, req.file.path, req.body);
     res.json({filename: destination});
 });

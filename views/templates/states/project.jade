@@ -19,24 +19,9 @@ form.container.form-group(name="projectForm")
     .input-group
         .input-group-addon Floor:
         input.form-control(type="text" name="pass" ng-model="project.floorName" required)
-    .form-group(ng-if="project.recipes")
-        .input-group
-            .input-group-addon ZoneMaps:
-            select.form-control(ng-options="v.name for v in project.zoneMaps track by v.name" ng-model="project._zoneMap")
-        H4 Job
-        .input-group
-            .input-group-addon Recipe:
-            select.form-control(ng-options="v.name for v in project.recipes track by v.name" ng-model="project.recipe")
-        .input-group
-            .input-group-addon Duration (s):
-            input.form-control(type="number" ng-model="project.duration")
-        .checkbox.form-control(ng-show="project.job")
-            label(style="padding-left:0;")
-                span(from-template="index/job_control")
-                |   {{projectInfo()}}
-        button.pnj-cancel(ng-click="project.startJob()" ng-disabled="!canStart()" ng-show="!project.isJobRunning()") Start Job
-        button.pnj-cancel(ng-click="project.stopJob()" ng-show="project.isJobRunning()" ng-disabled="!project.jobMonitor") Cancel Job
-    .clearfix(style="margin-bottom:20px;")
+    .input-group(ng-if="project.recipes")
+        .input-group-addon ZoneMaps:
+        select.form-control(ng-options="v.name for v in project.zoneMaps track by v.name" ng-model="project._zoneMap")
     .form-group
         .input-group
             .input-group-addon Data Source:
@@ -48,4 +33,21 @@ form.container.form-group(name="projectForm")
     .clearfix
     .form-group
         button.pnj-save(ng-click="project.connect()" ng-disabled="!projectForm.$valid" ng-show="!project.recipes") Connect
+    .clearfix
+
+.form-group(ng-if="project.recipes")
+    H4 Job
+    .input-group
+        .input-group-addon Recipe:
+        select.form-control(ng-options="v.name for v in project.recipes track by v.name" ng-model="project.recipe")
+    .input-group
+        .input-group-addon Duration (s):
+        input.form-control(type="number" ng-model="project.duration")
+    .checkbox.form-control(ng-show="project.job")
+        label(style="padding-left:0;")
+            span(from-template="index/job_control")
+            |   {{projectInfo()}}
+    button.pnj-cancel(ng-click="project.startJob()" ng-disabled="!canStart()" ng-show="!project.isJobRunning()") Start Job
+    button.pnj-cancel(ng-click="project.stopJob()" ng-show="project.isJobRunning()" ng-disabled="!project.jobMonitor") Cancel Job
+    .clearfix(style="margin-bottom:20px;")
 
