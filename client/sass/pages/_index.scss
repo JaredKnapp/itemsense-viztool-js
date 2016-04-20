@@ -90,16 +90,3 @@
   margin-left: 10px;
 }
 
-.pnj-li-icon-del{
-  @extend .label;
-  @extend .label-default;
-  @extend .label-pill;
-  @extend .pull-right;
-  @extend .fa;
-  @extend .fa-trash;
-  cursor: pointer;
-}
-.pnj-li{
-  @extend .list-group-item;
-  cursor: pointer;
-}

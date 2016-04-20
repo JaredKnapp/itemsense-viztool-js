@@ -13,5 +13,5 @@
                     .input-group-addon Reader Fields:
                     select.form-control(ng-model="project.showReaderFields" ng-options="f.i as f.n for f in fields")
         .ui-view
-    .pnj-footer#mouseCoords
+    .pnj-footer(ng-if="project.mouse") {{round(project.mouse.x)}} , {{round(project.mouse.y)}}
 

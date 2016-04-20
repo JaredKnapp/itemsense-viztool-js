@@ -68,12 +68,20 @@ module.exports = (function (app) {
                                     return $state.go("floorPlan");
                                 scope.$apply();
                             });
-
                             events.pressmove = stage.on("pressmove", function (ev) {
                                 if ($state.current.name === "floorPlan.origin")
                                     self.origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
                                 else if ($state.current.name === "floorPlan.trace")
                                     Tracer.pressmove(ev);
+                                else
+                                    project.mouse = {
+                                        x: self.stageToMeters(ev.stageX / self.zoom, "x"),
+                                        y: self.stageToMeters(ev.stageY / self.zoom, "y")
+                                    };
+                                scope.$apply();
+                            });
+                            events.pressup = stage.on("pressup", function () {
+                                project.mouse = null;
                                 scope.$apply();
                             });
 
@@ -121,9 +129,6 @@ module.exports = (function (app) {
                                 self.origin = self.visibleCenter();
                             self.update();
                         },
-                        canvasToMeters(v,axis){
-                            return this.stageToMeters(this.screenToCanvas(v),axis);
-                        },
                         screenToCanvas: function (v) {
                             return v / this.zoom;
                         },
@@ -155,30 +160,38 @@ module.exports = (function (app) {
                         endItem: function () {
                             this.item = null;
                         },
-                        startTrace() {
-                            const makeZonePoint = (p) => {
-                                return {
-                                    x: Math.round10(this.stageToMeters(p.x, "x"), -3),
-                                    y: Math.round10(this.stageToMeters(p.y, "y"), -3),
-                                    z: 0
-                                };
-                            };
-                            return Tracer.trace(this).then((points) => {
-                                return this.selectZone(project.addZone(_.map(points, p=>makeZonePoint(p))));
+                        startTrace: function () {
+                            var self = this;
+                            return Tracer.trace(this).then(function (points) {
+                                zoneCollection.push(Zones.createZone(self.addZone(points), self, 1.0));
+                                $state.go("floorPlan");
                             });
                         },
-                        selectZone: function (zone) {
-                            _.find(zoneCollection, wrapper => wrapper.zone === zone).activate();
+                        addZone: function (points) {
+                            var self = this,
+                                zonePoints = _.map(points, function (p) {
+                                    return {x: self.stageToMeters(p.x, "x"), y: self.stageToMeters(p.y, "y"),z:0};
+                                }),
+                                zone = {
+                                    name: "newZone",
+                                    floor: project.floorName,
+                                    points: zonePoints
+                                };
+                            this.zones.push(zone);
+                            return zone;
+                        },
+                        cloneZone: function () {
+                            var zone = Zones.cloneZone(this.zone.model, this);
+                            this.zones.push(zone.model);
+                            zone.activate();
                         },
                         deleteZone: function () {
                             var self = this,
-                                idx = _.findIndex(this.zones, function (zone) {
-                                    return zone === self.zone.model.ref;
+                                idx = _.findIndex(this.zones,function(zone){
+                                    return zone === self.zone.model;
                                 });
-                            if (idx !== -1){
-                                this.zones.splice(idx, 1);
-                                zoneCollection.splice(idx,1);
-                            }
+                            if(idx !== -1)
+                                this.zones.splice(idx,1);
                             this.zone.destroy();
                             $state.go("floorPlan");
                         },
@@ -206,12 +219,7 @@ module.exports = (function (app) {
                             if (!this.containsShape(Ruler.shape))
                                 this.addChild(Ruler.shape);
                             if (!Ruler.coords.startX)
-                                this.putRulerInCenter();
-                            Ruler.draw(true);
-                            this.rulerLength = Ruler.length;
-                        },
-                        putRulerInCenter(){
-                            Ruler.coords.init(this.visibleCenter(),20);
+                                Ruler.coords.init(this.visibleCenter(), 50);
                             Ruler.draw(true);
                             this.rulerLength = Ruler.length;
                         },
@@ -255,7 +263,9 @@ module.exports = (function (app) {
                             if (!p || !p.floorPlan)
                                 return;
                             this.setFloorPlan(p.floorPlanUrl);
-                            this.zones = p.zones;
+                            zoneCollection = _.map(p.zones, function (zone) {
+                                return Zones.createZone(zone, self);
+                            });
                             self.showReaders(p.showReaders);
                             self.update();
                         },
@@ -277,8 +287,13 @@ module.exports = (function (app) {
                                 if ($state.current.name.indexOf("floorPlan") === 0)
                                     stage.update();
                         },
+                        setTolerance: function (v) {
+                            this.zone.setTolerance(v);
+                        },
                         updateReader: function (reader) {
-                            var target = _.find(readers, (r) => r.ref === reader.placement);
+                            var target = _.find(readers, function (r) {
+                                return r.ref === reader.placement;
+                            });
                             if (target)
                                 target.draw(true);
 
@@ -305,7 +320,7 @@ module.exports = (function (app) {
                                     });
                                 else
                                     readers = _.map(project.readers, function (reader) {
-                                        return Reader.create(reader, self, project.readerLLRP[reader.name]);
+                                        return Reader.create(reader, self);
                                     });
                             else
                                 readers = _.reduce(readers, function (r, reader) {
@@ -370,10 +385,14 @@ module.exports = (function (app) {
                                 if (!project.pullItems)
                                     this.showItems(true);
                         },
-                        markEngagedReaders: function (engaged) {
-                            engaged = engaged || {};
-                            _.each(readers, (r)=> r.setStatus(engaged[r.model.name] || "inactive"));
-                            this.update();
+                        replaceZoneCollection: function () {
+                            var self=this;
+                            _.each(zoneCollection,function(z){
+                                z.destroy();
+                            });
+                            zoneCollection = _.map(project.zones,function(z){
+                                return Zones.createZone(z,self);
+                            });
                         }
                     },
                     {
@@ -453,9 +472,8 @@ module.exports = (function (app) {
                             get: function () {
                                 return project.zones;
                             },
-                            set(v){
-                                _.each(zoneCollection || [], zone => zone.destroy());
-                                zoneCollection = _.map(v || [], zone => Zones.createZone(zone, this));
+                            set: function (v) {
+                                project.zones = v;
                             }
                         },
                         zone: {
@@ -526,30 +544,11 @@ module.exports = (function (app) {
                                 else
                                     timeLapse.clear(true);
                             }
-                        },
-                        tracePoints: {
-                            set: function (v) {
-                                project.tracePoints = v;
-                            }
                         }
                     });
             canvas.width = bkWidth;
             canvas.height = bkHeight;
             canvas.setAttribute("oncontextmenu", "return false;");
-            let mouseDiv = null;
-            canvas.onmousemove = function(ev){
-                const x = Math.round10(wrapper.canvasToMeters(ev.offsetX,"x"),-2),
-                    y = Math.round10(wrapper.canvasToMeters(ev.offsetY,"y"),-2);
-                    mouseDiv = mouseDiv || document.querySelector("#mouseCoords");
-                if(wrapper.zoom)
-                    mouseDiv.innerHTML = `${x}, ${y}`;
-            };
-            canvas.onmouseout = function(){
-                mouseDiv = mouseDiv || document.querySelector("#mouseCoords");
-                if(mouseDiv)
-                    mouseDiv.innerHTML="";
-                mouseDiv = null;
-            };
             wrapper.initLayers();
             stage.addChild(main);
             wrapper.addChild(Origin.shape);
