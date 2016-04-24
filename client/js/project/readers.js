@@ -10,6 +10,12 @@ module.exports = (function (app) {
                 updateReader(reader) {
                     if (project.stage)
                         project.stage.updateReader(reader);
+                },
+                getChangedReaders(){
+                    return _.reduce(_.filter(project.changedReaders, r=>r.address.trim()), (result,reader) => {
+                        result[reader.address] = reader;
+                        return result;
+                    },{});
                 }
             };
         }
@@ -18,6 +24,7 @@ module.exports = (function (app) {
             let readers = null,
                 reader = null,
                 showReaders = false,
+                changedReaders = [],
                 showReaderFields = 0,
                 showLLRP = false,
                 readerLLRP = {};
@@ -73,8 +80,11 @@ module.exports = (function (app) {
                         if (project.stage && showReaders)
                             project.stage.showReaders(true);
                     }
+                },
+                changedReaders:{
+                    get:()=>changedReaders,
+                    set:(v)=> changedReaders = v
                 }
-                
             });
         };
     }]);

@@ -304,6 +304,7 @@ module.exports = (function (app) {
                         lastY = ev.stageY;
                         if (!isActive)  wrapper.activate();
                         hasdragged = false;
+                        stage.scope.$apply();
                         ev.preventDefault();
                         ev.stopPropagation();
                     });

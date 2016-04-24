@@ -144,7 +144,7 @@ module.exports = (function (app) {
                                 }
                             },
                             activate: function (noForce) {
-                                prevColor = color;
+                                prevColor = color === colors.active ? prevColor : color;
                                 color = colors.active;
                                 this.draw(true);
                                 stage.dispatchEvent(new createjs.Event("newReader").set({

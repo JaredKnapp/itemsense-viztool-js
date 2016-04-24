@@ -12,34 +12,38 @@ form.container.form-group(name="projectForm")
     .input-group(ng-class="{'has-warning':projectForm.pass.$touched && projectForm.pass.$invalid}")
         .input-group-addon Password:
         input.form-control(type="password" name="pass" ng-model="project.password" required)
-    .input-group
-        .input-group-addon.pnj-label-link(ng-click="getFacilities()") Facility:
-        input.form-control(type="text" name="pass" ng-model="project.facility" required ng-if="!project.facilities")
-        select.form-control(ng-if="project.facilities" ng-options="v for v in project.facilities " ng-model="project.facility" ng-change="project.connect()")
-    .input-group
-        .input-group-addon Floor:
-        input.form-control(type="text" name="pass" ng-model="project.floorName" required)
-    .input-group(ng-if="project.recipes")
-        .input-group-addon ZoneMaps:
-        select.form-control(ng-options="v.name for v in project.zoneMaps track by v.name" ng-model="project._zoneMap")
-    .form-group
+    .input-group(ng-if="project.facility && !project.facilities")
+        .input-group-addon Facility:
+        input.form-control.disabled(type="text" name="pass" ng-model="project.facility" disabled)
+    .form-group(ng-if="project.facilities")
+        .input-group
+            .input-group-addon Facility:
+            select.form-control(ng-if="project.facilities" ng-options="v for v in project.facilities " ng-model="project.facility" ng-change="project.connect()")
+    .form-group(ng-if="project.recipes")
+        .input-group
+            .input-group-addon ZoneMaps:
+            select.form-control(ng-options="v.name for v in project.zoneMaps track by v.name" ng-model="project._zoneMap")
+        .input-group
+            .input-group-addon Floor:
+            select.form-control(ng-options="v for v in project.floors" ng-model="project.floorName")
+            .input-group-addon(ng-click="setFloorName()") New Floor
         .input-group
             .input-group-addon Data Source:
             select.form-control(ng-options="v for v in ['Direct Connection','Node Red Flow']" ng-model="project.itemSource")
-    .form-group(ng-if="project.itemSource === 'Node Red Flow'")
-        .input-group
+        .input-group(ng-if="project.itemSource === 'Node Red Flow'")
             .input-group-addon Node Red Endpoint:
             input.form-control(type="url" name="redpoint" ng-model="project.nodeRedEndPoint" ng-trim="true")
     .clearfix
     .form-group
-        button.pnj-save(ng-click="project.connect()" ng-disabled="!projectForm.$valid" ng-show="!project.recipes") Connect
+        button.pnj-save(ng-click="getFacilities()" ng-disabled="!projectForm.$valid" ng-show="!project.facility && !project.facilities") Get Facilities
+        button.pnj-save(ng-if="project.facility && !project.facilities" ng-disabled="!projectForm.$valid" ng-click="project.connect()") Connect
     .clearfix
 
-.form-group(ng-if="project.recipes")
+.container.form-group(ng-if="project.recipes")
     H4 Job
     .input-group
         .input-group-addon Recipe:
-        select.form-control(ng-options="v.name for v in project.recipes track by v.name" ng-model="project.recipe")
+        select.form-control(ng-options="v as v.name for v in project.recipes track by v.name" ng-model="project.recipe")
     .input-group
         .input-group-addon Duration (s):
         input.form-control(type="number" ng-model="project.duration")

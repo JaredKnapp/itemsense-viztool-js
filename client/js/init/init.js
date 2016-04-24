@@ -6,8 +6,8 @@
 "use strict";
 
 module.exports = (function (app) {
-    app.run(["$rootScope", "$state", "$stateParams", "$q", "CreateJS", "Stage", "Project","$timeout",
-            function ($rootScope, $state, $stateParams, $q, createjs, stage, Project,$timeout) {
+    app.run(["$rootScope", "$state", "$stateParams", "$q", "CreateJS", "Stage", "Project","$timeout", "_", 
+            function ($rootScope, $state, $stateParams, $q, createjs, stage, Project,$timeout,_) {
                 var project = null, buffer = null, alert = null, mainTab = {}, imageVersion = 0;
                 $rootScope.$state = $state;
                 $rootScope.$stateParams = $stateParams;
@@ -53,6 +53,13 @@ module.exports = (function (app) {
                         ev.preventDefault();
                     }
                 });
+                window.addEventListener("beforeunload",function(ev){
+                    const msg ="Unsaved Changes. are you sure?";
+                    if(Object.keys(project.shouldSave).length){
+                        ev.returnValue = msg;
+                        return msg;
+                    }
+                });
                 function loadProject(ev, toState, toParams) {
                     ev.preventDefault();
                     return Project.get(toParams.id).then(function (prj) {
@@ -84,9 +91,19 @@ module.exports = (function (app) {
                         $rootScope.$broadcast("StartPlanState", toState.name.substr("floorPlan.".length));
                 });
                 $rootScope.$on("shouldSave",function(ev,data){
-                    console.log("Should Save", ev, data);
+                    if(data === "readers")
+                        if(project.reader.address){
+                            if(!_.find(project.changedReaders, r => r.address === project.reader.address))
+                                project.changedReaders.push(project.reader);
+                        }
+                        else
+                            project.changedReaders.push(project.reader);
+
                     project.shouldSave[data || "general"] = true;
-                    console.log("Should Save", data);
+                });
+                $rootScope.$on("shouldNotSave",function(ev,data){
+                    if(data === "readers")  project.changedReaders=[];
+                    delete project.shouldSave[data];
                 });
                 $rootScope.sanitize = function (s) {
                     return (s||"").trim().replace(/[^-a-zA-Z0-9._]/g, "_");

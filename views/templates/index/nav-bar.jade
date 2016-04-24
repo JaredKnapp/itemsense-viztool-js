@@ -30,7 +30,7 @@
             li.divider
             li.menuitem
                a(href="javascript:void(0);" ng-click="about()") About
-      li(uib-dropdown ng-class="{disabled:!project.recipes || !project.stage}")
+      li(uib-dropdown ng-class="{disabled:!project.recipes || !project.stage}" ng-show="$state.current.name.startsWith('floorPlan')")
          a(uib-dropdown-toggle href="javascript:void(0);") View
          ul(uib-dropdown-menu)
             li.menu-item
@@ -59,7 +59,7 @@
                   |    Epc Filter
             li.menu-item
                a(href="javascript:void(0);" ng-click="setFloorName()") Floor Name...
-      li(uib-dropdown ng-class="{disabled:!project.recipes}")
+      li(uib-dropdown ng-class="{disabled:!project.recipes}" ng-show="$state.current.name.startsWith('floorPlan')")
          a(uib-dropdown-toggle href="javascript:void(0);") Zones
          ul(uib-dropdown-menu)
             li.menu-item
@@ -70,7 +70,13 @@
                a(href="javascript:void(0);" ng-click="trace()")
                   i.pnj-menu-check(ng-show="$state.is('floorPlan.trace')")
                   |    Add Zone
-      li(uib-dropdown ng-class="{disabled:!project.recipes}")
-         a(uib-dropdown-toggle href="javascript:void(0);") {{project.shouldSave}}
+      .navbar-form.navbar-left
+         button.btn(ng-click="project.save()" ng-class="saveClass()") Save Project
+      .navbar-form.navbar-left
+         button.btn.btn-warning(ng-click="cancelReaders()" ng-show="project.shouldSave.readers") Cancel Reader Changes
+      .navbar-form.navbar-left
+         button.btn.btn-warning(ng-click="cancelZoneMap()" ng-show="project.shouldSave.zones") Cancel Zone Changes
+      li(uib-dropdown)
+         a(href="javascript:void(0);" ng-show="project.facility && project.floorName") {{project.facility}}, Floor: {{project.floorName}}
    .pnj-job-control(ng-show="project.job" from-template="index/job_control")
 

@@ -158,7 +158,6 @@ module.exports = (function (app) {
                     var zoom = null,
                         floorPlan = null,
                         floorPlanVersion = 1,//just to force the reload of floorplan. doesn't actually keep version
-                        floorName = null,
                         origin = projectOrigin(ref),
                         shouldSave = {},
                         name = "",
@@ -181,8 +180,6 @@ module.exports = (function (app) {
                         jobMonitor = false,
                         targets = {},
                         selection = {},
-                        facility = "DEFAULT",
-                        facilities = null,
                         epcFilter = ".",
                         timeLapse = false,
                         timeLapseFlag = false,
@@ -292,6 +289,10 @@ module.exports = (function (app) {
                                     this.scale = null;
                                 else
                                     this.scale = this.rulerLength / v;
+                                if(this.showReaders && this.stage)
+                                    this.stage.refreshReaders();
+                                if(this.zones && this.stage)
+                                    this.stage.zones = this.zones;
                             }
                         },
                         {
@@ -455,15 +456,6 @@ module.exports = (function (app) {
                                         this.jobInterval = v ? this.monitorJob() : null;
                                     else
                                         jobMonitor = v;
-                                }
-                            },
-                            floorName: {
-                                enumerable: true,
-                                get: function () {
-                                    return floorName;
-                                },
-                                set: function (v) {
-                                    floorName = v;
                                 }
                             },
                             pullInterval: {
@@ -632,19 +624,6 @@ module.exports = (function (app) {
                                     if (stage)
                                         stage.setEpcFilter(epcFilter);
                                 }
-                            },
-                            facility: {
-                                enumerable: true,
-                                get: function () {
-                                    return facility || "DEFAULT";
-                                },
-                                set: function (v) {
-                                    facility = v;
-                                }
-                            },
-                            facilities: {
-                                get: ()=> facilities,
-                                set: v => facilities = v
                             },
                             itemSource:{
                                 enumerable: true,

@@ -11,6 +11,31 @@ module.exports = (function (app) {
             function selectProject() {
                 return $scope.project.get().then(list => Requester.selectProject(list));
             }
+            function setZoneMap(zoneMap){
+                return $scope.project.setCurrentZoneMap(zoneMap.name)
+                    .then((zoneMap)=>$scope.project.zoneMap = zoneMap);
+            }
+            function goTopState(){
+                const name = $scope.$state.current.name;
+                if(name.startsWith("floorPlan"))
+                    $scope.$state.go("floorPlan");
+            }
+
+            $scope.cancelReaders = function () {
+                $scope.project.showReaders = false;
+                $scope.project.getReaders().then(function () {
+                    $scope.$emit("shouldNotSave","readers");
+                    $scope.project.showReaders = true;
+                    goTopState();
+                });
+            };
+            $scope.cancelZoneMap = function(){
+                $scope.project.getZoneMap($scope.project.zoneMap.name).then((zoneMap)=>{
+                    $scope.project.zoneMap = zoneMap;
+                    $scope.$emit("shouldNotSave","zones");
+                    goTopState();
+                });
+            };
 
             $scope.about = function () {
                 Requester.about();
@@ -19,9 +44,7 @@ module.exports = (function (app) {
                 if ($scope.project.shouldSave.zones)
                     if (!window.confirm("Changes to Current ZoneMap will be lost. Continue?"))
                         return;
-                Requester.selectZoneMap()
-                    .then(zoneMap => $scope.project.setCurrentZoneMap(zoneMap.name)
-                        .then(()=>$scope.project._zoneMap = zoneMap));
+                Requester.selectZoneMap().then(zoneMap=>setZoneMap(zoneMap));
             };
             $scope.deleteProject = function () {
                 selectProject().then((prj) => {
@@ -47,8 +70,8 @@ module.exports = (function (app) {
             $scope.setFloorName = function () {
                 if (!$scope.project)
                     return;
-                var floorName = window.prompt("Set Floor Name for the project", $scope.project.floorName || "");
-                if (floorName === null) return;
+                var floorName = window.prompt("Set Floor Name for the project", $scope.project.floorName || "").trim();
+                if (!floorName) return;
                 $scope.$emit("shouldSave", "general");
                 $scope.project.floorName = floorName;
             };
@@ -105,6 +128,12 @@ module.exports = (function (app) {
                 $scope.project[prop] = !$scope.project[prop];
                 if (!ignore)
                     $scope.$emit("shouldSave", "general");
+            };
+            $scope.saveClass =function(){
+                return (Object.keys($scope.project.shouldSave).length) ? "btn-warning": "hidden";
+            };
+            $scope.shouldSave=function(key){
+                $scope.$emit("shouldSave",key);
             };
         }])
         .factory("Requester", ["$uibModal", "_", function ($uibModal, _) {
@@ -215,7 +244,7 @@ module.exports = (function (app) {
             };
             $scope.$watch("projectForm.$pristine", function (n) {
                 if (!n) $scope.$emit("shouldSave", "general");
-            })
+            });
         }])
         .controller("FloorPlan", ["$scope", function ($scope) {
             $scope.mainTab = {floorPlan: true};
@@ -279,13 +308,12 @@ module.exports = (function (app) {
             });
         }])
         .controller("Readers", ["$scope", function ($scope) {
-            var stageReader;
 
             function makeReader() {
                 var newReader = {
                     address: "",
                     name: "",
-                    facility: "DEFAULT",
+                    facility: $scope.project.facility || "DEFAULT",
                     type: "XARRAY",
                     readerZone: "",
                     antennaZones: null,
@@ -299,22 +327,30 @@ module.exports = (function (app) {
                     }
                 };
                 $scope.project.readers.push(newReader);
+                if($scope.project.stage)
+                    $scope.project.stage.addReader(newReader);
+                else
+                    $scope.project.reader = newReader;
                 $scope.$emit("shouldSave", "readers");
-                stageReader = $scope.project.stage ? $scope.project.stage.addReader(newReader) : null;
                 return newReader;
             }
 
             $scope.activeReader = $scope.project.reader || makeReader();
 
             $scope.$watch("readerForm.$pristine", function (n) {
-                if (!n) $scope.$emit("shouldSave", "readers");
+                if (n) return;
+                $scope.$emit("shouldSave", "readers");
             });
+
             $scope.$watch(function () {
                 return $scope.project.reader;
             }, function (n) {
-                if (n && n !== $scope.activeReader)
+                if (n && n !== $scope.activeReader){
                     $scope.activeReader = n;
+                    $scope.readerForm.$setPristine();
+                }
             });
+
             $scope.newReader = function () {
                 if ($scope.project.stage)
                     $scope.project.stage.reader = null;
@@ -323,16 +359,10 @@ module.exports = (function (app) {
                 $scope.activeReader = makeReader();
             };
 
-            $scope.cancel = function () {
-                $scope.project.showReaders = false;
-                $scope.project.getReaders().then(function () {
-                    $scope.project.showReaders = true;
-                    $scope.$state.go("floorPlan");
-                });
-            };
 
             $scope.save = function () {
                 $scope.project.postReaders($scope.activeReader).then(function () {
+                    $scope.$emit("shouldNotSave","readers");
                     $scope.$state.go("floorPlan");
                 });
             };

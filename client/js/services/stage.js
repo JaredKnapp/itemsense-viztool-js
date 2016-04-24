@@ -77,6 +77,15 @@ module.exports = (function (app) {
                                 scope.$apply();
                             });
 
+                            events.pressup = stage.on("pressup",()=>{
+                                if($state.current.name === "floorPlan.origin"){
+                                    if(project.showReaders)
+                                        this.refreshReaders();
+                                    if(project.zones)
+                                        this.zones = project.zones;
+                                }
+
+                            });
                             events.dblclick = stage.on("dblclick", function (ev) {
                                 if ($state.current.name === "floorPlan.trace")
                                     Tracer.dblclick(ev);
@@ -171,14 +180,12 @@ module.exports = (function (app) {
                             _.find(zoneCollection, wrapper => wrapper.zone === zone).activate();
                         },
                         deleteZone: function () {
-                            var self = this,
-                                idx = _.findIndex(this.zones, function (zone) {
-                                    return zone === self.zone.model.ref;
-                                });
+                            const idx = _.findIndex(this.zones, zone => zone === this.zone.model.ref),
+                                shapeIdx = _.findIndex(zoneCollection,z => z === this.zone);
                             if (idx !== -1){
                                 this.zones.splice(idx, 1);
                                 this.scope.$emit("shouldSave","zones");
-                                zoneCollection.splice(idx,1);
+                                zoneCollection.splice(shapeIdx,1);
                             }
                             this.zone.destroy();
                             $state.go("floorPlan");
@@ -296,6 +303,11 @@ module.exports = (function (app) {
                                 return r !== reader;
                             });
                             reader.destroy();
+                        },
+                        refreshReaders(){
+                            _.each(readers,r => r.destroy());
+                            readers = _.map(project.readers, r => Reader.create(r,this,project.readerLLRP[r.name]));
+                            this.update();
                         },
                         showReaders: function (v) {
                             var self = this;
@@ -468,7 +480,8 @@ module.exports = (function (app) {
                             },
                             set(v){
                                 _.each(zoneCollection || [], zone => zone.destroy());
-                                zoneCollection = _.map(v || [], zone => Zones.createZone(zone, this));
+                                zoneCollection = _.map(v || [], zone => zone.floor === project.floorName ? Zones.createZone(zone, this):null);
+                                zoneCollection = _.filter(zoneCollection,z=>z);
                             }
                         },
                         zone: {

@@ -69,6 +69,7 @@ function handleError(err, res, fn) {
     try {
         r = fn(err, r);
     } catch (e) {
+        console.log("exception in error processing", e);
     }
     console.log("Error in Rest call ", err, r);
     res.status(r.status).json(r);
@@ -224,7 +225,7 @@ router.get("/:projectId/readers", threadCall.bind(null, "getReaders", false));
 
 router.post("/:projectId/readers", threadCall.bind(null, "postReaders", true));
 
-router.get("/:projectId/zones", threadCall.bind(null, "getZoneMaps", false));
+router.get("/:projectId/zones/:itemId", threadCall.bind(null, "getZoneMap", false));
 
 router.post("/:projectId/zones", threadCall.bind(null, "addZoneMap", true));
 

@@ -84,16 +84,16 @@ function createResultItem(data, tp) {
 
 class ConfigDump {
 
-    constructor(itemsenseApi,project) {
+    constructor(itemsenseApi, project) {
         this.itemsenseApi = itemsenseApi;
-        this.project =project;
+        this.project = project;
         this.readerConfigs = {};
         this.readerDefinitions = {};
     }
 
     static createTemplate(type) {
         return type === "job" ? {
-            signature:"",
+            signature: "",
             timestamp: new Date().toUTCString(),
             job: null,
             currentZoneMaps: [],
@@ -102,7 +102,7 @@ class ConfigDump {
             readerDefinitions: [],
             zoneMaps: []
         } : {
-            signature:"",
+            signature: "",
             timestamp: new Date().toUTCString(),
             recipes: null,
             readerConfigurations: null,
@@ -135,7 +135,7 @@ class ConfigDump {
             })
             .then((facilities) => {
                 result.facilities = facilities;
-                return q.all(this.saveCurrentZoneMaps(result,facilities));
+                return q.all(this.saveCurrentZoneMaps(result, facilities));
             }).then(()=>result);
 
     }
@@ -239,14 +239,17 @@ function startProject(project) {
                     return defer.promise;
                 },
                 getNodeRedFlow(){
-                    readPromise= wrapper.stash(wrapper.restCall({url: project.nodeRedEndPoint}))
-                        .catch(error=>{console.log(error); return q.reject(error)});
+                    readPromise = wrapper.stash(wrapper.restCall({url: project.nodeRedEndPoint}))
+                        .catch(error=> {
+                            console.log(error);
+                            return q.reject(error)
+                        });
                     return readPromise;
                 },
                 getDirect(){
                     readPromise = wrapper.stash(itemsenseApi.items.get({pageSize: 1000})).then(function (items) {
                         if (!itemSenseJob)
-                            return q.reject({statusCode: 500, response:{body: "Job not started"}});
+                            return q.reject({statusCode: 500, response: {body: "Job not started"}});
                         items.data = _.filter(items.data, function (i) {
                             return i.lastModifiedTime > itemSenseJob.creationTime
                         });
@@ -305,11 +308,11 @@ function startProject(project) {
                 setCurrentZoneMap: function (name) {
                     return itemsenseApi.currentZoneMap.update(name);
                 },
-                getCurrentZoneMap: function () {
+                getCurrentZoneMap() {
                     return itemsenseApi.currentZoneMap.get(project.facility);
                 },
-                getAllZoneMaps: function () {
-                    return itemsenseApi.zoneMaps.getAll();
+                getZoneMap(data) {
+                    return data ? itemsenseApi.zoneMaps.get(data) : itemsenseApi.zoneMaps.getAll();
                 },
                 getFacilities: ()=> itemsenseApi.facilities.get(),
                 getJobs: function (id) {
@@ -384,7 +387,7 @@ function startProject(project) {
 
                     return this.getJobs(id).then(function (job) {
                         if (itemSenseJob && job.id === itemSenseJob.id)
-                            if (self.isComplete(job)){
+                            if (self.isComplete(job)) {
                                 self.stopInterval();
                                 itemSenseJob = null
                             }
@@ -392,8 +395,8 @@ function startProject(project) {
                     });
                 },
                 stopJob: function (id) {
-                    return itemsenseApi.jobs.stop(id).then(()=>{
-                        if(id === itemSenseJob.id)
+                    return itemsenseApi.jobs.stop(id).then(()=> {
+                        if (id === itemSenseJob.id)
                             itemSenseJob = null;
                     });
                 }
@@ -426,7 +429,10 @@ function startProject(project) {
     return wrapper;
 }
 
-const notStarted = ()=> project ? null : q.reject({statusCode: 500, response:{body: "Server error: Project Not Started"}});
+const notStarted = ()=> project ? null : q.reject({
+    statusCode: 500,
+    response: {body: "Server error: Project Not Started"}
+});
 
 var md = {
 
@@ -443,15 +449,10 @@ var md = {
         }).then(function (job) {
             project.itemSenseJob = job;
             payload.job = job;
-            return project.getAllZoneMaps();
+            return project.getZoneMap();
         }).then(function (zoneMaps) {
             payload.zoneMaps = _.filter(zoneMaps, function (z) {
                 return z.facility === project.project.facility;
-            });
-            payload.zoneMaps.forEach(function(zoneMap){
-                zoneMap.zones = _.filter(zoneMap.zones,function(zone){
-                    return zone.floor === undefined || zone.floor === project.project.floorName;
-                })
             });
             return project.getCurrentZoneMap();
         }).then(function (currentZoneMap) {
@@ -470,7 +471,7 @@ var md = {
     getReaders: () => notStarted() || project.getReaders(),
     getItems: () => notStarted() || project.getItems(),
     postReaders: data => notStarted() || project.postReaders(data),
-    getZoneMaps: () => notStarted() || project.getAllZoneMaps(),
+    getZoneMap: (data) => notStarted() || project.getZoneMap(data),
     deleteZoneMap: (data) => notStarted() || project.deleteZoneMap(data),
     addZoneMap: data => notStarted() || project.addZoneMap(data),
     setCurrentZoneMap: data => notStarted() || project.setCurrentZoneMap(data),

@@ -16,7 +16,7 @@ module.exports = (function (app) {
         function wrap(project) {
             return {
                 updateZones: (project, zone) => {
-                    project.zones = project.zones.concat(zone);
+                    project.zones = project.zoneMap.zones = project.zones.concat(zone);
                     project.shouldSave.zones = true;
                     return zone;
                 },
@@ -46,6 +46,13 @@ module.exports = (function (app) {
                 },
                 newZoneMap(name) {
                     project.addZoneMap(newZoneMap(name, project));
+                },
+                getZoneMapFloors(zoneMap){
+                    const floors = _.reduce(zoneMap.zones,(r,zone)=>{
+                        r[zone.floor] = true;
+                        return r;
+                    },{});
+                    return Object.keys(floors);
                 }
             };
         }
@@ -53,7 +60,11 @@ module.exports = (function (app) {
         return (project) => {
             let zones = [],
                 zone = null,
+                floors = [],
+                floorName = null,
                 tracePoints = null,
+                facility = "",
+                facilities = null,
                 zoneMaps = null,
                 zoneMap = null;
 
@@ -75,6 +86,25 @@ module.exports = (function (app) {
                     get: () => zoneMaps,
                     set: v => zoneMaps = v
                 },
+                floors: {
+                    get:()=> floors,
+                    set: function(v){
+                        floors = v;
+                        if(this.floorName && !_.find(floors,f=>f===this.floorName))
+                            floors.push(this.floorName);
+                    }
+                },
+                floorName: {
+                    enumerable: true,
+                    get: () => floorName,
+                    set: function (v) {
+                        floorName = v;
+                        if(v && !_.find(this.floors,f=>f===v))
+                            this.floors.push(v);
+                        if(this.stage)
+                            this.stage.zones = this.zones;
+                    }
+                },
                 _zoneMap: {
                     get: () => zoneMap,
                     set: function (v) {
@@ -86,8 +116,18 @@ module.exports = (function (app) {
                     get: () => zoneMap,
                     set: function (v) {
                         zoneMap = v;
+                        this.floors = v ? this.getZoneMapFloors(v):[];
                         this.zones = v ? v.zones || [] : [];
                     }
+                },
+                facility: {
+                    enumerable: true,
+                    get: () => facility,
+                    set: (v) => facility = v
+                },
+                facilities: {
+                    get: ()=> facilities,
+                    set: v => facilities = v
                 },
                 tracePoints: {
                     get: () => tracePoints,
