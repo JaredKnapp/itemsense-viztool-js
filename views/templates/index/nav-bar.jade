@@ -22,7 +22,7 @@
                a(ng-href="/project/{{project.handle}}/dump" target="_self" download="itemsense-configuration.json") Export...
             li.menuitem(ng-show="!project.recipes" ng-class="{disabled:!project.canConnect()}")
                a(href="javascript:void(0);" ng-click="project.connect()") Connect to Item Sense
-            li.menuitem(ng-class="{disabled:!project.canConnect()}")
+            li.menuitem(ng-class="{disabled:!project.canConnect() || !project.classes}")
                a(ui-sref="present({id:project.handle})") Present Project
             li.divider
             li.menuitem(flow-init="{target:planUpload}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow)")
