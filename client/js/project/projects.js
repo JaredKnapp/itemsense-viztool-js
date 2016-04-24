@@ -243,8 +243,7 @@ module.exports = (function (app) {
                             },
                             setOrigin: function (x, y) {
                                 shouldSave.general = true;
-                                if (stage)
-                                    stage.setOrigin(x, y);
+                                if (stage)  stage.setOrigin(x, y);
                             },
                             addTarget: function (k, data) {
                                 if (k === "symbols")

@@ -252,11 +252,12 @@ module.exports = (function (app) {
             $scope.$on("keydown", function (ev, key) {
                 if ($scope.$state.current.name === "floorPlan.zone") {
                     if (key.srcElement.tagName === "BODY") {
-                        if (key.keyCode === 8) //backspace
+                        if (key.keyCode === 8 || key.keyCode === 46) //backspace || Delete
                             $scope.project.deleteZone();
                         else if (key.keyCode === 67 && (key.metaKey || key.ctrlKey)) //Control or Command-C
                             $scope.project.cloneZone();
                         $scope.$apply();
+                        console.log(key.keyCode)
                     }
                 }
             });

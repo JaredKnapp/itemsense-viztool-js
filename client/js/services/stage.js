@@ -278,6 +278,10 @@ module.exports = (function (app) {
                         setOrigin: function (x, y) {
                             this.origin.x = bkWidth * x;
                             this.origin.y = bkHeight * y;
+                            if(project.showReaders)
+                                this.refreshReaders();
+                            if(project.zones)
+                                this.zones = project.zones;
                             this.drawOrigin();
                         },
                         update: function () {
@@ -409,7 +413,6 @@ module.exports = (function (app) {
                                 if (!this.containsShape(timeLapse.shape))
                                     this.addChild(timeLapse.shape);
                                 project.zoom = this.zoom || this.widthZoom();
-                                console.log("floorplan");
                                 if(this.origin.x === undefined)
                                     this._origin = this.visibleCenter();
                                 else
