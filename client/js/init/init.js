@@ -196,6 +196,8 @@ module.exports = (function (app) {
                     }
                 }).state("floorPlan.item", {
                     templateUrl: "/templates/states/floor_plan_item"
+                }).state("floorPlan.area",{
+                    templateUrl: "/templates/states/floor_plan_area"
                 }).state("classes", {
                     url: "/classes/:id",
                     templateUrl: "/templates/states/classes",
