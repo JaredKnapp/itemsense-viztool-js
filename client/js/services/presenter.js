@@ -198,7 +198,7 @@ module.exports = (function (app) {
                         main.addChild(bitmap);
                         main.setTransform(0, 0, wrapper.zoom, wrapper.zoom);
                         stage.update();
-                        project.preparePresentation(wrapper,bitmap);
+                        project.preparePresentation(wrapper, bitmap);
                         return project.connect();
                     }).then(function () {
                         interval = $interval(wrapper.tick, 5000);
@@ -220,5 +220,72 @@ module.exports = (function (app) {
                     });
                     return wrapper;
                 };
-            }]);
+            }])
+        .factory("ProjectPresentationArea", ["_", function (_) {
+            function PresentationAreaFactory(project, ref = {mode: "Full"}) {
+                return Object.create({}, {
+                    mode: {
+                        enumerable: true,
+                        get: () => ref.mode,
+                        set: v => ref.mode = v
+                    },
+                    x1: {
+                        enumerable: true,
+                        get: () => ref.x1,
+                        set: v => ref.x1 = v
+                    },
+                    x2: {
+                        enumerable: true,
+                        get: () => ref.x2,
+                        set: v => ref.x2 = v
+                    },
+                    y1: {
+                        enumerable: true,
+                        get: () => ref.y1,
+                        set: v => ref.y1 = v
+                    },
+                    y2: {
+                        enumerable: true,
+                        get: () => ref.y2,
+                        set: v => ref.y2 = v
+                    },
+                    _x1: {
+                        get: ()=> project.stage.metersToStage(ref.x1, "x"),
+                        set: v=> ref.x1 = Math.round10(project.stage.stageToMeters(v, "x"), -3)
+                    },
+                    _x2: {
+                        get: ()=> project.stage.metersToStage(ref.x2, "x"),
+                        set: v=> ref.x2 = Math.round10(project.stage.stageToMeters(v, "x"), -3)
+                    },
+                    _y1: {
+                        get: ()=> project.stage.metersToStage(ref.y1, "y"),
+                        set: v=> ref.y1 = Math.round10(project.stage.stageToMeters(v, "y"), -3)
+                    },
+                    _y2: {
+                        get: ()=> project.stage.metersToStage(ref.y2, "y"),
+                        set: v=> ref.y2 = Math.round10(project.stage.stageToMeters(v, "y"), -3)
+                    }
+                });
+            }
+
+            function wrap(project) {
+                return {
+                    fullPresentationArea(){
+                        project.presentationArea.mode = "Full";
+                    }
+                };
+            }
+
+            return function (project) {
+                let presentationArea = PresentationAreaFactory(project);
+                _.each(wrap(project), (fn, key)=>project[key] = fn);
+                Object.defineProperties(project, {
+                    presentationArea: {
+                        enumerable: true,
+                        get: () => presentationArea,
+                        set: v => presentationArea = PresentationAreaFactory(project, v)
+                    }
+                });
+            };
+        }]);
 })(angular.module(window.mainApp));

@@ -115,7 +115,8 @@ module.exports = (function (app) {
             };
         }])
         .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", "ProjectZones", "ProjectReaders",
-            function (_, projectOrigin, $interval, ProjectZones, ProjectReaders) {
+            "ProjectPresentationArea",
+            function (_, projectOrigin, $interval, ProjectZones, ProjectReaders, PresentationArea) {
                 function TimeLapseData() {
                     var base = [], project = null, self = this;
                     this.add = function addItems(items, timeLapse) {
@@ -641,6 +642,7 @@ module.exports = (function (app) {
                         });
                     ProjectZones(project);
                     ProjectReaders(project);
+                    PresentationArea(project);
                     origin.project = project;
                     timeLapseData.setProject(project);
                     if (ref.itemSense)

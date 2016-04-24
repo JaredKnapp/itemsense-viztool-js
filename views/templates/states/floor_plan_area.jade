@@ -1,0 +1,21 @@
+h3 Set Presntation Area:
+p(ng-if="project.presentationArea.mode === 'Full'") Currently will present the full floor plan.
+p(ng-if="project.presentationArea.mode !== 'Full'") Currently will present the selected area.
+p Click and drag to define the area to be shown during presentation mode.
+table.table(ng-if="project.presentationArea.mode !== 'Full'")
+    thead
+        tr
+            th Point
+            th X
+            th Y
+    tbody
+        tr
+            th Left-Top
+            td(contenteditable="true" ng-model="project.presentationArea.x1" step="0.1")
+            td(contenteditable="true" ng-model="project.presentationArea.y1" step="0.1")
+        tr
+            th Bottom-Right
+            td(contenteditable="true" ng-model="project.presentationArea.x2" step="0.1")
+            td(contenteditable="true" ng-model="project.presentationArea.y2" step="0.1")
+
+i.pnj-zoom-reset(ng-click="presentationReset()" title="Reset to Full Floor Plan" ng-if="project.presentationArea.mode !== 'Full'")

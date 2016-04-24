@@ -114,6 +114,12 @@ module.exports = (function (app) {
                 else
                     $scope.$state.go("floorPlan.trace");
             };
+            $scope.setPresentationArea = function () {
+                if ($scope.$state.is("floorPlan.area"))
+                    $scope.$state.go("floorPlan");
+                else
+                    $scope.$state.go("floorPlan.area");
+            };
             $scope.planUpload = function () {
                 if ($scope.project)
                     return "/project/" + $scope.project.handle + "/upload/1";
@@ -257,7 +263,6 @@ module.exports = (function (app) {
                         else if (key.keyCode === 67 && (key.metaKey || key.ctrlKey)) //Control or Command-C
                             $scope.project.cloneZone();
                         $scope.$apply();
-                        console.log(key.keyCode)
                     }
                 }
             });
