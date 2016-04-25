@@ -12,7 +12,7 @@
         div(ng-repeat="c in classes" ng-class="getSelectorClass()" ng-click="selectedClass=c" ng-dblclick="clearSelection(c)")
             .pnj-circle-small(style="{{setColor(selection[c])}}")
                 img.pnj-presenter-image(ng-if="selection[c].Image" ng-src="{{project.symbolImage(selection[c].Image)}}")
-                span(ng-if="!selection[c].Image && selection[c].Color==='white'") {{selection[c].Property}}
+                span(ng-if="!selection[c].Image && (!selection[c].Color || selection[c].Color==='white')") {{selection[c].Property}}
                 span(ng-if="!selection[c]") {{c}}
     .pnj-presenter-stage
         .pnj-presenter-easel(presentation="true")

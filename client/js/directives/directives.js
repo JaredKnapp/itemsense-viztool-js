@@ -43,6 +43,12 @@ module.exports = (function (app) {
                 circle.style.backgroundColor = content.backgroundColor;
                 if (label)
                     el.append("<div class='pnj-icon-label'>" + label + "</div>");
+                const overlay = circle.cloneNode();
+                overlay.style.top = 0;
+                overlay.style.position = "absolute";
+                overlay.style.backgroundColor = "initial";
+                overlay.setAttribute("class", "pnj-panel-btn pnj-overlay-btn");
+                el[0].appendChild(overlay);
                 return angular.element(circle);
             }
 
@@ -87,15 +93,19 @@ module.exports = (function (app) {
                 link: function (scope, el, attrs) {
                     var content = circleContent(scope, attrs.iconText),
                         circle = appendCircle(el, attrs.iconLabel, content);
+                    scope.$watch(()=> circle[0].offsetWidth,
+                        () => el.children().eq(2).css("width", circle[0].offsetWidth));
                     circle.html(content.element);
+                    el.children().eq(2).css("width", circle[0].offsetWidth);
                 }
             };
         }])
         .directive("contenteditable", [function () {
-            function ignoreEvent(ev){
+            function ignoreEvent(ev) {
                 ev.stopPropagation();
                 ev.preventDefault();
             }
+
             return {
                 restrict: "A",
                 require: "ngModel",
@@ -127,19 +137,19 @@ module.exports = (function (app) {
                             element.html(Math.round10(val() - step, -3));
                             scope.$apply(read);
                         }
-                        else if(ev.keyCode === 13){
+                        else if (ev.keyCode === 13) {
                             element[0].blur();
                             ignoreEvent(ev);
                         }
-                        else if(ev.keyCode === 27){
+                        else if (ev.keyCode === 27) {
                             element.html("escape");
                             element[0].blur();
                             ignoreEvent(ev);
                         }
                     });
 
-                    element.bind("keypress",function(ev){
-                        if(ev.charCode < 45 || ev.charCode > 57 || ev.charCode === 47)
+                    element.bind("keypress", function (ev) {
+                        if (ev.charCode < 45 || ev.charCode > 57 || ev.charCode === 47)
                             return ignoreEvent(ev);
                     });
                 }

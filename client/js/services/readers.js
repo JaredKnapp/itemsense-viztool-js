@@ -181,9 +181,6 @@ module.exports = (function (app) {
                                 get: function () {
                                     return reader;
                                 }
-                            },
-                            status:{
-                                get:() => readerStatus[engaged] || engaged || "unknown"
                             }
                         });
                     device.name = "Reader";

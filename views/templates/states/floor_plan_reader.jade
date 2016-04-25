@@ -16,6 +16,8 @@ form.css-form(name="readerForm" novalidate)
         .input-group
             .pnj-label-75 Facility:
             input.form-control(type="text" ng-model="activeReader.facility")
+    h4(ng-if="project.showLLRP && !statusMessage") Status:
+        small           {{readerStatus(activeReader)}}
     .form-group
         h3 Placement
         .input-group

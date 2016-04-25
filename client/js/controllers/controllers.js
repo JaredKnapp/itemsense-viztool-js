@@ -314,7 +314,14 @@ module.exports = (function (app) {
             });
         }])
         .controller("Readers", ["$scope", function ($scope) {
-
+            const readerStatuses ={
+                engage: "In current Job",
+                occupied: "Occupied by another process",
+                disengage: "Idle",
+                newReader: "New",
+                disconnected: "Disconnected",
+                unknown: "UnKnown"
+            };
             function makeReader() {
                 var newReader = {
                     address: "",
@@ -348,6 +355,9 @@ module.exports = (function (app) {
                 $scope.$emit("shouldSave", "readers");
             });
 
+            $scope.readerStatus=function(reader){
+                return readerStatuses[$scope.project.readerLLRP[reader.name] || "newReader"] || readerStatuses.unknown;
+            };
             $scope.$watch(function () {
                 return $scope.project.reader;
             }, function (n) {

@@ -14,7 +14,6 @@ module.exports = (function (app) {
                         stage = new createjs.Stage(canvas),
                         main = new createjs.Container(),
                         bkWidth, bkHeight, zoomX, zoomY, zoom,
-                        minX, minY, maxX, maxY,
                         interval, items = {}, activeTweens = 0, itemData, item,
                         wrapper = Object.create({
                             update: function () {
@@ -90,7 +89,8 @@ module.exports = (function (app) {
                                     return items;
                                 }, function (error) {
                                     $interval.cancel(interval);
-                                    scope.$emit("Presenter", error.data.msg);
+                                    console.log("Error getting items",error);
+                                    scope.$emit("Presenter", error && error.data ? error.data.msg : error.data || error);
                                 });
                             },
                             presentationArea(){
@@ -145,10 +145,6 @@ module.exports = (function (app) {
                                 canvas.width = canvas.style.width = bkWidth * this.zoom;
                                 canvas.height = canvas.style.height = bkHeight * this.zoom;
                                 this.adjustCanvasParent(box, parent);
-                                minX = this.stageToMeters(this.screenToCanvas(5), "x");
-                                maxX = this.stageToMeters(box.w - this.screenToCanvas(5), "x");
-                                maxY = this.stageToMeters(this.screenToCanvas(5), "y");
-                                minY = this.stageToMeters(box.h - this.screenToCanvas(5), "y");
                             }
                         }, {
                             project: {
