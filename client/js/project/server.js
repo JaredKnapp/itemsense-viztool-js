@@ -82,6 +82,7 @@ module.exports=(function(app) {
             },
             connect: function () {
                 var self = this;
+                $rootScope.statusMessage = "Connecting to Itemsense Instance ....";
                 return restCall({
                     method: "POST",
                     url: "/project/" + self.handle + "/connect",
@@ -110,7 +111,7 @@ module.exports=(function(app) {
                     if (self.showReaders && !self.readers)
                         return self.getReaders();
                     return self;
-                });
+                }).finally(()=>$rootScope.statusMessage="");
             },
             getReaders: function () {
                 return restCall({
@@ -253,8 +254,11 @@ module.exports=(function(app) {
                 });
             },
             getLLRPStatus(){
+                $rootScope.statusMessage="Getting Reader Status....";
                 return restCall({
                     url: `/project/${this.handle}/llrp`
+                }).finally(()=>{
+                    $rootScope.statusMessage = "";
                 });
             },
             getFacilities(){

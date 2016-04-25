@@ -348,7 +348,8 @@ function startProject(project) {
                         return q.all(_.map(notInJob, reader => this.isReaderConnected(reader)));
                     }).then(occupied =>
                         _.reduce(occupied, function (r, reader) {
-                            if (reader)  r[reader] = "occupied";
+                            if (reader)
+                                r[reader.name] = reader.status || "occupied";
                             return r;
                         }, result.status)
                     ).then(status =>
@@ -360,12 +361,19 @@ function startProject(project) {
                 },
                 isReaderConnected(reader){
                     return this.getReaderHomePage(reader)
-                        .then(homePage => this.isReaderOccupied(homePage) ? reader.name : null)
+                        .then(homePage => this.isReaderOccupied(homePage) ? {name: reader.name} : null)
+                        .catch(err => {
+                            console.log("Error reading home page", err, err.message, reader);
+                            return (err.message === "ETIMEDOUT") ?
+                            {name: reader.name, status: "disconnected"} :
+                            {name: reader.name, status: err.message};
+                        })
                 },
                 getReaderHomePage(reader) {
                     return this.restCall({
                         url: `http://${reader.address}/cgi-bin/index.cgi`,
-                        method: "GET"
+                        method: "GET",
+                        timeout: 10000
                     }, project.readerUser || "root", project.readerPassword || "impinj");
                 },
                 isReaderOccupied(homePage) {

@@ -136,7 +136,7 @@ module.exports = (function (app) {
                                 }
                             });
                             self.scope = scope;
-                            if (self.project && !self.origin.x)
+                            if (self.project && undefined === self.origin.x)
                                 self._origin = self.visibleCenter();
                             self.update();
                         },

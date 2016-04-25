@@ -52,7 +52,6 @@ module.exports = (function (app) {
                     }
                 },
                 showLLRP: {
-                    enumerable: true,
                     get: () => showLLRP,
                     set: function (v) {
                         showLLRP = v;

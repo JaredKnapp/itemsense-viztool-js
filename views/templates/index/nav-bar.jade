@@ -42,7 +42,7 @@
                   i.pnj-menu-check(ng-show="project.showReaders")
                   |    Show Readers
             li.menu-item
-               a(href="javascript:void(0);" ng-click="toggle('showLLRP')")
+               a(href="javascript:void(0);" ng-click="project.showLLRP = !project.showLLRP")
                   i.pnj-menu-check(ng-show="project.showLLRP")
                   |    Show Reader Engagement
             li.menu-item
@@ -80,6 +80,8 @@
          button.btn.btn-warning(ng-click="cancelReaders()" ng-show="project.shouldSave.readers") Cancel Reader Changes
       .navbar-form.navbar-left
          button.btn.btn-warning(ng-click="cancelZoneMap()" ng-show="project.shouldSave.zones") Cancel Zone Changes
+      .navbar-form.navbar-left
+         button.btn.btn-warning.disabled(ng-show="statusMessage") {{statusMessage}}
       li(uib-dropdown)
          a(href="javascript:void(0);" ng-show="project.facility && project.floorName") {{project.facility}}, Floor: {{project.floorName}}
    .pnj-job-control(ng-show="project.job" from-template="index/job_control")

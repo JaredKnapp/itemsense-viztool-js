@@ -6,9 +6,9 @@
 "use strict";
 
 module.exports = (function (app) {
-    app.run(["$rootScope", "$state", "$stateParams", "$q", "CreateJS", "Stage", "Project","$timeout", "_", 
-            function ($rootScope, $state, $stateParams, $q, createjs, stage, Project,$timeout,_) {
-                var project = null, buffer = null, alert = null, mainTab = {}, imageVersion = 0;
+    app.run(["$rootScope", "$state", "$stateParams", "$q", "CreateJS", "Stage", "Project", "$timeout", "_",
+            function ($rootScope, $state, $stateParams, $q, createjs, stage, Project, $timeout, _) {
+                var project = null, buffer = null, alert = null, mainTab = {}, imageVersion = 0, statusMessage = "";
                 $rootScope.$state = $state;
                 $rootScope.$stateParams = $stateParams;
                 $rootScope.round = function (v, d) {
@@ -27,7 +27,7 @@ module.exports = (function (app) {
                     return defer.promise;
 
                 };
-                angular.contrastColor=function(c){
+                angular.contrastColor = function (c) {
                     function contrast(r) {
                         var d = parseInt(r, 16);
                         d = (d > 128) ? d - 32 : d + 32;
@@ -37,25 +37,25 @@ module.exports = (function (app) {
                     return "#" + contrast(c.slice(1, 3)) +
                         contrast(c.slice(3, 5)) + contrast(c.slice(5, 7));
                 };
-                var delayResize=null;
-                window.addEventListener("resize",function(ev){
-                    if(delayResize)
+                var delayResize = null;
+                window.addEventListener("resize", function (ev) {
+                    if (delayResize)
                         $timeout.cancel(delayResize);
-                    delayResize=$timeout(function(){
-                        $rootScope.$broadcast("resize",ev);
-                        delayResize=null;
-                    },500);
+                    delayResize = $timeout(function () {
+                        $rootScope.$broadcast("resize", ev);
+                        delayResize = null;
+                    }, 500);
                 });
-                window.addEventListener("keydown",function(ev){
-                    $rootScope.$broadcast("keydown",ev);
-                    if(ev.srcElement.tagName === "BODY"){
+                window.addEventListener("keydown", function (ev) {
+                    $rootScope.$broadcast("keydown", ev);
+                    if (ev.srcElement.tagName === "BODY") {
                         ev.stopPropagation();
                         ev.preventDefault();
                     }
                 });
-                window.addEventListener("beforeunload",function(ev){
-                    const msg ="Unsaved Changes. are you sure?";
-                    if(Object.keys(project.shouldSave).length){
+                window.addEventListener("beforeunload", function (ev) {
+                    const msg = "Unsaved Changes. are you sure?";
+                    if (Object.keys(project.shouldSave).length) {
                         ev.returnValue = msg;
                         return msg;
                     }
@@ -79,7 +79,7 @@ module.exports = (function (app) {
                 }
 
                 $rootScope.$on("$stateChangeStart", function (ev, toState, toParams, fromState) {
-                    if (toParams.id==="newProject" || !$rootScope.project){
+                    if (toParams.id === "newProject" || !$rootScope.project) {
                         $rootScope.project = Project.newProject();
                     }
                     else if (shouldLoad(toParams.id.trim()))
@@ -90,10 +90,10 @@ module.exports = (function (app) {
                     if (toState.name.indexOf("floorPlan.") > -1)
                         $rootScope.$broadcast("StartPlanState", toState.name.substr("floorPlan.".length));
                 });
-                $rootScope.$on("shouldSave",function(ev,data){
-                    if(data === "readers")
-                        if(project.reader.address){
-                            if(!_.find(project.changedReaders, r => r.address === project.reader.address))
+                $rootScope.$on("shouldSave", function (ev, data) {
+                    if (data === "readers")
+                        if (project.reader.address) {
+                            if (!_.find(project.changedReaders, r => r.address === project.reader.address))
                                 project.changedReaders.push(project.reader);
                         }
                         else
@@ -101,17 +101,17 @@ module.exports = (function (app) {
 
                     project.shouldSave[data || "general"] = true;
                 });
-                $rootScope.$on("shouldNotSave",function(ev,data){
-                    if(data === "readers")  project.changedReaders=[];
+                $rootScope.$on("shouldNotSave", function (ev, data) {
+                    if (data === "readers")  project.changedReaders = [];
                     delete project.shouldSave[data];
                 });
                 $rootScope.sanitize = function (s) {
-                    return (s||"").trim().replace(/[^-a-zA-Z0-9._]/g, "_");
+                    return (s || "").trim().replace(/[^-a-zA-Z0-9._]/g, "_");
                 };
                 $rootScope.alertClosed = function () {
                     $rootScope.alert = null;
                 };
-                $rootScope.symbolUrl=function(fileName){
+                $rootScope.symbolUrl = function (fileName) {
                     return "/project/" + $rootScope.project.handle + "/symbols/" + ($rootScope.sanitize(fileName) || "symb");
                 };
                 Object.defineProperties($rootScope, {
@@ -121,7 +121,7 @@ module.exports = (function (app) {
                             return project;
                         },
                         set: function (v) {
-                            if(project)
+                            if (project)
                                 project.baseChanged();
                             project = v;
                             project.stage = stage;
@@ -145,6 +145,10 @@ module.exports = (function (app) {
                             alert = v;
                         }
                     },
+                    statusMessge: {
+                        get: ()=>statusMessage,
+                        set: v=>statusMessage = v
+                    },
                     mainTab: {
                         enumerable: true,
                         get: function () {
@@ -154,11 +158,11 @@ module.exports = (function (app) {
                             mainTab = v;
                         }
                     },
-                    imageVersion:{
-                        get:function(){
+                    imageVersion: {
+                        get: function () {
                             return imageVersion;
                         },
-                        set:function(v){
+                        set: function (v) {
                             imageVersion = v;
                         }
                     }
@@ -180,7 +184,7 @@ module.exports = (function (app) {
                     controller: "FloorPlan"
                 }).state("floorPlan.origin", {
                     templateUrl: "/templates/states/floor_plan_origin",
-                    controller:"Origin"
+                    controller: "Origin"
                 }).state("floorPlan.ruler", {
                     templateUrl: "/templates/states/floor_plan_ruler"
                 }).state("floorPlan.trace", {
@@ -189,31 +193,31 @@ module.exports = (function (app) {
                     templateUrl: "/templates/states/floor_plan_zone"
                 }).state("floorPlan.reader", {
                     templateUrl: "/templates/states/floor_plan_reader",
-                    controller:"Readers",
-                    params:{
-                        x:{value:null},
-                        y:{value:null}
+                    controller: "Readers",
+                    params: {
+                        x: {value: null},
+                        y: {value: null}
                     }
                 }).state("floorPlan.item", {
                     templateUrl: "/templates/states/floor_plan_item"
-                }).state("floorPlan.area",{
+                }).state("floorPlan.area", {
                     templateUrl: "/templates/states/floor_plan_area"
                 }).state("classes", {
                     url: "/classes/:id",
                     templateUrl: "/templates/states/classes",
                     controller: "Classes"
-                }).state("classes.epc",{
-                    url:"/:epc",
-                    templateUrl:"/templates/states/classes_epc",
-                    controller:"EPCEditor"
-                }).state("classes.symbol",{
-                    url:"/:header/:symbol",
-                    templateUrl:"/templates/states/classes_symbol",
-                    controller:"SymbolEditor"
-                }).state("present",{
-                    url:"/present/:id",
-                    templateUrl:"/templates/states/present",
-                    controller:"Presenter"
+                }).state("classes.epc", {
+                    url: "/:epc",
+                    templateUrl: "/templates/states/classes_epc",
+                    controller: "EPCEditor"
+                }).state("classes.symbol", {
+                    url: "/:header/:symbol",
+                    templateUrl: "/templates/states/classes_symbol",
+                    controller: "SymbolEditor"
+                }).state("present", {
+                    url: "/present/:id",
+                    templateUrl: "/templates/states/present",
+                    controller: "Presenter"
                 });
                 // Closure to make big fractions readable
                 (function () {
