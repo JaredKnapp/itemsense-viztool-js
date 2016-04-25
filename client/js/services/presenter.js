@@ -95,26 +95,60 @@ module.exports = (function (app) {
                             },
                             presentationArea(){
                                 const box = project.presentationArea;
+                                return (box.mode === "Full") ?
+                                {
+                                    x: 0,
+                                    y: 0,
+                                    w: bkWidth,
+                                    h: bkHeight
+                                } :
+                                {
+                                    x: this.metersToStage(Math.min(box.x1, box.x2), "x"),
+                                    y: this.metersToStage(Math.max(box.y1, box.y2), "y"),
+                                    w: this.metersToCanvas(Math.abs(box.x1 - box.x2)),
+                                    h: this.metersToCanvas(Math.abs(box.y1 - box.y2))
+                                };
+                            },
+                            adjustCanvasParent(box, parent){
+                                const marginW = Math.round((parent.w - (box.w * this.zoom)) / 2),
+                                    marginH = Math.round((parent.h - (box.h * this.zoom)) / 2),
+                                    boxX = Math.round(box.x * this.zoom),
+                                    boxY = Math.round(box.y * this.zoom);
+                                parent.el.scrollTop = boxY;
+                                parent.el.scrollLeft = boxX;
+                                if (parent.el.scrollLeft < boxX)
+                                    canvas.style.left = Math.round(parent.el.scrollLeft - boxX) + "px";
+                                if (parent.el.scrollTop < boxY)
+                                    canvas.style.top = Math.round(parent.el.scrollTop - boxY) + "px";
+                                parent.el.style.left = Math.max(3,marginW) + "px";
+                                parent.el.style.right = Math.max(3,marginW) + "px";
+                                parent.el.style.top = Math.max(3,marginH) + "px";
+                                parent.el.style.bottom = Math.max(3,marginH) + "px";
+                            },
+                            resetCanvasParent(){
+                                canvas.parentElement.style.left = canvas.parentElement.style.right = 0;
+                                canvas.parentElement.style.top = canvas.parentElement.style.bottom = 0;
                                 return {
-                                    x: this.metersToStage(Math.min(box.x1 ,  box.x2),"x"),
-                                    y: this.metersToStage(Math.min(box.y1 ,  box.y2),"y"),
-                                    w: this.metersToStage(Math.abs(box.x1-box.x2),"x"),
-                                    h: this.metersToStage(Math.abs(box.y1-box.y2),"y")
+                                    el: canvas.parentElement,
+                                    w: canvas.parentElement.offsetWidth,
+                                    h: canvas.parentElement.offsetHeight
                                 };
                             },
                             resize: function () {
-                                const parentWidth = canvas.parentElement.offsetWidth,
-                                    parentHeight = canvas.parentElement.offsetHeight;
-                                this.zoomX = parentWidth / bkWidth;
-                                this.zoomY = parentHeight / bkHeight;
+                                const parent = this.resetCanvasParent(),
+                                    box = this.presentationArea();
+                                this.zoomX = parent.w / box.w;
+                                this.zoomY = parent.h / box.h;
                                 this.zoom = Math.min(this.zoomX, this.zoomY);
-                                console.log(parentWidth,bkWidth,this.zoom, this.presentationArea())
+                                console.log(parent.w, bkWidth, this.zoom, box.x, box.w)
+                                console.log(parent.h, bkHeight, this.zoom, box.y, box.h)
                                 canvas.width = canvas.style.width = bkWidth * this.zoom;
                                 canvas.height = canvas.style.height = bkHeight * this.zoom;
+                                this.adjustCanvasParent(box, parent);
                                 minX = this.stageToMeters(this.screenToCanvas(5), "x");
-                                maxX = this.stageToMeters(bkWidth - this.screenToCanvas(5), "x");
+                                maxX = this.stageToMeters(box.w - this.screenToCanvas(5), "x");
                                 maxY = this.stageToMeters(this.screenToCanvas(5), "y");
-                                minY = this.stageToMeters(bkHeight - this.screenToCanvas(5), "y");
+                                minY = this.stageToMeters(box.h - this.screenToCanvas(5), "y");
                             }
                         }, {
                             project: {
@@ -197,6 +231,9 @@ module.exports = (function (app) {
                                 set: function (v) {
                                     itemData = v;
                                 }
+                            },
+                            scope: {
+                                get: () => scope
                             }
                         });
                     el.append(canvas);
@@ -382,7 +419,7 @@ module.exports = (function (app) {
                     ev.stopPropagation();
                 });
                 pressup = stage.on("pressup", (ev) => {
-                    if (Math.abs(wrapper.x1 - wrapper.x2) < 500 || Math.abs(wrapper.y1 - wrapper.y2) < 200){
+                    if (Math.abs(wrapper.x1 - wrapper.x2) < 500 || Math.abs(wrapper.y1 - wrapper.y2) < 200) {
                         stage.scope.alert = {
                             type: "warning",
                             msg: "Presentation Area is too small. Setting Presentation to Full Mode"

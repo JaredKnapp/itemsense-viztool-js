@@ -211,8 +211,9 @@ module.exports=(function(app) {
                     if (!self.isJobRunning() && self.itemSource === "Direct Connection")
                         self.pullItems = false;
                     return items;
-                }).catch(()=>{
+                }).catch((err)=>{
                     self.pullItems = false;
+                    return $q.reject(err);
                 });
             },
             saveZoneMap(data){
