@@ -116,14 +116,12 @@ module.exports = (function (app) {
                                     boxY = Math.round(box.y * this.zoom);
                                 parent.el.scrollTop = boxY;
                                 parent.el.scrollLeft = boxX;
+                                parent.el.style.left = parent.el.style.right = Math.max(3,marginW) + "px";
+                                parent.el.style.top = parent.el.style.bottom = Math.max(3,marginH) + "px";
                                 if (parent.el.scrollLeft < boxX)
                                     canvas.style.left = Math.round(parent.el.scrollLeft - boxX) + "px";
                                 if (parent.el.scrollTop < boxY)
                                     canvas.style.top = Math.round(parent.el.scrollTop - boxY) + "px";
-                                parent.el.style.left = Math.max(3,marginW) + "px";
-                                parent.el.style.right = Math.max(3,marginW) + "px";
-                                parent.el.style.top = Math.max(3,marginH) + "px";
-                                parent.el.style.bottom = Math.max(3,marginH) + "px";
                             },
                             resetCanvasParent(){
                                 canvas.parentElement.style.left = canvas.parentElement.style.right = 0;
