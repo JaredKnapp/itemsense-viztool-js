@@ -11,11 +11,11 @@ table.table(ng-if="project.presentationArea.mode !== 'Full'")
     tbody
         tr
             th Left-Top
-            td(contenteditable="true" ng-model="project.presentationArea.x1" step="0.1")
-            td(contenteditable="true" ng-model="project.presentationArea.y1" step="0.1")
+            td(contenteditable="true" ng-model="project.presentationArea._x1" step="0.1")
+            td(contenteditable="true" ng-model="project.presentationArea._y1" step="0.1")
         tr
             th Bottom-Right
-            td(contenteditable="true" ng-model="project.presentationArea.x2" step="0.1")
-            td(contenteditable="true" ng-model="project.presentationArea.y2" step="0.1")
+            td(contenteditable="true" ng-model="project.presentationArea._x2" step="0.1")
+            td(contenteditable="true" ng-model="project.presentationArea._y2" step="0.1")
 
 i.pnj-zoom-reset(ng-click="presentationReset()" title="Reset to Full Floor Plan" ng-if="project.presentationArea.mode !== 'Full'")

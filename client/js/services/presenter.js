@@ -250,20 +250,36 @@ module.exports = (function (app) {
                         set: v => ref.y2 = v
                     },
                     _x1: {
-                        get: ()=> project.stage.metersToStage(ref.x1, "x"),
-                        set: v=> ref.x1 = Math.round10(project.stage.stageToMeters(v, "x"), -3)
+                        get: ()=> ref.x1,
+                        set: v=> {
+                            ref.x1 = v;
+                            if (project.stage)
+                                project.stage.presentationArea.draw(true);
+                        }
                     },
                     _x2: {
-                        get: ()=> project.stage.metersToStage(ref.x2, "x"),
-                        set: v=> ref.x2 = Math.round10(project.stage.stageToMeters(v, "x"), -3)
+                        get: ()=> ref.x2,
+                        set: v=> {
+                            ref.x2 = v;
+                            if (project.stage)
+                                project.stage.presentationArea.draw(true);
+                        }
                     },
                     _y1: {
-                        get: ()=> project.stage.metersToStage(ref.y1, "y"),
-                        set: v=> ref.y1 = Math.round10(project.stage.stageToMeters(v, "y"), -3)
+                        get: ()=> ref.y1,
+                        set: v=> {
+                            ref.y1 = v;
+                            if (project.stage)
+                                project.stage.presentationArea.draw(true);
+                        }
                     },
                     _y2: {
-                        get: ()=> project.stage.metersToStage(ref.y2, "y"),
-                        set: v=> ref.y2 = Math.round10(project.stage.stageToMeters(v, "y"), -3)
+                        get: ()=> ref.y2,
+                        set: v=> {
+                            ref.y2 = v;
+                            if (project.stage)
+                                project.stage.presentationArea.draw(true);
+                        }
                     }
                 });
             }
@@ -286,6 +302,93 @@ module.exports = (function (app) {
                         set: v => presentationArea = PresentationAreaFactory(project, v)
                     }
                 });
+            };
+        }])
+        .factory("StagePresentationArea", ["_", "CreateJS", function (_, createjs) {
+            function presentationAreaFactory(stage) {
+                let zoomHandler = null, mousedown = null, pressmove = null;
+                const shape = new createjs.Shape(),
+                    wrapper = Object.create({
+                        setToFull(){
+                            wrapper.x1 = 0;
+                            wrapper.y1 = 0;
+                            wrapper.x2 = stage.originBox.w;
+                            wrapper.y2 = stage.originBox.h;
+                        },
+                        draw(update){
+                            if (stage.project.presentationArea.mode === "Full")
+                                wrapper.setToFull();
+                            shape.graphics.clear().s("red").sd([10, 10], 0)
+                                .mt(wrapper.x1, wrapper.y1)
+                                .lt(wrapper.x2, wrapper.y1)
+                                .lt(wrapper.x2, wrapper.y2)
+                                .lt(wrapper.x1, wrapper.y2)
+                                .lt(wrapper.x1, wrapper.y1);
+                            if (update)
+                                stage.update();
+                        },
+                        destroy(){
+                            stage.removeChild(shape);
+                            stage.off("Zoom", zoomHandler);
+                            stage.off("mousedown", mousedown);
+                            stage.off("pressmove", pressmove);
+                            stage.update();
+                        }
+                    }, {
+                        x1: {
+                            get: () => stage.metersToStage(stage.project.presentationArea.x1, "x"),
+                            set: v => stage.project.presentationArea.x1 = Math.round10(stage.stageToMeters(v, "x"), -3)
+                        },
+                        x2: {
+                            get: () => stage.metersToStage(stage.project.presentationArea.x2, "x"),
+                            set: v => stage.project.presentationArea.x2 = Math.round10(stage.stageToMeters(v, "x"), -3)
+                        },
+                        y1: {
+                            get: () => stage.metersToStage(stage.project.presentationArea.y1, "y"),
+                            set: v => stage.project.presentationArea.y1 = Math.round10(stage.stageToMeters(v, "y"), -3)
+                        },
+                        y2: {
+                            get: () => stage.metersToStage(stage.project.presentationArea.y2, "y"),
+                            set: v => stage.project.presentationArea.y2 = Math.round10(stage.stageToMeters(v, "y"), -3)
+                        }
+                    });
+                zoomHandler = stage.on("zoom", ()=>wrapper.draw);
+                mousedown = stage.on("mousedown", (ev)=> {
+                    stage.project.presentationArea.mode = "Area";
+                    wrapper.x1 = ev.stageX / stage.zoom;
+                    wrapper.y1 = ev.stageY / stage.zoom;
+                    wrapper.draw(true);
+                    stage.scope.$apply();
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                });
+                pressmove = stage.on("pressmove", (ev) => {
+                    wrapper.x2 = ev.stageX / stage.zoom;
+                    wrapper.y2 = ev.stageY / stage.zoom;
+                    wrapper.draw(true);
+                    stage.scope.$apply();
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                });
+                shape.name = "Area";
+                stage.addChild(shape);
+                wrapper.draw(true);
+                return wrapper;
+            }
+
+            function wrap(stage) {
+                return {
+                    startPresentationArea(){
+                        stage.presentationArea = presentationAreaFactory(stage);
+                    },
+                    endPresentationArea(){
+                        stage.presentationArea.destroy();
+                    }
+                };
+            }
+
+            return function (stage) {
+                _.each(wrap(stage), (fn, k)=>stage[k] = fn);
             };
         }]);
 })(angular.module(window.mainApp));
