@@ -1,7 +1,7 @@
 .form-group
     .input-group
         .pnj-label-110 Name:
-        input.form-control(type="text" ng-model="project.zone.name")
+        input.form-control(type="text" ng-model="project.zone.name" ng-change="shouldSave('zones')")
     i.pnj-delete(title="delete" ng-click="project.deleteZone()")
     i.pnj-clone(title="duplicate" ng-click="project.cloneZone()")
 h4 Edit Zone

@@ -22,7 +22,7 @@
                a(ng-href="/project/{{project.handle}}/dump" target="_self" download="itemsense-configuration.json") Export...
             li.menuitem(ng-show="!project.recipes" ng-class="{disabled:!project.canConnect()}")
                a(href="javascript:void(0);" ng-click="project.connect()") Connect to Item Sense
-            li.menuitem(ng-class="{disabled:!project.canConnect()}")
+            li.menuitem(ng-class="{disabled:!project.canConnect() || !project.classes}")
                a(ui-sref="present({id:project.handle})") Present Project
             li.divider
             li.menuitem(flow-init="{target:planUpload}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow)")
@@ -30,27 +30,27 @@
             li.divider
             li.menuitem
                a(href="javascript:void(0);" ng-click="about()") About
-      li(uib-dropdown ng-class="{disabled:!project.recipes || !project.stage}")
+      li(uib-dropdown ng-class="{disabled:!project.recipes || !project.stage}" ng-show="$state.current.name.startsWith('floorPlan')")
          a(uib-dropdown-toggle href="javascript:void(0);") View
          ul(uib-dropdown-menu)
             li.menu-item
-               a(href="javascript:void(0);" ng-click="project.jobMonitor=!project.jobMonitor")
+               a(href="javascript:void(0);" ng-click="toggle('jobMonitor')")
                   i.pnj-menu-check(ng-show="project.jobMonitor")
                   |    Monitor Job
             li.menu-item
-               a(href="javascript:void(0);" ng-click="project.showReaders=!project.showReaders")
+               a(href="javascript:void(0);" ng-click="toggle('showReaders')")
                   i.pnj-menu-check(ng-show="project.showReaders")
                   |    Show Readers
             li.menu-item
-               a(href="javascript:void(0);" ng-click="project.showLLRP=!project.showLLRP")
+               a(href="javascript:void(0);" ng-click="project.showLLRP = !project.showLLRP")
                   i.pnj-menu-check(ng-show="project.showLLRP")
                   |    Show Reader Engagement
             li.menu-item
-               a(href="javascript:void(0);" ng-click="project.pullItems=!project.pullItems")
+               a(href="javascript:void(0);" ng-click="toggle('pullItems')")
                   i.pnj-menu-check(ng-show="project.pullItems")
                   |    Pull Items
             li.menu-item(ng-class="{disabled:!project.items}")
-               a(href="javascript:void(0);" ng-click="project.showItems=!project.showItems")
+               a(href="javascript:void(0);" ng-click="toggle('showItems')")
                   i.pnj-menu-check(ng-show="project.showItems")
                   |    Show Items
             li.menu-item
@@ -59,7 +59,7 @@
                   |    Epc Filter
             li.menu-item
                a(href="javascript:void(0);" ng-click="setFloorName()") Floor Name...
-      li(uib-dropdown ng-class="{disabled:!project.recipes}")
+      li(uib-dropdown ng-class="{disabled:!project.recipes}" ng-show="$state.current.name.startsWith('floorPlan')")
          a(uib-dropdown-toggle href="javascript:void(0);") Zones
          ul(uib-dropdown-menu)
             li.menu-item
@@ -70,5 +70,19 @@
                a(href="javascript:void(0);" ng-click="trace()")
                   i.pnj-menu-check(ng-show="$state.is('floorPlan.trace')")
                   |    Add Zone
+            li.menu-item
+               a(href="javascript:void(0);" ng-click="setPresentationArea()")
+                  i.pnj-menu-check(ng-show="$state.is('floorPlan.area')")
+                  |    Set Presentation Area
+      .navbar-form.navbar-left
+         button.btn(ng-click="project.save()" ng-class="saveClass()") Save Project
+      .navbar-form.navbar-left
+         button.btn.btn-warning(ng-click="cancelReaders()" ng-show="project.shouldSave.readers") Cancel Reader Changes
+      .navbar-form.navbar-left
+         button.btn.btn-warning(ng-click="cancelZoneMap()" ng-show="project.shouldSave.zones") Cancel Zone Changes
+      .navbar-form.navbar-left
+         button.btn.btn-warning.disabled(ng-show="statusMessage") {{statusMessage}}
+      li(uib-dropdown)
+         a(href="javascript:void(0);" ng-show="project.facility && project.floorName") {{project.facility}}, Floor: {{project.floorName}}
    .pnj-job-control(ng-show="project.job" from-template="index/job_control")
 

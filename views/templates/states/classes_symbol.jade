@@ -16,6 +16,7 @@ form(name="SymbolEditor")
             style="background-color:{{bkColor(symbol)}};border-color:{{getBorder(bkColor(symbol))}}")
                 img(ng-if="symbol.Image" ng-src="{{symbolImage()}}" title="Symbol Image")
                 .pnj-item-text(ng-if="!symbol.Image && !symbol.Color") {{symbol.Property}}
+            .pnj-item-color(style="position:absolute;top:0;left:4%;width:92%")
         .clearfix
     .form-group
         span(flow-init="{target:targetSymbol}"

@@ -84,16 +84,16 @@ function createResultItem(data, tp) {
 
 class ConfigDump {
 
-    constructor(itemsenseApi,project) {
+    constructor(itemsenseApi, project) {
         this.itemsenseApi = itemsenseApi;
-        this.project =project;
+        this.project = project;
         this.readerConfigs = {};
         this.readerDefinitions = {};
     }
 
     static createTemplate(type) {
         return type === "job" ? {
-            signature:"",
+            signature: "",
             timestamp: new Date().toUTCString(),
             job: null,
             currentZoneMaps: [],
@@ -102,7 +102,7 @@ class ConfigDump {
             readerDefinitions: [],
             zoneMaps: []
         } : {
-            signature:"",
+            signature: "",
             timestamp: new Date().toUTCString(),
             recipes: null,
             readerConfigurations: null,
@@ -135,7 +135,7 @@ class ConfigDump {
             })
             .then((facilities) => {
                 result.facilities = facilities;
-                return q.all(this.saveCurrentZoneMaps(result,facilities));
+                return q.all(this.saveCurrentZoneMaps(result, facilities));
             }).then(()=>result);
 
     }
@@ -239,23 +239,28 @@ function startProject(project) {
                     return defer.promise;
                 },
                 getNodeRedFlow(){
-                    return this.restCall({url: project.nodeRedEndPoint});
+                    readPromise = wrapper.stash(wrapper.restCall({url: project.nodeRedEndPoint}))
+                        .catch(error=> {
+                            console.log(error);
+                            return q.reject(error)
+                        });
+                    return readPromise;
                 },
-                getItems: function () {
-                    if (readPromise)
-                        return readPromise;
-                    const data = (project.itemSource === "Direct Connection")
-                        ? itemsenseApi.items.get({pageSize: 1000})
-                        : this.getNodeRedFlow();
-                    readPromise = wrapper.stash(data).then(function (items) {
+                getDirect(){
+                    readPromise = wrapper.stash(itemsenseApi.items.get({pageSize: 1000})).then(function (items) {
                         if (!itemSenseJob)
-                            return q.reject({statusCode: 500, body: "Job not started"});
+                            return q.reject({statusCode: 500, response: {body: "Job not started"}});
                         items.data = _.filter(items.data, function (i) {
                             return i.lastModifiedTime > itemSenseJob.creationTime
                         });
                         return items;
                     });
                     return readPromise;
+                },
+                getItems: function () {
+                    if (readPromise)
+                        return readPromise;
+                    return project.itemSource === "Direct Connection" ? this.getDirect() : this.getNodeRedFlow();
                 },
                 dumpConfig(){
                     const worker = new ConfigDump(itemsenseApi, project);
@@ -303,11 +308,11 @@ function startProject(project) {
                 setCurrentZoneMap: function (name) {
                     return itemsenseApi.currentZoneMap.update(name);
                 },
-                getCurrentZoneMap: function () {
+                getCurrentZoneMap() {
                     return itemsenseApi.currentZoneMap.get(project.facility);
                 },
-                getAllZoneMaps: function () {
-                    return itemsenseApi.zoneMaps.getAll();
+                getZoneMap(data) {
+                    return data ? itemsenseApi.zoneMaps.get(data) : itemsenseApi.zoneMaps.getAll();
                 },
                 getFacilities: ()=> itemsenseApi.facilities.get(),
                 getJobs: function (id) {
@@ -343,7 +348,8 @@ function startProject(project) {
                         return q.all(_.map(notInJob, reader => this.isReaderConnected(reader)));
                     }).then(occupied =>
                         _.reduce(occupied, function (r, reader) {
-                            if (reader)  r[reader] = "occupied";
+                            if (reader)
+                                r[reader.name] = reader.status || "occupied";
                             return r;
                         }, result.status)
                     ).then(status =>
@@ -355,12 +361,19 @@ function startProject(project) {
                 },
                 isReaderConnected(reader){
                     return this.getReaderHomePage(reader)
-                        .then(homePage => this.isReaderOccupied(homePage) ? reader.name : null)
+                        .then(homePage => this.isReaderOccupied(homePage) ? {name: reader.name} : null)
+                        .catch(err => {
+                            console.log("Error reading home page", err, err.message, reader);
+                            return (err.message === "ETIMEDOUT") ?
+                            {name: reader.name, status: "disconnected"} :
+                            {name: reader.name, status: err.message};
+                        })
                 },
                 getReaderHomePage(reader) {
                     return this.restCall({
                         url: `http://${reader.address}/cgi-bin/index.cgi`,
-                        method: "GET"
+                        method: "GET",
+                        timeout: 10000
                     }, project.readerUser || "root", project.readerPassword || "impinj");
                 },
                 isReaderOccupied(homePage) {
@@ -382,7 +395,7 @@ function startProject(project) {
 
                     return this.getJobs(id).then(function (job) {
                         if (itemSenseJob && job.id === itemSenseJob.id)
-                            if (self.isComplete(job)){
+                            if (self.isComplete(job)) {
                                 self.stopInterval();
                                 itemSenseJob = null
                             }
@@ -390,8 +403,8 @@ function startProject(project) {
                     });
                 },
                 stopJob: function (id) {
-                    return itemsenseApi.jobs.stop(id).then(()=>{
-                        if(id === itemSenseJob.id)
+                    return itemsenseApi.jobs.stop(id).then(()=> {
+                        if (id === itemSenseJob.id)
                             itemSenseJob = null;
                     });
                 }
@@ -424,7 +437,10 @@ function startProject(project) {
     return wrapper;
 }
 
-const notStarted = ()=> project ? null : q.reject({statusCode: 500, body: "Server error: Project Not Started"});
+const notStarted = ()=> project ? null : q.reject({
+    statusCode: 500,
+    response: {body: "Server error: Project Not Started"}
+});
 
 var md = {
 
@@ -441,7 +457,7 @@ var md = {
         }).then(function (job) {
             project.itemSenseJob = job;
             payload.job = job;
-            return project.getAllZoneMaps();
+            return project.getZoneMap();
         }).then(function (zoneMaps) {
             payload.zoneMaps = _.filter(zoneMaps, function (z) {
                 return z.facility === project.project.facility;
@@ -463,7 +479,7 @@ var md = {
     getReaders: () => notStarted() || project.getReaders(),
     getItems: () => notStarted() || project.getItems(),
     postReaders: data => notStarted() || project.postReaders(data),
-    getZoneMaps: () => notStarted() || project.getAllZoneMaps(),
+    getZoneMap: (data) => notStarted() || project.getZoneMap(data),
     deleteZoneMap: (data) => notStarted() || project.deleteZoneMap(data),
     addZoneMap: data => notStarted() || project.addZoneMap(data),
     setCurrentZoneMap: data => notStarted() || project.setCurrentZoneMap(data),

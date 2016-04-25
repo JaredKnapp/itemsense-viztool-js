@@ -90,6 +90,7 @@ module.exports = (function (app) {
             });
             shape.on("mousedown", function (ev) {
                 wrapper.activate();
+                stage.scope.$apply();
                 ev.preventDefault();
                 ev.stopPropagation();
             });

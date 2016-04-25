@@ -9,13 +9,15 @@ form.css-form(name="readerForm" novalidate)
             input.form-control(type="text" ng-model="activeReader.name" required)
         .input-group
             .pnj-label-75 Address:
-            input.form-control(type="text" ng-model="activeReader.address" required)
+            input.form-control(type="text" ng-model="activeReader.address" required ng-change="shouldSave()")
         .input-group
             .pnj-label-75 Zone:
             input.form-control(type="text" ng-model="activeReader.readerZone")
         .input-group
             .pnj-label-75 Facility:
             input.form-control(type="text" ng-model="activeReader.facility")
+    h4(ng-if="project.showLLRP && !statusMessage") Status:
+        small           {{readerStatus(activeReader)}}
     .form-group
         h3 Placement
         .input-group
@@ -39,5 +41,3 @@ form.css-form(name="readerForm" novalidate)
         .input-group
             .pnj-label-75 Roll:
             input.form-control(type="number" ng-model="activeReader.placement.roll" step="10")
-    button.btn.btn-default.pull-left(ng-click="cancel()") Cancel
-    button.btn.btn-primary.pull-right(ng-click="save()" ng-disabled="!readerForm.$valid") Save

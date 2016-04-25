@@ -8,8 +8,9 @@
 
 module.exports = (function (app) {
     app.factory("Stage", ["_", "$q", "$state", "$interval", "CreateJS", "Origin", "Ruler", "Tracer", "Zones", "Reader", "Item",
-        "TimeLapse",
-        function (_, $q, $state, $interval, createjs, Origin, Ruler, Tracer, Zones, Reader, Item, TimeLapse) {
+        "TimeLapse", "StagePresentationArea",
+        function (_, $q, $state, $interval, createjs, Origin, Ruler, Tracer, Zones, Reader, Item,
+                  TimeLapse, PresentationArea) {
             var main = new createjs.Container(),
                 canvas = document.createElement("canvas"),
                 stage = new createjs.Stage(canvas),
@@ -17,7 +18,7 @@ module.exports = (function (app) {
                 floorPlan, project, bkWidth = 1300, bkHeight = 700, events = {}, zone = null, zoneCollection = [],
                 readers = [], reader = null,
                 items = {}, itemInterval = null, item = null, activeTweens = 0,
-                layers = ["Floorplan", "Origin", "Zone", "Field", "Reader", "Item", "Ruler", "Tracer", "TimeLapse"],
+                layers = ["Floorplan", "Origin", "Zone", "Field", "Reader", "Item", "Ruler", "Tracer", "TimeLapse", "Area"],
                 wrapper = Object.create({
                         offAll: function () {
                             _.each(events, function (v, k) {
@@ -58,25 +59,39 @@ module.exports = (function (app) {
                             el[0].appendChild(canvas);
                             self.offAll();
                             events.mousedown = stage.on("mousedown", function (ev) {
-                                if ($state.current.name === "floorPlan.origin")
-                                    self.origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
-                                else if ($state.current.name === "floorPlan.trace")
-                                    Tracer.mousedown(ev);
-                                else if ($state.current.name === "floorPlan.ruler")
-                                    return;
-                                else
-                                    return $state.go("floorPlan");
+                                switch ($state.current.name) {
+                                    case "floorPlan.origin":
+                                        self._origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
+                                        break;
+                                    case "floorPlan.trace":
+                                        Tracer.mousedown(ev);
+                                        break;
+                                    case "floorPlan.ruler":
+                                    case "floorPlan.area":
+                                        return;
+                                    default:
+                                        return $state.go("floorPlan");
+                                }
                                 scope.$apply();
                             });
 
                             events.pressmove = stage.on("pressmove", function (ev) {
                                 if ($state.current.name === "floorPlan.origin")
-                                    self.origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
+                                    self._origin = {x: ev.stageX / self.zoom, y: ev.stageY / self.zoom};
                                 else if ($state.current.name === "floorPlan.trace")
                                     Tracer.pressmove(ev);
                                 scope.$apply();
                             });
 
+                            events.pressup = stage.on("pressup", ()=> {
+                                if ($state.current.name === "floorPlan.origin") {
+                                    if (project.showReaders)
+                                        this.refreshReaders();
+                                    if (project.zones)
+                                        this.zones = project.zones;
+                                }
+
+                            });
                             events.dblclick = stage.on("dblclick", function (ev) {
                                 if ($state.current.name === "floorPlan.trace")
                                     Tracer.dblclick(ev);
@@ -96,6 +111,8 @@ module.exports = (function (app) {
                                         return self.endReader();
                                     case "item":
                                         return self.endItem();
+                                    case "area":
+                                        return self.endPresentationArea();
                                     default:
                                         break;
                                 }
@@ -112,17 +129,19 @@ module.exports = (function (app) {
                                         return self.startReader();
                                     case "item":
                                         return self.startItem();
+                                    case "area":
+                                        return self.startPresentationArea();
                                     default:
                                         break;
                                 }
                             });
                             self.scope = scope;
-                            if (self.project && !self.origin.x)
-                                self.origin = self.visibleCenter();
+                            if (self.project && undefined === self.origin.x)
+                                self._origin = self.visibleCenter();
                             self.update();
                         },
-                        canvasToMeters(v,axis){
-                            return this.stageToMeters(this.screenToCanvas(v),axis);
+                        canvasToMeters(v, axis){
+                            return this.stageToMeters(this.screenToCanvas(v), axis);
                         },
                         screenToCanvas: function (v) {
                             return v / this.zoom;
@@ -171,13 +190,12 @@ module.exports = (function (app) {
                             _.find(zoneCollection, wrapper => wrapper.zone === zone).activate();
                         },
                         deleteZone: function () {
-                            var self = this,
-                                idx = _.findIndex(this.zones, function (zone) {
-                                    return zone === self.zone.model.ref;
-                                });
-                            if (idx !== -1){
+                            const idx = _.findIndex(this.zones, zone => zone === this.zone.model.ref),
+                                shapeIdx = _.findIndex(zoneCollection, z => z === this.zone);
+                            if (idx !== -1) {
                                 this.zones.splice(idx, 1);
-                                zoneCollection.splice(idx,1);
+                                this.scope.$emit("shouldSave", "zones");
+                                zoneCollection.splice(shapeIdx, 1);
                             }
                             this.zone.destroy();
                             $state.go("floorPlan");
@@ -211,7 +229,7 @@ module.exports = (function (app) {
                             this.rulerLength = Ruler.length;
                         },
                         putRulerInCenter(){
-                            Ruler.coords.init(this.visibleCenter(),20);
+                            Ruler.coords.init(this.visibleCenter(), 20);
                             Ruler.draw(true);
                             this.rulerLength = Ruler.length;
                         },
@@ -270,6 +288,10 @@ module.exports = (function (app) {
                         setOrigin: function (x, y) {
                             this.origin.x = bkWidth * x;
                             this.origin.y = bkHeight * y;
+                            if (project.showReaders)
+                                this.refreshReaders();
+                            if (project.zones)
+                                this.zones = project.zones;
                             this.drawOrigin();
                         },
                         update: function () {
@@ -295,6 +317,11 @@ module.exports = (function (app) {
                                 return r !== reader;
                             });
                             reader.destroy();
+                        },
+                        refreshReaders(){
+                            _.each(readers, r => r.destroy());
+                            readers = _.map(project.readers, r => Reader.create(r, this, project.readerLLRP[r.name]));
+                            this.update();
                         },
                         showReaders: function (v) {
                             var self = this;
@@ -330,11 +357,13 @@ module.exports = (function (app) {
                             this.update();
                         },
                         pullItems: function (v) {
-                            if (v)
+                            if (v) {
                                 itemInterval = itemInterval || $interval(function () {
                                         if ($state.current.name.indexOf("floorPlan") === 0)
                                             project.getItems();
-                                    }, 5000);
+                                    }, project.pullInterval * 1000);
+                                project.getItems();
+                            }
                             else {
                                 $interval.cancel(itemInterval);
                                 itemInterval = null;
@@ -378,7 +407,6 @@ module.exports = (function (app) {
                     },
                     {
                         floorPlan: {
-                            enumerable: false,
                             get: function () {
                                 return floorPlan;
                             },
@@ -395,7 +423,17 @@ module.exports = (function (app) {
                                 if (!this.containsShape(timeLapse.shape))
                                     this.addChild(timeLapse.shape);
                                 project.zoom = this.zoom || this.widthZoom();
-                                this.origin = this.origin.x === undefined ? this.visibleCenter() : this.origin;
+                                if (this.origin.x === undefined)
+                                    this._origin = this.visibleCenter();
+                                else
+                                    Origin.draw(true);
+                            }
+                        },
+                        _origin: {
+                            get: ()=>project.origin,
+                            set: function (v) {
+                                this.origin = v;
+                                this.scope.$emit("shouldSave", "general");
                             }
                         },
                         origin: {
@@ -455,7 +493,8 @@ module.exports = (function (app) {
                             },
                             set(v){
                                 _.each(zoneCollection || [], zone => zone.destroy());
-                                zoneCollection = _.map(v || [], zone => Zones.createZone(zone, this));
+                                zoneCollection = _.map(v || [], zone => zone.floor === project.floorName ? Zones.createZone(zone, this) : null);
+                                zoneCollection = _.filter(zoneCollection, z=>z);
                             }
                         },
                         zone: {
@@ -531,23 +570,26 @@ module.exports = (function (app) {
                             set: function (v) {
                                 project.tracePoints = v;
                             }
+                        },
+                        project: {
+                            get: () => project
                         }
                     });
             canvas.width = bkWidth;
             canvas.height = bkHeight;
             canvas.setAttribute("oncontextmenu", "return false;");
             let mouseDiv = null;
-            canvas.onmousemove = function(ev){
-                const x = Math.round10(wrapper.canvasToMeters(ev.offsetX,"x"),-2),
-                    y = Math.round10(wrapper.canvasToMeters(ev.offsetY,"y"),-2);
-                    mouseDiv = mouseDiv || document.querySelector("#mouseCoords");
-                if(wrapper.zoom)
+            canvas.onmousemove = function (ev) {
+                const x = Math.round10(wrapper.canvasToMeters(ev.offsetX, "x"), -2),
+                    y = Math.round10(wrapper.canvasToMeters(ev.offsetY, "y"), -2);
+                mouseDiv = mouseDiv || document.querySelector("#mouseCoords");
+                if (wrapper.zoom)
                     mouseDiv.innerHTML = `${x}, ${y}`;
             };
-            canvas.onmouseout = function(){
+            canvas.onmouseout = function () {
                 mouseDiv = mouseDiv || document.querySelector("#mouseCoords");
-                if(mouseDiv)
-                    mouseDiv.innerHTML="";
+                if (mouseDiv)
+                    mouseDiv.innerHTML = "";
                 mouseDiv = null;
             };
             wrapper.initLayers();
@@ -573,11 +615,15 @@ module.exports = (function (app) {
             stage.on("newItem", function (ev) {
                 switchFocus(ev, "item");
             });
+            stage.on("shouldSave", function (ev) {
+                wrapper.scope.$emit("shouldSave", ev.subject);
+            });
             createjs.Ticker.setFPS(30);
             createjs.Ticker.addEventListener("tick", function () {
                 if (wrapper.activeTweens > 0)
                     stage.update();
             });
+            PresentationArea(wrapper, project);
             return wrapper;
         }]);
 })(angular.module(window.mainApp));

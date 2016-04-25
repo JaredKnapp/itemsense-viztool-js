@@ -80,16 +80,22 @@ module.exports = (function (app) {
             };
         }])
         .factory("Reader", ["CreateJS", "ReaderModel", function (createjs, ReaderModel) {
-            const colors = {engage: "green", disengage: "gray", active: "red", occupied: "yellow", inactive:"blue"};
+            const colors = {
+                engage: "green",
+                disengage: "gray",
+                active: "red",
+                occupied: "yellow",
+                inactive: "blue",
+                disconnected: "black"
+            };
             return {
                 create: function (reader, stage, engaged) {
-                    engaged = engaged || "inactive";
                     var field = new createjs.Shape(),
                         device = new createjs.Shape(),
                         ref = reader ? reader.placement : {},
                         model = ReaderModel(ref, stage),
-                        zoomHandler = null,
-                        prevColor = engaged ? colors[engaged] : colors.disengage,
+                        zoomHandler = null, moved = false,
+                        prevColor = colors.inactive,
                         color = prevColor,
                         lastX, lastY,
                         wrapper = Object.create({
@@ -135,16 +141,17 @@ module.exports = (function (app) {
                                 if (update)
                                     stage.update();
                             },
-                            setStatus(key,update){
+                            setStatus(key, update){
+                                engaged = key;
                                 if (color === colors.active)
                                     prevColor = colors[key];
                                 else {
-                                    color = colors[key];
+                                    color = colors[key] || color.inactive;
                                     this.draw(update);
                                 }
                             },
                             activate: function (noForce) {
-                                prevColor = color;
+                                prevColor = color === colors.active ? prevColor : color;
                                 color = colors.active;
                                 this.draw(true);
                                 stage.dispatchEvent(new createjs.Event("newReader").set({
@@ -182,6 +189,7 @@ module.exports = (function (app) {
                         wrapper.activate();
                         lastX = ev.stageX;
                         lastY = ev.stageY;
+                        moved = false;
                         ev.preventDefault();
                         ev.stopPropagation();
                     });
@@ -192,8 +200,18 @@ module.exports = (function (app) {
                         wrapper.draw(true);
                         lastX = ev.stageX;
                         lastY = ev.stageY;
+                        moved = true;
                         if (stage.scope)
                             stage.scope.$apply();
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                    });
+                    device.on("pressup", function (ev) {
+                        if (!moved) return;
+                        stage.dispatchEvent(new createjs.Event("shouldSave").set({subject: "readers"}));
+                        stage.scope.$apply();
+                        ev.preventDefault();
+                        ev.stopPropagation();
                     });
                     stage.addChild(field);
                     stage.addChild(device);

@@ -115,7 +115,8 @@ module.exports = (function (app) {
             };
         }])
         .factory("ProjectObject", ["_", "ProjectOrigin", "$interval", "ProjectZones", "ProjectReaders",
-            function (_, projectOrigin, $interval, ProjectZones, ProjectReaders) {
+            "ProjectPresentationArea",
+            function (_, projectOrigin, $interval, ProjectZones, ProjectReaders, PresentationArea) {
                 function TimeLapseData() {
                     var base = [], project = null, self = this;
                     this.add = function addItems(items, timeLapse) {
@@ -158,9 +159,8 @@ module.exports = (function (app) {
                     var zoom = null,
                         floorPlan = null,
                         floorPlanVersion = 1,//just to force the reload of floorplan. doesn't actually keep version
-                        floorName = null,
                         origin = projectOrigin(ref),
-                        shouldSave = true,
+                        shouldSave = {},
                         name = "",
                         itemSense = "",
                         rulerLength = 1,
@@ -171,6 +171,7 @@ module.exports = (function (app) {
                         nodeRedEndPoint = null,
                         showItems = false,
                         pullItems = false,
+                        pullInterval = 5,
                         stage = null,
                         recipes = null,
                         recipe = null,
@@ -180,8 +181,6 @@ module.exports = (function (app) {
                         jobMonitor = false,
                         targets = {},
                         selection = {},
-                        facility = "DEFAULT",
-                        facilities = null,
                         epcFilter = ".",
                         timeLapse = false,
                         timeLapseFlag = false,
@@ -244,8 +243,8 @@ module.exports = (function (app) {
                                 this.job = null;
                             },
                             setOrigin: function (x, y) {
-                                if (stage)
-                                    stage.setOrigin(x, y);
+                                shouldSave.general = true;
+                                if (stage)  stage.setOrigin(x, y);
                             },
                             addTarget: function (k, data) {
                                 if (k === "symbols")
@@ -290,6 +289,10 @@ module.exports = (function (app) {
                                     this.scale = null;
                                 else
                                     this.scale = this.rulerLength / v;
+                                if(this.showReaders && this.stage)
+                                    this.stage.refreshReaders();
+                                if(this.zones && this.stage)
+                                    this.stage.zones = this.zones;
                             }
                         },
                         {
@@ -379,7 +382,7 @@ module.exports = (function (app) {
                                     items = v;
                                 }
                             },
-                            headMapFlag: {
+                            timeLapseFlag: {
                                 get: function () {
                                     return timeLapseFlag;
                                 },
@@ -388,7 +391,6 @@ module.exports = (function (app) {
                                 }
                             },
                             timeLapse: {
-                                enumerable: true,
                                 get: function () {
                                     return timeLapse;
                                 },
@@ -456,13 +458,11 @@ module.exports = (function (app) {
                                         jobMonitor = v;
                                 }
                             },
-                            floorName: {
-                                enumerable: true,
-                                get: function () {
-                                    return floorName;
-                                },
-                                set: function (v) {
-                                    floorName = v;
+                            pullInterval: {
+                                enumerable:true,
+                                get:()=>pullInterval,
+                                set:function (v){
+                                    pullInterval = Math.max(v,5);
                                 }
                             },
                             showItems: {
@@ -499,7 +499,6 @@ module.exports = (function (app) {
                                     return name;
                                 },
                                 set: function (v) {
-                                    this.shouldSave = true;
                                     name = v;
                                 }
                             },
@@ -530,7 +529,6 @@ module.exports = (function (app) {
                                     return floorPlan;
                                 },
                                 set: function (v) {
-                                    this.shouldSave = true;
                                     floorPlan = v;
                                     floorPlanVersion += 1;
                                     if (stage)
@@ -543,7 +541,6 @@ module.exports = (function (app) {
                                     return origin;
                                 },
                                 set: function (v) {
-                                    this.shouldSave = true;
                                     origin = v;
                                     if (stage)
                                         stage.origin = v;
@@ -628,32 +625,24 @@ module.exports = (function (app) {
                                         stage.setEpcFilter(epcFilter);
                                 }
                             },
-                            facility: {
-                                enumerable: true,
-                                get: function () {
-                                    return facility || "DEFAULT";
-                                },
-                                set: function (v) {
-                                    facility = v;
-                                }
-                            },
-                            facilities: {
-                                get: ()=> facilities,
-                                set: v => facilities = v
-                            },
                             itemSource:{
                                 enumerable: true,
                                 get:() => itemSource,
-                                set: v => itemSource = v
+                                set: function (v){
+                                    itemSource = v;
+                                }
                             },
                             nodeRedEndPoint:{
                                 enumerable: true,
                                 get:() => nodeRedEndPoint,
-                                set: v => nodeRedEndPoint = v
+                                set: function (v){
+                                    nodeRedEndPoint = v;
+                                }
                             }
                         });
                     ProjectZones(project);
                     ProjectReaders(project);
+                    PresentationArea(project);
                     origin.project = project;
                     timeLapseData.setProject(project);
                     if (ref.itemSense)

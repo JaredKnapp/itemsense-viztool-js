@@ -46,12 +46,32 @@ module.exports=(function(app) {
                     url: "/project/" + (id || "")
                 });
             },
+            saveChangedReaders(){
+                var self= this;
+                if(_.find(self.changedReaders, r => !r.address.trim()))
+                    if(!window.confirm("Readers with No addresses will not be saved. Continue?"))
+                        return $q.reject("Readers with no addresses");
+                return $q.all(_.map(self.getChangedReaders(),r=> self.postReaders(r)))
+                    .then(()=>self.getReaders())
+                    .then(()=> self.showReaders = !!self.showReaders);
+            },
             save: function () {
                 var self = this;
                 return restCall({
                     method: "POST",
                     url: "/project/",
                     data: self
+                }).then(() => {
+                    delete self.shouldSave.general;
+                    if(self.shouldSave.zones)
+                        return self.saveZoneMap(self.zoneMap);
+                }).then(()=>{
+                    delete self.shouldSave.zones;
+                    if(self.shouldSave.readers)
+                        return self.saveChangedReaders();
+                }).then(()=>{
+                    delete self.shouldSave.readers;
+                    self.changedReaders = [];
                 });
             },
             deleteProject(data){
@@ -62,6 +82,7 @@ module.exports=(function(app) {
             },
             connect: function () {
                 var self = this;
+                $rootScope.statusMessage = "Connecting to Itemsense Instance ....";
                 return restCall({
                     method: "POST",
                     url: "/project/" + self.handle + "/connect",
@@ -74,26 +95,33 @@ module.exports=(function(app) {
                     self.zoneMap = _.find(data.zoneMaps, function (z) {
                         return z.name === data.currentZoneMap.name;
                     });
-                    self.recipe = data.job ? _.find(self.recipes, function (r) {
-                        return r.name === data.job.job.recipeName;
-                    }) : null;
+                    self.recipe = _.find(self.recipes, (r) =>{
+                        if(data.job)
+                            return r.name === data.job.job.recipeName;
+                        if(self.recipe)
+                            return r.name === self.recipe.name;
+                    });
                     self.duration = data.job ? data.job.job.durationSeconds : 20;
                     if (self.job) {
-                        self.jobMonitor = self.jobMonitor;
-                        self.pullItems = self.pullItems;
+                        self.jobMonitor = !!self.jobMonitor;
+                        self.pullItems = !!self.pullItems;
                     }
+                    else if(self.itemSource !== "Direct Connection")
+                        self.pullItems = !!self.pullItems;
                     if (self.showReaders && !self.readers)
                         return self.getReaders();
                     return self;
-                });
+                }).finally(()=>$rootScope.statusMessage="");
             },
             getReaders: function () {
                 return restCall({
                     url: `/project/${this.handle}/readers`
                 }).then((readers) => {
                     this.readers = readers;
-                    if (this.stage)
+                    if (this.stage){
+                        this.stage.showReaders(false);
                         this.stage.showReaders(this.showReaders);
+                    }
                     return this;
                 });
             },
@@ -181,22 +209,27 @@ module.exports=(function(app) {
                 }, opts)).then(function (items) {
                     self.items = items;
                     self.showItems = self.showItems;
-                    if (!self.isJobRunning())
+                    if (!self.isJobRunning() && self.itemSource === "Direct Connection")
                         self.pullItems = false;
                     return items;
+                }).catch((err)=>{
+                    self.pullItems = false;
+                    return $q.reject(err);
+                });
+            },
+            saveZoneMap(data){
+                return restCall({
+                    method: "POST",
+                    url: "/project/" + this.handle + "/zones",
+                    data: data
                 });
             },
             addZoneMap: function (data) {
-                var self = this;
-                return restCall({
-                    method: "POST",
-                    url: "/project/" + self.handle + "/zones",
-                    data: data
-                }).then(function (zoneMap) {
-                    self.zoneMaps = _.filter(self.zoneMaps,z=>z.name !== zoneMap.name).concat([zoneMap]);
-                    self.zoneMap = zoneMap;
-                    self.zones = zoneMap.zones;
-                    return self.setCurrentZoneMap(zoneMap.name);
+                return this.saveZoneMap(data).then((zoneMap) => {
+                    this.zoneMaps = _.filter(this.zoneMaps,z=>z.name !== zoneMap.name).concat([zoneMap]);
+                    this.zoneMap = zoneMap;
+                    this.zones = zoneMap.zones;
+                    return this.setCurrentZoneMap(zoneMap.name);
                 });
             },
             deleteZoneMap: function(zoneMap){
@@ -207,6 +240,12 @@ module.exports=(function(app) {
                     this.zoneMaps = _.filter(this.zoneMaps, z => z !== zoneMap);
                 });
             },
+            getZoneMap(name){
+                name = name? `/${name}` : "";
+                return restCall({
+                    url:`/project/${this.handle}/zones${name}`
+                });
+            },
             setCurrentZoneMap: function (name) {
                 var self = this;
                 return restCall({
@@ -215,8 +254,11 @@ module.exports=(function(app) {
                 });
             },
             getLLRPStatus(){
+                $rootScope.statusMessage="Getting Reader Status....";
                 return restCall({
                     url: `/project/${this.handle}/llrp`
+                }).finally(()=>{
+                    $rootScope.statusMessage = "";
                 });
             },
             getFacilities(){
