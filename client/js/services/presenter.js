@@ -93,12 +93,22 @@ module.exports = (function (app) {
                                     scope.$emit("Presenter", error.data.msg);
                                 });
                             },
+                            presentationArea(){
+                                const box = project.presentationArea;
+                                return {
+                                    x: this.metersToStage(Math.min(box.x1 ,  box.x2),"x"),
+                                    y: this.metersToStage(Math.min(box.y1 ,  box.y2),"y"),
+                                    w: this.metersToStage(Math.abs(box.x1-box.x2),"x"),
+                                    h: this.metersToStage(Math.abs(box.y1-box.y2),"y")
+                                };
+                            },
                             resize: function () {
-                                var parentWidth = canvas.parentElement.offsetWidth,
+                                const parentWidth = canvas.parentElement.offsetWidth,
                                     parentHeight = canvas.parentElement.offsetHeight;
                                 this.zoomX = parentWidth / bkWidth;
                                 this.zoomY = parentHeight / bkHeight;
                                 this.zoom = Math.min(this.zoomX, this.zoomY);
+                                console.log(parentWidth,bkWidth,this.zoom, this.presentationArea())
                                 canvas.width = canvas.style.width = bkWidth * this.zoom;
                                 canvas.height = canvas.style.height = bkHeight * this.zoom;
                                 minX = this.stageToMeters(this.screenToCanvas(5), "x");
@@ -306,7 +316,7 @@ module.exports = (function (app) {
         }])
         .factory("StagePresentationArea", ["_", "CreateJS", function (_, createjs) {
             function presentationAreaFactory(stage) {
-                let zoomHandler = null, mousedown = null, pressmove = null;
+                let zoomHandler = null, mousedown = null, pressmove = null, pressup = null;
                 const shape = new createjs.Shape(),
                     wrapper = Object.create({
                         setToFull(){
@@ -332,6 +342,7 @@ module.exports = (function (app) {
                             stage.off("Zoom", zoomHandler);
                             stage.off("mousedown", mousedown);
                             stage.off("pressmove", pressmove);
+                            stage.off("pressup", pressup);
                             stage.update();
                         }
                     }, {
@@ -366,6 +377,21 @@ module.exports = (function (app) {
                     wrapper.x2 = ev.stageX / stage.zoom;
                     wrapper.y2 = ev.stageY / stage.zoom;
                     wrapper.draw(true);
+                    stage.scope.$apply();
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                });
+                pressup = stage.on("pressup", (ev) => {
+                    if (Math.abs(wrapper.x1 - wrapper.x2) < 500 || Math.abs(wrapper.y1 - wrapper.y2) < 200){
+                        stage.scope.alert = {
+                            type: "warning",
+                            msg: "Presentation Area is too small. Setting Presentation to Full Mode"
+                        };
+                        stage.project.presentationArea.mode = "Full";
+                        wrapper.draw(true);
+                    }
+                    else
+                        stage.scope.$emit("shouldSave", "general");
                     stage.scope.$apply();
                     ev.preventDefault();
                     ev.stopPropagation();
