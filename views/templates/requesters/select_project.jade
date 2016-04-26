@@ -2,8 +2,6 @@
     h3.modal-title Select Project
 .modal-body
     .list-group(style="max-height:300px;overflow:auto;")
-        li.pnj-li(ng-repeat="prj in projects" ng-click="selectProject(prj)")
-            span.pnj-li-icon-del(ng-click="deleteProject(prj,$event)")     delete
-            |{{prj.handle}}
+        a.list-group-item(ng-repeat="prj in projects" href="javascript:void(0);" ng-click="selectProject(prj)") {{prj.handle}}
 .modal-footer
     button.pnj-requester-cancel(ng-click="cancel()") Cancel

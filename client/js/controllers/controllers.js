@@ -8,6 +8,7 @@
 module.exports = (function (app) {
 
     app.controller("topLevel", ["$scope", "Requester", "$http", "_", function ($scope, Requester, $http, _) {
+<<<<<<< HEAD
             function selectProject() {
                 return $scope.project.get().then(list => Requester.selectProject(list));
             }
@@ -56,7 +57,14 @@ module.exports = (function (app) {
                 });
             };
             $scope.select = function () {
-                selectProject().then(prj => $scope.$state.go("project", {id: prj.handle}, {reload: true}));
+                $http({
+                    url: "/project",
+                    method: "GET"
+                }).then(function (response) {
+                    return Requester.selectProject(response.data);
+                }).then(function (prj) {
+                    $scope.$state.go("project", {id: prj.handle}, {reload: true});
+                });
             };
             $scope.setEpcFilter = function () {
                 if (!$scope.project)
@@ -100,10 +108,10 @@ module.exports = (function (app) {
                 var zoneMapName = (window.prompt("Name of new Zone Map", "") || "").trim();
                 if (!zoneMapName)
                     return;
-                if (_.find($scope.project.zoneMaps, function (z) {
+                if(_.find($scope.project.zoneMaps,function(z){
                         return z.name === zoneMapName;
                     }))
-                    if (!window.confirm("Zone Map " + zoneMapName + " exists. do you want to clear it?"))
+                    if(!window.confirm("Zone Map "+zoneMapName+" exists. do you want to clear it?"))
                         return;
                 $scope.project.newZoneMap(zoneMapName);
                 $scope.$emit("shouldSave", "general");
@@ -175,12 +183,6 @@ module.exports = (function (app) {
                             projects: projects
                         }
                     });
-                },
-                selectZoneMap: function () {
-                    return openModal({
-                        templateUrl: "/templates/requesters/select_zone_map",
-                        controller: "SelectZoneMap"
-                    });
                 }
             };
         }])
@@ -197,33 +199,10 @@ module.exports = (function (app) {
                 $scope.selectProject = function (project) {
                     $modal.close(project);
                 };
-                $scope.deleteProject = (prj, $event) => {
-                    if (window.confirm(`Are you sure you want to delete the ${prj.name} project?\n all floorplan and data will be deleted.`))
-                        $scope.project.deleteProject(prj).then((list) => {
-                            $scope.projects = list;
-                            if (prj.handle === $scope.project.handle) {
-                                $scope.$state.go("project", {id: "newProject"}, {reload: true});
-                                $modal.dismiss("close");
-                            }
-                        });
-                    $event.stopPropagation();
-                };
                 $scope.cancel = function () {
                     $modal.dismiss("close");
                 };
             }])
-        .controller("SelectZoneMap", ["$scope", "$uibModalInstance", "params", function ($scope, $modal) {
-            $scope.selectZoneMap = function (zoneMap) {
-                $modal.close(zoneMap);
-            };
-            $scope.deleteZoneMap = function (zoneMap, $event) {
-                $scope.project.deleteZoneMap(zoneMap);
-                $event.stopPropagation();
-            };
-            $scope.cancel = function () {
-                $modal.dismiss("close");
-            };
-        }])
         .controller("ProjectState", ["$scope", function ($scope) {
             $scope.mainTab = {project: true};
 
@@ -260,7 +239,7 @@ module.exports = (function (app) {
                     if (key.srcElement.tagName === "BODY") {
                         if (key.keyCode === 8 || key.keyCode === 46) //backspace || Delete
                             $scope.project.deleteZone();
-                        else if (key.keyCode === 67 && (key.metaKey || key.ctrlKey)) //Control or Command-C
+                        else if(key.keyCode === 67 && (key.metaKey || key.ctrlKey)) //Control or Command-C
                             $scope.project.cloneZone();
                         $scope.$apply();
                     }

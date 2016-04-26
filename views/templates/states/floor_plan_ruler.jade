@@ -6,9 +6,8 @@
         .pnj-label-75 Meters:
         input.form-control(type="number" ng-model="project._rulerMeters" step="0.1")
     .input-group
-        .pnj-label-75 Scale:
+        .pnj-label-75(ng-click="setScale()" style="cursor:pointer;") Scale:
         input.form-control(type="number" ng-model="project._scale")
-        span.input-group-addon.pnj-label-link(ng-click="setScale()") Set
 table.table
     thead
         tr
@@ -34,6 +33,5 @@ table.table
                 input(type="checkbox" ng-model="project.rulerCoords.fix[1]" ng-click="project.rulerCoords.fix[0] =  project.rulerCoords.fix[1] ? false : project.rulerCoords.fix[0]")
             td
                 button.btn.btn-primary(ng-click="addReader('end')" ng-disabled="!project.readers") Put
-button.btn.btn-default(ng-click="project.stage.putRulerInCenter()") Move to Center of View
 .ui-view
 

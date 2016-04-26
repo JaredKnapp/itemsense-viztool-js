@@ -5,8 +5,7 @@
 /public/stylesheets/**
 .__browserify_string_empty.js
 public/projects/*
-client/staging/babeled.js
-client/staging/lib.js
 !public/projects/readme
 tests/experiments/*.log
+client/staging
 .DS_Store

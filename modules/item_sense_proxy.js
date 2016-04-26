@@ -3,14 +3,20 @@
  * Item sense interface implementation
  *
  */
-"use strict";
 
 var q = require("q"),
     _ = require("lodash"),
-    request = require("request"),
-    util = require("./util"),
+    ItemSense = require("itemsense-node"),
     project = null;
 
+
+function makeUrl(u) {
+    if (u.indexOf("http") === -1)
+        u = "http://" + u;
+    if (u.lastIndexOf("/") === u.length - 1)
+        u = u.substr(0, u.length - 1);
+    return u;
+}
 
 function wrapResults() {
     var counter = 0,
@@ -48,7 +54,7 @@ function createResultItem(data, tp) {
             get: function () {
                 return data;
             },
-            set: function (v) {
+            set: function(v){
                 data = v;
             }
         }
@@ -203,8 +209,13 @@ class ConfigDump {
 }
 
 function startProject(project) {
-    const itemsenseApi = util.connectToItemsense(project.itemSense.trim(), project.user, project.password);
-    var readPromise = null, interval = null, itemSenseJob = null,
+    var itemsenseApi = new ItemSense({
+        itemsenseUrl: makeUrl(project.itemSense.trim() + '/itemsense'),
+        username: project.user || 'admin',
+        password: project.password || 'admindefault'
+    });
+
+    var readPromise = null, interval = null, itemSenseJob = {},
         results = wrapResults(),
         wrapper = Object.create({
                 stash: function (promise) {
@@ -214,11 +225,12 @@ function startProject(project) {
                         results.last = createResultItem(data.items, "at");
                         return results.last;
                     }, function (error) {
+                        console.log("item promise failed", error);
                         if (results.last.at)
                             results.last.to = true;
                         else
                             results.last = createResultItem(error, "from");
-                        return q.reject(error);
+                        return q.reject(reportError(error));
                     }).finally(function () {
                         readPromise = null;
                     });
@@ -253,6 +265,7 @@ function startProject(project) {
                         items.data = _.filter(items.data, function (i) {
                             return i.lastModifiedTime > itemSenseJob.creationTime
                         });
+                        console.log("after filter", items.data.length);
                         return items;
                     });
                     return readPromise;
@@ -287,41 +300,36 @@ function startProject(project) {
                     return itemsenseApi.readerDefinitions.update(data);
                 },
                 getReaders: function () {
-                    return itemsenseApi.readerDefinitions.get().then(list => _.filter(list || [], this.inProject));
+                    return itemsenseApi.readerDefinitions.get();
                 },
-                getRecipes: function (recipeName) {
-                    return itemsenseApi.recipes.get(recipeName);
+                getRecipes: function () {
+                    return itemsenseApi.recipes.get();
                 },
-                addZoneMap: function (data) {
-                    var self = this;
-                    return itemsenseApi.zoneMaps.update(data).then(function (zmap) {
-                        if (!itemSenseJob)
-                            return self.setCurrentZoneMap(zmap.name).then(function () {
-                                return zmap;
-                            });
-                        return zmap;
+                addZoneMap:function(data){
+                    var self=this;
+                    return itemsenseApi.zoneMaps.update(data).then(function(zmap){
+                        return self.setCurrentZoneMap(zmap.name).then(function(){
+                            return zmap;
+                        });
                     });
                 },
-                deleteZoneMap: function (data) {
-                    return itemsenseApi.zoneMaps.delete(data);
-                },
-                setCurrentZoneMap: function (name) {
+                setCurrentZoneMap:function(name){
                     return itemsenseApi.currentZoneMap.update(name);
                 },
+<<<<<<< HEAD
                 getCurrentZoneMap() {
                     return itemsenseApi.currentZoneMap.get(project.facility);
                 },
                 getZoneMap(data) {
                     return data ? itemsenseApi.zoneMaps.get(data) : itemsenseApi.zoneMaps.getAll();
                 },
-                getFacilities: ()=> itemsenseApi.facilities.get(),
                 getJobs: function (id) {
                     return itemsenseApi.jobs.get(id);
                 },
                 getRunningJob: function () {
                     return this.getJobs().then(function (jobs) {
                         return _.find(jobs, function (j) {
-                            return j.status.indexOf("RUNNING") !== -1 && j.job.facility === project.facility;
+                            return j.status.indexOf("RUNNING")!==-1;
                         });
                     });
                 },
@@ -382,7 +390,7 @@ function startProject(project) {
                 },
                 isComplete: function (job) {
                     return job ? _.find(["COMPLETE", "STOPPED"], function (c) {
-                        return job.status.startsWith(c);
+                        return job.status.indexOf(c)!==-1;
                     }) : true;
                 },
                 stopInterval: function () {
@@ -397,8 +405,6 @@ function startProject(project) {
                         if (itemSenseJob && job.id === itemSenseJob.id)
                             if (self.isComplete(job)) {
                                 self.stopInterval();
-                                itemSenseJob = null
-                            }
                         return job;
                     });
                 },
@@ -463,11 +469,8 @@ var md = {
                 return z.facility === project.project.facility;
             });
             return project.getCurrentZoneMap();
-        }).then(function (currentZoneMap) {
+        }).then(function(currentZoneMap){
             payload.currentZoneMap = currentZoneMap;
-            return project.getFacilities();
-        }).then(function (facilities) {
-            payload.facilities = facilities;
             return payload;
         });
     },

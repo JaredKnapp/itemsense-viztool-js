@@ -12,14 +12,12 @@
                a(href="javascript:void(0);" ng-click="select()") Open Project ...
             li.menuitem
                a(href="javascript:void(0);" ng-click="project.save()") Save Project
-            li.menuitem
-               a(href="javascript:void(0);" ng-click="deleteProject()") Delete Project ...
             li.menuitem(ng-class="{disabled:!project.handle}" flow-init="{target:targetClasses}" flow-files-submitted="$flow.upload()" flow-file-success="csvUploadSuccess($file,$message,$flow,'classes')")
                a(href="javascript:void(0);" flow-btn flow-attrs="{accept:'text/csv'}") Import Classification CSV
             li.menuitem(ng-class="{disabled:!project.handle}" flow-init="{target:targetSymbols}" flow-files-submitted="$flow.upload()" flow-file-success="csvUploadSuccess($file,$message,$flow,'symbols')")
                a(href="javascript:void(0);" flow-btn flow-attrs="{accept:'text/csv'}") Import Picture Map CSV
-            li.menuitem(ng-class="{disabled: !project.recipes}")
-               a(ng-href="/project/{{project.handle}}/dump" target="_self" download="itemsense-configuration.json") Export...
+            li.menuitem.disabled
+               a(href="javascript:void(0);") Export...
             li.menuitem(ng-show="!project.recipes" ng-class="{disabled:!project.canConnect()}")
                a(href="javascript:void(0);" ng-click="project.connect()") Connect to Item Sense
             li.menuitem(ng-class="{disabled:!project.canConnect() || !project.classes}")
@@ -62,8 +60,8 @@
       li(uib-dropdown ng-class="{disabled:!project.recipes}" ng-show="$state.current.name.startsWith('floorPlan')")
          a(uib-dropdown-toggle href="javascript:void(0);") Zones
          ul(uib-dropdown-menu)
-            li.menu-item
-               a(href="javascript:void(0);" ng-click="selectZoneMap()") Current: {{project.zoneMap.name}}
+            li.menu-item.disabled
+               a(href="javascript:void(0);") Current: {{project.zoneMap.name}}
             li.menu-item
                a(href="javascript:void(0);" ng-click="newZoneMap()") New ZoneMap...
             li.menu-item

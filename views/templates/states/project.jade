@@ -24,6 +24,7 @@ form.container.form-group(name="projectForm")
             .input-group-addon ZoneMaps:
             select.form-control(ng-options="v.name for v in project.zoneMaps track by v.name" ng-model="project._zoneMap")
         .input-group
+<<<<<<< HEAD
             .input-group-addon Floor:
             select.form-control(ng-options="v for v in project.floors" ng-model="project.floorName")
             .input-group-addon(ng-click="setFloorName()") New Floor

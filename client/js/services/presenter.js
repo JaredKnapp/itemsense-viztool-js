@@ -6,8 +6,8 @@
 "use strict";
 
 module.exports = (function (app) {
-    app.factory("Presenter", ["CreateJS", "$interval", "Item", "_", "$timeout",
-            function (createjs, $interval, Item, _, $timeout) {
+    app.factory("Presenter", ["CreateJS", "$interval", "Item", "_", "$timeout", "PresenterZones",
+            function (createjs, $interval, Item, _, $timeout, prepareZones) {
                 return function (scope, el) {
                     var project = scope.project,
                         canvas = document.createElement("canvas"),
@@ -15,6 +15,7 @@ module.exports = (function (app) {
                         main = new createjs.Container(),
                         bkWidth, bkHeight, zoomX, zoomY, zoom,
                         interval, items = {}, activeTweens = 0, itemData, item,
+                        zones = null,
                         wrapper = Object.create({
                             update: function () {
                                 if (this.activeTweens <= 0)
@@ -67,7 +68,14 @@ module.exports = (function (app) {
                                 });
                             },
                             correctXY: function (tags) {
-                                return tags; //no correction performed on client. use node-red flows to correct at server.
+                                return _.map(tags, function (t) {
+                                    _.each(zones, function (z) {
+                                        z.entreat(t);
+                                    });
+                                    t.x = Math.max(minX, Math.min(t.xLocation, maxX));
+                                    t.y = Math.max(minY, Math.min(t.yLocation, maxY));
+                                    return t;
+                                });
                             },
                             showItems: function (itemData) {
                                 var self = this;

@@ -7,27 +7,27 @@
 
 module.exports = (function (app) {
     app.factory("StageMetrics", [function () {
-            return function (ref, stage, xKey, yKey) {
+            return function (ref, stage,xKey,yKey) {
                 xKey = xKey || "x";
                 yKey = yKey || "y";
-                if (ref.x === undefined)
-                    Object.defineProperties(ref, {
-                        x: {
-                            configurable: true,
-                            get: function () {
+                if(ref.x === undefined)
+                    Object.defineProperties(ref,{
+                        x:{
+                            configurable:true,
+                            get:function(){
                                 return ref[xKey];
                             },
-                            set: function (v) {
-                                ref[xKey] = v;
+                            set:function(v){
+                                ref[xKey]=v;
                             }
                         },
-                        y: {
-                            configurable: true,
-                            get: function () {
+                        y:{
+                            configurable:true,
+                            get:function(){
                                 return ref[yKey];
                             },
-                            set: function (v) {
-                                ref[yKey] = v;
+                            set:function(v){
+                                ref[yKey]=v;
                             }
                         }
                     });
@@ -80,6 +80,7 @@ module.exports = (function (app) {
             };
         }])
         .factory("Reader", ["CreateJS", "ReaderModel", function (createjs, ReaderModel) {
+<<<<<<< HEAD
             const colors = {
                 engage: "green",
                 disengage: "gray",
@@ -92,7 +93,7 @@ module.exports = (function (app) {
                 create: function (reader, stage, engaged) {
                     var field = new createjs.Shape(),
                         device = new createjs.Shape(),
-                        ref = reader ? reader.placement : {},
+                        ref=reader ? reader.placement : {},
                         model = ReaderModel(ref, stage),
                         zoomHandler = null, moved = false,
                         prevColor = colors.inactive,
@@ -107,16 +108,10 @@ module.exports = (function (app) {
                                 if (update)
                                     stage.update();
                             },
-                            hasStatus: status => color === colors[status] || (color === colors.active && prevColor === colors[status]),
-                            shouldDrawFields: function () {
-                                if (reader.type !== "XARRAY") return false;
-                                if (this.hasStatus("engage")) return true;
-                                return this.hasStatus("inactive");
-                            },
                             drawFields: function () {
-                                var g = field.graphics.clear().s("brown").ss(1);
-                                if (!this.shouldDrawFields())
+                                if(reader.type !=="XARRAY")
                                     return;
+                                var g = field.graphics.clear().s("brown").ss(1);
                                 if (stage.showReaderFields > 2)
                                     g = g.f("rgba(200,0,0,0.2)").dc(0, 0, stage.metersToCanvas(5));
                                 if (stage.showReaderFields > 1)
@@ -127,10 +122,10 @@ module.exports = (function (app) {
                             drawDevice: function () {
                                 var l = stage.screenToCanvas(10),
                                     r = stage.screenToCanvas(3);
-                                if (reader.type === "XARRAY")
+                                if(reader.type === "XARRAY")
                                     device.graphics.clear().s("brown").ss(1).f(color).r(-l, -l, l * 2, l * 2).dc(0, -l, r);
                                 else
-                                    device.graphics.clear().s("brown").ss(1).f(color).dc(0, 0, l);
+                                    device.graphics.clear().s("brown").ss(1).f(color).dc(0,0,l);
                             },
                             draw: function (update) {
                                 this.drawFields();
@@ -141,6 +136,7 @@ module.exports = (function (app) {
                                 if (update)
                                     stage.update();
                             },
+<<<<<<< HEAD
                             setStatus(key, update){
                                 engaged = key;
                                 if (color === colors.active)
@@ -154,13 +150,10 @@ module.exports = (function (app) {
                                 prevColor = color === colors.active ? prevColor : color;
                                 color = colors.active;
                                 this.draw(true);
-                                stage.dispatchEvent(new createjs.Event("newReader").set({
-                                    reader: wrapper,
-                                    force: !noForce
-                                }));
+                                stage.dispatchEvent(new createjs.Event("newReader").set({reader: wrapper, force:!noForce}));
                             },
                             deactivate: function () {
-                                color = prevColor;
+                                color = "blue";
                                 this.draw(true);
                             }
                         }, {
@@ -175,11 +168,6 @@ module.exports = (function (app) {
                             ref: {
                                 get: function () {
                                     return ref;
-                                }
-                            },
-                            model: {
-                                get: function () {
-                                    return reader;
                                 }
                             }
                         });
