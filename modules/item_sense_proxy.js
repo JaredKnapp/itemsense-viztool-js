@@ -316,7 +316,6 @@ function startProject(project) {
                 setCurrentZoneMap:function(name){
                     return itemsenseApi.currentZoneMap.update(name);
                 },
-<<<<<<< HEAD
                 getCurrentZoneMap() {
                     return itemsenseApi.currentZoneMap.get(project.facility);
                 },
