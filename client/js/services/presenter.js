@@ -6,17 +6,15 @@
 "use strict";
 
 module.exports = (function (app) {
-    app.factory("Presenter", ["CreateJS", "$interval", "Item", "_", "$timeout", "PresenterZones",
-            function (createjs, $interval, Item, _, $timeout, prepareZones) {
+    app.factory("Presenter", ["CreateJS", "$interval", "Item", "_", "$timeout",
+            function (createjs, $interval, Item, _, $timeout) {
                 return function (scope, el) {
                     var project = scope.project,
                         canvas = document.createElement("canvas"),
                         stage = new createjs.Stage(canvas),
                         main = new createjs.Container(),
                         bkWidth, bkHeight, zoomX, zoomY, zoom,
-                        minX, minY, maxX, maxY,
                         interval, items = {}, activeTweens = 0, itemData, item,
-                        zones = null,
                         wrapper = Object.create({
                             update: function () {
                                 if (this.activeTweens <= 0)
@@ -69,14 +67,7 @@ module.exports = (function (app) {
                                 });
                             },
                             correctXY: function (tags) {
-                                return _.map(tags, function (t) {
-                                    _.each(zones, function (z) {
-                                        z.entreat(t);
-                                    });
-                                    t.x = Math.max(minX, Math.min(t.xLocation, maxX));
-                                    t.y = Math.max(minY, Math.min(t.yLocation, maxY));
-                                    return t;
-                                });
+                                return tags; //no correction performed on client. use node-red flows to correct at server.
                             },
                             showItems: function (itemData) {
                                 var self = this;
@@ -98,21 +89,60 @@ module.exports = (function (app) {
                                     return items;
                                 }, function (error) {
                                     $interval.cancel(interval);
-                                    scope.$emit("Presenter", error.data.msg);
+                                    console.log("Error getting items",error);
+                                    scope.$emit("Presenter", error && error.data ? error.data.msg : error.data || error);
                                 });
                             },
+                            presentationArea(){
+                                const box = project.presentationArea;
+                                return (box.mode === "Full") ?
+                                {
+                                    x: 0,
+                                    y: 0,
+                                    w: bkWidth,
+                                    h: bkHeight
+                                } :
+                                {
+                                    x: this.metersToStage(Math.min(box.x1, box.x2), "x"),
+                                    y: this.metersToStage(Math.max(box.y1, box.y2), "y"),
+                                    w: this.metersToCanvas(Math.abs(box.x1 - box.x2)),
+                                    h: this.metersToCanvas(Math.abs(box.y1 - box.y2))
+                                };
+                            },
+                            adjustCanvasParent(box, parent){
+                                const marginW = Math.round((parent.w - (box.w * this.zoom)) / 2),
+                                    marginH = Math.round((parent.h - (box.h * this.zoom)) / 2),
+                                    boxX = Math.round(box.x * this.zoom),
+                                    boxY = Math.round(box.y * this.zoom);
+                                parent.el.scrollTop = boxY;
+                                parent.el.scrollLeft = boxX;
+                                parent.el.style.left = parent.el.style.right = Math.max(3,marginW) + "px";
+                                parent.el.style.top = parent.el.style.bottom = Math.max(3,marginH) + "px";
+                                if (parent.el.scrollLeft < boxX)
+                                    canvas.style.left = Math.round(parent.el.scrollLeft - boxX) + "px";
+                                if (parent.el.scrollTop < boxY)
+                                    canvas.style.top = Math.round(parent.el.scrollTop - boxY) + "px";
+                            },
+                            resetCanvasParent(){
+                                canvas.parentElement.style.left = canvas.parentElement.style.right = 0;
+                                canvas.parentElement.style.top = canvas.parentElement.style.bottom = 0;
+                                return {
+                                    el: canvas.parentElement,
+                                    w: canvas.parentElement.offsetWidth,
+                                    h: canvas.parentElement.offsetHeight
+                                };
+                            },
                             resize: function () {
-                                var parentWidth = canvas.parentElement.offsetWidth,
-                                    parentHeight = canvas.parentElement.offsetHeight;
-                                this.zoomX = parentWidth / bkWidth;
-                                this.zoomY = parentHeight / bkHeight;
+                                const parent = this.resetCanvasParent(),
+                                    box = this.presentationArea();
+                                this.zoomX = parent.w / box.w;
+                                this.zoomY = parent.h / box.h;
                                 this.zoom = Math.min(this.zoomX, this.zoomY);
+                                console.log(parent.w, bkWidth, this.zoom, box.x, box.w)
+                                console.log(parent.h, bkHeight, this.zoom, box.y, box.h)
                                 canvas.width = canvas.style.width = bkWidth * this.zoom;
                                 canvas.height = canvas.style.height = bkHeight * this.zoom;
-                                minX = this.stageToMeters(this.screenToCanvas(5), "x");
-                                maxX = this.stageToMeters(bkWidth - this.screenToCanvas(5), "x");
-                                maxY = this.stageToMeters(this.screenToCanvas(5), "y");
-                                minY = this.stageToMeters(bkHeight - this.screenToCanvas(5), "y");
+                                this.adjustCanvasParent(box, parent);
                             }
                         }, {
                             project: {
@@ -195,6 +225,9 @@ module.exports = (function (app) {
                                 set: function (v) {
                                     itemData = v;
                                 }
+                            },
+                            scope: {
+                                get: () => scope
                             }
                         });
                     el.append(canvas);
@@ -206,8 +239,7 @@ module.exports = (function (app) {
                         main.addChild(bitmap);
                         main.setTransform(0, 0, wrapper.zoom, wrapper.zoom);
                         stage.update();
-                        project.preparePresentation(wrapper,bitmap);
-                        zones = prepareZones(project.zones, wrapper);
+                        project.preparePresentation(wrapper, bitmap);
                         return project.connect();
                     }).then(function () {
                         interval = $interval(wrapper.tick, 5000);
@@ -230,164 +262,190 @@ module.exports = (function (app) {
                     return wrapper;
                 };
             }])
-        .factory("PresenterLines", [function () {
-            // this uses the solution outlined in http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect to find intersections
-            function subtractPoint(p2, p1) {
+        .factory("ProjectPresentationArea", ["_", function (_) {
+            function PresentationAreaFactory(project, ref = {mode: "Full"}) {
+                return Object.create({}, {
+                    mode: {
+                        enumerable: true,
+                        get: () => ref.mode,
+                        set: v => ref.mode = v
+                    },
+                    x1: {
+                        enumerable: true,
+                        get: () => ref.x1,
+                        set: v => ref.x1 = v
+                    },
+                    x2: {
+                        enumerable: true,
+                        get: () => ref.x2,
+                        set: v => ref.x2 = v
+                    },
+                    y1: {
+                        enumerable: true,
+                        get: () => ref.y1,
+                        set: v => ref.y1 = v
+                    },
+                    y2: {
+                        enumerable: true,
+                        get: () => ref.y2,
+                        set: v => ref.y2 = v
+                    },
+                    _x1: {
+                        get: ()=> ref.x1,
+                        set: v=> {
+                            ref.x1 = v;
+                            if (project.stage)
+                                project.stage.presentationArea.draw(true);
+                        }
+                    },
+                    _x2: {
+                        get: ()=> ref.x2,
+                        set: v=> {
+                            ref.x2 = v;
+                            if (project.stage)
+                                project.stage.presentationArea.draw(true);
+                        }
+                    },
+                    _y1: {
+                        get: ()=> ref.y1,
+                        set: v=> {
+                            ref.y1 = v;
+                            if (project.stage)
+                                project.stage.presentationArea.draw(true);
+                        }
+                    },
+                    _y2: {
+                        get: ()=> ref.y2,
+                        set: v=> {
+                            ref.y2 = v;
+                            if (project.stage)
+                                project.stage.presentationArea.draw(true);
+                        }
+                    }
+                });
+            }
+
+            function wrap(project) {
                 return {
-                    x: p2.x - p1.x,
-                    y: p2.y - p1.y
+                    fullPresentationArea(){
+                        project.presentationArea.mode = "Full";
+                    }
                 };
             }
 
-            function crossProduct(p1, p2) {
-                return (p1.x * p2.y) - (p1.y * p2.x);
-            }
-
-            function getU(uNum, dnom, a, s) {
-                if (dnom === 0)
-                    return null;
-                var u = uNum / dnom,
-                    t = crossProduct(a, s) / dnom;
-                return (u < 0 || t < 0 || t > 1.0) ? null : u;
-            }
-
-            return function (p1, p2, center) {
-                var r = subtractPoint(p2, p1),
-                    a = subtractPoint(center, p1),
-                    uNum = crossProduct(a, r);
-                return Object.create({
-                    doesIntersect: function (p) {
-                        var s = subtractPoint(p, center),
-                            dnom = crossProduct(r, s),
-                            u = getU(uNum, dnom, a, s);
-                        return u ? {
-                            x: s.x * u,
-                            y: s.y * u
-                        } : null;
+            return function (project) {
+                let presentationArea = PresentationAreaFactory(project);
+                _.each(wrap(project), (fn, key)=>project[key] = fn);
+                Object.defineProperties(project, {
+                    presentationArea: {
+                        enumerable: true,
+                        get: () => presentationArea,
+                        set: v => presentationArea = PresentationAreaFactory(project, v)
                     }
-                }, {});
+                });
             };
         }])
-        .factory("PresenterZones", ["_", "CreateJS", "PresenterLines", function (_, createjs, lineObject) {
-            function drawShape(shape, pts) {
-                var g = shape.graphics.clear().s("brown").f("red");
-                _.reduce(pts, function (r, p, i) {
-                    return i ? r.lt(p.x, p.y) : r.mt(p.x, p.y);
-                }, g).lt(pts[0].x, pts[0].y);
-                return shape;
-            }
-
-            function getCenterPoint(z) {
-                var center = _.reduce(z.points, function (r, p) {
-                    r.x += p.x;
-                    r.y += p.y;
-                    return r;
-                }, {x: 0, y: 0});
-                center.x /= z.points.length;
-                center.y /= z.points.length;
-                return center;
-            }
-
-            function getLineObjects(z, center) {
-                return _.reduce(z.points.concat(z.points[0]), function (r, p, i) {
-                    if (i === 0)
-                        return r;
-                    r.push(lineObject(z.points[i - 1], p, center));
-                    return r;
-                }, []);
-            }
-/*
-            function getShadowPoints(z, center) {
-                return _.map(z.points, function (p) {
-                    return {
-                        x: center.x + ((p.x - center.x) * z.tolerance),
-                        y: center.y + ((p.y - center.y) * z.tolerance)
-                    };
+        .factory("StagePresentationArea", ["_", "CreateJS", function (_, createjs) {
+            function presentationAreaFactory(stage) {
+                let zoomHandler = null, mousedown = null, pressmove = null, pressup = null;
+                const shape = new createjs.Shape(),
+                    wrapper = Object.create({
+                        setToFull(){
+                            wrapper.x1 = 0;
+                            wrapper.y1 = 0;
+                            wrapper.x2 = stage.originBox.w;
+                            wrapper.y2 = stage.originBox.h;
+                        },
+                        draw(update){
+                            if (stage.project.presentationArea.mode === "Full")
+                                wrapper.setToFull();
+                            shape.graphics.clear().s("red").sd([10, 10], 0)
+                                .mt(wrapper.x1, wrapper.y1)
+                                .lt(wrapper.x2, wrapper.y1)
+                                .lt(wrapper.x2, wrapper.y2)
+                                .lt(wrapper.x1, wrapper.y2)
+                                .lt(wrapper.x1, wrapper.y1);
+                            if (update)
+                                stage.update();
+                        },
+                        destroy(){
+                            stage.removeChild(shape);
+                            stage.off("Zoom", zoomHandler);
+                            stage.off("mousedown", mousedown);
+                            stage.off("pressmove", pressmove);
+                            stage.off("pressup", pressup);
+                            stage.update();
+                        }
+                    }, {
+                        x1: {
+                            get: () => stage.metersToStage(stage.project.presentationArea.x1, "x"),
+                            set: v => stage.project.presentationArea.x1 = Math.round10(stage.stageToMeters(v, "x"), -3)
+                        },
+                        x2: {
+                            get: () => stage.metersToStage(stage.project.presentationArea.x2, "x"),
+                            set: v => stage.project.presentationArea.x2 = Math.round10(stage.stageToMeters(v, "x"), -3)
+                        },
+                        y1: {
+                            get: () => stage.metersToStage(stage.project.presentationArea.y1, "y"),
+                            set: v => stage.project.presentationArea.y1 = Math.round10(stage.stageToMeters(v, "y"), -3)
+                        },
+                        y2: {
+                            get: () => stage.metersToStage(stage.project.presentationArea.y2, "y"),
+                            set: v => stage.project.presentationArea.y2 = Math.round10(stage.stageToMeters(v, "y"), -3)
+                        }
+                    });
+                zoomHandler = stage.on("zoom", ()=>wrapper.draw);
+                mousedown = stage.on("mousedown", (ev)=> {
+                    stage.project.presentationArea.mode = "Area";
+                    wrapper.x1 = ev.stageX / stage.zoom;
+                    wrapper.y1 = ev.stageY / stage.zoom;
+                    wrapper.draw(true);
+                    stage.scope.$apply();
+                    ev.preventDefault();
+                    ev.stopPropagation();
                 });
-            }
-*/
-            function prepareZone(z, stage) {
-                var center = getCenterPoint(z),
-                    lines = getLineObjects(z, center),
-//                    shadow = drawShape(new createjs.Shape(), getShadowPoints(z, center)),
-                    shape = drawShape(new createjs.Shape(), z.points);
-
-                return Object.create({
-
-                    moveToIntersection: function (intersection, p) {
-                        if (!intersection) return false;
-                        var offset = z.type === "blocker" ? 1 + (Math.random() * (z.tolerance - 1)) : Math.random();
-                        p.x = stage.stageToMeters(center.x + (intersection.x * offset), "x");
-                        p.y = stage.stageToMeters(center.y + (intersection.y * offset), "y");
-                        return true;
-                    },
-
-                    moveToNewPosition: function (q, p) {
-                        for (var i = 0; i < lines.length; i++)
-                            if (this.moveToIntersection(lines[i].doesIntersect(q), p))
-                                return;
-                    },
-                    appliesToFixture: function (p) {
-                        var pObject = stage.project.itemHash[p.epc];
-                        var pSymbols = _.map(pObject, function (v) {
-                            return v;
-                        });
-                        return _.find(z.include, function (include) {
-                            return _.find(pSymbols, function (symbol) {
-                                return symbol === include;
-                            });
-                        });
-                    },
-                    hits: function (p) {
-                        return false && p; //disable zone fixtures and blockers for now
-                        /*
-                        if (shape.hitTest(p.x, p.y))
-                            return z.type === "blocker";
-                        if (z.type === "blocker")
-                            return false;
-                        if (shadow.hitTest(p.x, p.y))
-                            return this.appliesToFixture(p);
-                        */
-                    },
-
-                    entreat: function (p) {
-                        var q = {
-                            x: stage.metersToStage(p.x, "x"),
-                            y: stage.metersToStage(p.y, "y"),
-                            epc: p.epc
+                pressmove = stage.on("pressmove", (ev) => {
+                    wrapper.x2 = ev.stageX / stage.zoom;
+                    wrapper.y2 = ev.stageY / stage.zoom;
+                    wrapper.draw(true);
+                    stage.scope.$apply();
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                });
+                pressup = stage.on("pressup", (ev) => {
+                    if (Math.abs(wrapper.x1 - wrapper.x2) < 500 || Math.abs(wrapper.y1 - wrapper.y2) < 200) {
+                        stage.scope.alert = {
+                            type: "warning",
+                            msg: "Presentation Area is too small. Setting Presentation to Full Mode"
                         };
-                        if (this.hits(q))
-                            this.moveToNewPosition(q, p);
+                        stage.project.presentationArea.mode = "Full";
+                        wrapper.draw(true);
                     }
-                }, {
-                    shape: {
-                        get: function () {
-                            return shape;
-                        }
-                    },
-                    zone: {
-                        get: function () {
-                            return z;
-                        }
-                    },
-                    center: {
-                        get: function () {
-                            return center;
-                        }
-                    }
+                    else
+                        stage.scope.$emit("shouldSave", "general");
+                    stage.scope.$apply();
+                    ev.preventDefault();
+                    ev.stopPropagation();
                 });
+                shape.name = "Area";
+                stage.addChild(shape);
+                wrapper.draw(true);
+                return wrapper;
             }
 
-            return function (zones, stage) {
-                return _.map(zones, function (z) {
-                    return prepareZone(z, stage);
-                }).sort(function(a,b){
-                    if(a.type === b.type)
-                        return 0;
-                    if(a.type === "blocker")
-                        return -1;
-                    return 1;
-                });
+            function wrap(stage) {
+                return {
+                    startPresentationArea(){
+                        stage.presentationArea = presentationAreaFactory(stage);
+                    },
+                    endPresentationArea(){
+                        stage.presentationArea.destroy();
+                    }
+                };
+            }
+
+            return function (stage) {
+                _.each(wrap(stage), (fn, k)=>stage[k] = fn);
             };
         }]);
 })(angular.module(window.mainApp));
