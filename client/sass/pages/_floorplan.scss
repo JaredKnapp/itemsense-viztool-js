@@ -108,6 +108,11 @@
   @extend .input-group-addon;
   min-width: 75px;
 }
+.pnj-label-link {
+  cursor:pointer;
+  text-decoration: underline;
+  color:blue;
+}
 
 .pnj-label-110{
   @extend .input-group-addon;

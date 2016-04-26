@@ -24,8 +24,8 @@ module.exports = (function (app) {
         .directive("presentation", ["Presenter", function (presenter) {
             return {
                 restrict: "A",
-                link:function(scope,el){
-                    var scene=presenter(scope,el);
+                link: function (scope, el) {
+                    var scene = presenter(scope, el);
                     scene.update();
                 }
             };
@@ -99,7 +99,7 @@ module.exports = (function (app) {
                     el.children().eq(2).css("width", circle[0].offsetWidth);
                 }
             };
-       }])
+        }])
         .directive("contenteditable", [function () {
             function ignoreEvent(ev) {
                 ev.stopPropagation();

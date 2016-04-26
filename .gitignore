@@ -8,4 +8,5 @@ public/projects/*
 !public/projects/readme
 tests/experiments/*.log
 client/staging
+client/app.js
 .DS_Store

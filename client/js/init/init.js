@@ -188,7 +188,7 @@ module.exports = (function (app) {
                 }).state("floorPlan.ruler", {
                     templateUrl: "/templates/states/floor_plan_ruler"
                 }).state("floorPlan.trace", {
-                    template: "<div></div>"
+                    templateUrl: "/templates/states/floor_plan_trace"
                 }).state("floorPlan.zone", {
                     templateUrl: "/templates/states/floor_plan_zone"
                 }).state("floorPlan.reader", {

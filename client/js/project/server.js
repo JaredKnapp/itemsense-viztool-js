@@ -208,7 +208,7 @@ module.exports=(function(app) {
                     url: "/project/" + self.handle + "/items"
                 }, opts)).then(function (items) {
                     self.items = items;
-                    self.showItems = !!self.showItems;
+                    self.showItems = self.showItems;
                     if (!self.isJobRunning() && self.itemSource === "Direct Connection")
                         self.pullItems = false;
                     return items;
