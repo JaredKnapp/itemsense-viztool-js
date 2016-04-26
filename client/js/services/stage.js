@@ -384,11 +384,12 @@ module.exports = (function (app) {
                             _.each(items, function (i) {
                                 if (i.keep)
                                     return delete i.keep;
-                                delete items[i.epc];
+                                delete items[i.model.epc];
                                 i.destroy();
                             });
                             if (project.timeLapse)
                                 timeLapse.draw(project.timeLapseData.getTimeLapse());
+                            self.update();
                         },
                         containsShape: function (shape) {
                             var i = this.selectLayer(shape);
