@@ -8,7 +8,6 @@
 module.exports = (function (app) {
 
     app.controller("topLevel", ["$scope", "Requester", "$http", "_", function ($scope, Requester, $http, _) {
-<<<<<<< HEAD
             function selectProject() {
                 return $scope.project.get().then(list => Requester.selectProject(list));
             }

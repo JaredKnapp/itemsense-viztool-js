@@ -99,8 +99,7 @@ module.exports = (function (app) {
                     el.children().eq(2).css("width", circle[0].offsetWidth);
                 }
             };
-<<<<<<< HEAD
-        }])
+       }])
         .directive("contenteditable", [function () {
             function ignoreEvent(ev) {
                 ev.stopPropagation();

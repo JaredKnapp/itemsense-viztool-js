@@ -268,7 +268,6 @@ module.exports = (function (app) {
                     shape.on("mousedown", function (ev) {
                         lastX = ev.stageX;
                         lastY = ev.stageY;
-<<<<<<< HEAD
                         if (!isActive)  wrapper.activate();
                         hasdragged = false;
                         stage.scope.$apply();

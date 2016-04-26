@@ -80,7 +80,6 @@ module.exports = (function (app) {
             };
         }])
         .factory("Reader", ["CreateJS", "ReaderModel", function (createjs, ReaderModel) {
-<<<<<<< HEAD
             const colors = {
                 engage: "green",
                 disengage: "gray",
@@ -136,7 +135,6 @@ module.exports = (function (app) {
                                 if (update)
                                     stage.update();
                             },
-<<<<<<< HEAD
                             setStatus(key, update){
                                 engaged = key;
                                 if (color === colors.active)
