@@ -377,19 +377,19 @@ module.exports = (function (app) {
                     }, {
                         x1: {
                             get: () => stage.metersToStage(stage.project.presentationArea.x1, "x"),
-                            set: v => stage.project.presentationArea.x1 = Math.round10(stage.stageToMeters(v, "x"), -3)
+                            set: v => stage.project.presentationArea.x1 = Math.round10(stage.stageToMeters(v, "x"), -2)
                         },
                         x2: {
                             get: () => stage.metersToStage(stage.project.presentationArea.x2, "x"),
-                            set: v => stage.project.presentationArea.x2 = Math.round10(stage.stageToMeters(v, "x"), -3)
+                            set: v => stage.project.presentationArea.x2 = Math.round10(stage.stageToMeters(v, "x"), -2)
                         },
                         y1: {
                             get: () => stage.metersToStage(stage.project.presentationArea.y1, "y"),
-                            set: v => stage.project.presentationArea.y1 = Math.round10(stage.stageToMeters(v, "y"), -3)
+                            set: v => stage.project.presentationArea.y1 = Math.round10(stage.stageToMeters(v, "y"), -2)
                         },
                         y2: {
                             get: () => stage.metersToStage(stage.project.presentationArea.y2, "y"),
-                            set: v => stage.project.presentationArea.y2 = Math.round10(stage.stageToMeters(v, "y"), -3)
+                            set: v => stage.project.presentationArea.y2 = Math.round10(stage.stageToMeters(v, "y"), -2)
                         }
                     });
                 zoomHandler = stage.on("zoom", ()=>wrapper.draw);

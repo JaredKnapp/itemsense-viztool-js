@@ -74,7 +74,7 @@ module.exports = (function (app) {
                     _x: {
                         enumerable: false,
                         get: function () {
-                            return Math.round10(this.x, -3);
+                            return Math.round10(this.x, -2);
                         },
                         set: function (v) {
                             this.x = v;
@@ -85,7 +85,7 @@ module.exports = (function (app) {
                     _y: {
                         enumerable: false,
                         get: function () {
-                            return Math.round10(this.y, -3);
+                            return Math.round10(this.y, -2);
                         },
                         set: function (v) {
                             this.y = v;
@@ -96,7 +96,7 @@ module.exports = (function (app) {
                     X: {
                         get: function () {
                             if (this.project.scale)
-                                return Math.round10(this.x / this.project.scale, -3);
+                                return Math.round10(this.x / this.project.scale, -2);
                         },
                         set: function (v) {
                             this._x = v * (this.project.scale || 1.0);
@@ -105,7 +105,7 @@ module.exports = (function (app) {
                     Y: {
                         get: function () {
                             if (this.project.scale)
-                                return Math.round10(this.y / this.project.scale, -3);
+                                return Math.round10(this.y / this.project.scale, -2);
                         },
                         set: function (v) {
                             this._y = v * (this.project.scale || 1.0);
@@ -340,7 +340,7 @@ module.exports = (function (app) {
                                 get: function () {
                                     if (!this.rulerLength)
                                         return this.rulerLength;
-                                    return Math.round10(this.rulerLength, -3);
+                                    return Math.round10(this.rulerLength, -2);
                                 },
                                 set: function (v) {
                                     this.rulerLength = v;
@@ -352,7 +352,7 @@ module.exports = (function (app) {
                                 get: function () {
                                     if (this.scale === null)
                                         return null;
-                                    return Math.round10(this.rulerLength / this.scale, -3);
+                                    return Math.round10(this.rulerLength / this.scale, -2);
                                 },
                                 set: function (v) {
                                     if (v === null)
@@ -364,7 +364,7 @@ module.exports = (function (app) {
                                 get: function () {
                                     if (this.scale === null)
                                         return null;
-                                    return Math.round10(this.scale, -3);
+                                    return Math.round10(this.scale, -2);
                                 },
                                 set: function (v) {
                                     this.scale = v;

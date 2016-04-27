@@ -10,7 +10,7 @@ module.exports = (function (app) {
             return function (ref, stage, tracer) {
                 Object.defineProperties(ref, {
                     X: {
-                        get: () => Math.round10(stage.stageToMeters(ref.x, "x"), -3),
+                        get: () => Math.round10(stage.stageToMeters(ref.x, "x"), -2),
                         set: (v) => {
                             v = isNaN(v) ? 0 : parseFloat(v);
                             ref.x = stage.metersToStage(v, "x");
@@ -18,7 +18,7 @@ module.exports = (function (app) {
                         }
                     },
                     Y: {
-                        get: () => Math.round10(stage.stageToMeters(ref.y, "y"), -3),
+                        get: () => Math.round10(stage.stageToMeters(ref.y, "y"), -2),
                         set: (v) => {
                             v = isNaN(v) ? 0 : parseFloat(v);
                             ref.y = stage.metersToStage(v, "y");
@@ -134,11 +134,11 @@ module.exports = (function (app) {
                     },
                     x: {
                         get: () => stage.metersToStage(p.x, "x"),
-                        set: (v) => p.x = Math.round10(stage.stageToMeters(v, "x"), -3)
+                        set: (v) => p.x = Math.round10(stage.stageToMeters(v, "x"), -2)
                     },
                     y: {
                         get: () => stage.metersToStage(p.y, "y"),
-                        set: (v) => p.y = Math.round10(stage.stageToMeters(v, "y"), -3)
+                        set: (v) => p.y = Math.round10(stage.stageToMeters(v, "y"), -2)
                     },
                     _x: {
                         get: () => p.x,

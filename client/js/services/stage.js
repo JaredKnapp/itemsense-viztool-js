@@ -177,8 +177,8 @@ module.exports = (function (app) {
                         startTrace() {
                             const makeZonePoint = (p) => {
                                 return {
-                                    x: Math.round10(this.stageToMeters(p.x, "x"), -3),
-                                    y: Math.round10(this.stageToMeters(p.y, "y"), -3),
+                                    x: Math.round10(this.stageToMeters(p.x, "x"), -2),
+                                    y: Math.round10(this.stageToMeters(p.y, "y"), -2),
                                     z: 0
                                 };
                             };
