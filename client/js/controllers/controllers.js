@@ -347,7 +347,8 @@ module.exports = (function (app) {
                 $scope.$emit("shouldSave", "readers");
                 return newReader;
             }
-
+            if($scope.$stateParams.readerName)
+                $scope.project.stage.selectReader($scope.$stateParams.readerName);
             $scope.activeReader = $scope.project.reader || makeReader();
 
             $scope.$watch("readerForm.$pristine", function (n) {

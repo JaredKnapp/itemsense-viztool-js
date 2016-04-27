@@ -144,6 +144,7 @@ module.exports = (function (app) {
                         get: () => p.x,
                         set: (v) => {
                             p.x = isNaN(v) ? p.x || 0 : parseFloat(v);
+                            stage.scope.$emit("shouldSave","zones");
                             wrapper.draw(true);
                         }
                     },
@@ -151,6 +152,7 @@ module.exports = (function (app) {
                         get: () => p.y,
                         set: (v) => {
                             p.y = isNaN(v) ? p.y || 0 : parseFloat(v);
+                            stage.scope.$emit("shouldSave","zones");
                             wrapper.draw(true);
                         }
                     }

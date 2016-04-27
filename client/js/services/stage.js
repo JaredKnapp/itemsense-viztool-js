@@ -308,8 +308,18 @@ module.exports = (function (app) {
                         addReader: function (ref) {
                             var reader = Reader.create(ref, this);
                             readers.push(reader);
+                            return this.selectReader(reader);
+                        },
+                        selectReader: function (reader) {
                             this.reader = reader;
-                            reader.activate(true);
+                            if (reader)
+                                reader.activate(true);
+                            return reader;
+                        },
+                        setReader: function (name) {
+                            const reader = _.find(readers, r => r.model.name === name);
+                            if (reader)
+                                this.selectReader(reader);
                             return reader;
                         },
                         removeReader: function (reader) {
