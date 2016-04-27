@@ -39,7 +39,7 @@ module.exports = (function (app) {
                             return stage.metersToStage(ref.x, "x");
                         },
                         set: function (v) {
-                            ref.x = stage.stageToMeters(v, "x");
+                            ref.x = Math.round10(stage.stageToMeters(v, "x"));
                         }
                     },
                     _y: { //y for the shape
@@ -48,7 +48,7 @@ module.exports = (function (app) {
                             return stage.metersToStage(ref.y, "y");
                         },
                         set: function (v) {
-                            ref.y = stage.stageToMeters(v, "y");
+                            ref.y = Math.round10(stage.stageToMeters(v, "y"));
                         }
                     },
                     X: { // X in meters, to display on UI

@@ -332,9 +332,9 @@ module.exports = (function (app) {
                     antennaZones: null,
                     labels: null,
                     placement: {
-                        x: $scope.$stateParams.x || 0,
-                        y: $scope.$stateParams.y || 0,
-                        z: 0,
+                        x: Math.round10($scope.$stateParams.x || 0,-3),
+                        y: Math.round10($scope.$stateParams.y || 0,-3),
+                        z: 1.5,
                         yaw: 0, pitch: 0, roll: 0,
                         floor: $scope.project.floorName || ""
                     }

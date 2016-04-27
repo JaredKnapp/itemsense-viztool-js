@@ -138,8 +138,6 @@ module.exports = (function (app) {
                                 this.zoomX = parent.w / box.w;
                                 this.zoomY = parent.h / box.h;
                                 this.zoom = Math.min(this.zoomX, this.zoomY);
-                                console.log(parent.w, bkWidth, this.zoom, box.x, box.w)
-                                console.log(parent.h, bkHeight, this.zoom, box.y, box.h)
                                 canvas.width = canvas.style.width = bkWidth * this.zoom;
                                 canvas.height = canvas.style.height = bkHeight * this.zoom;
                                 this.adjustCanvasParent(box, parent);
