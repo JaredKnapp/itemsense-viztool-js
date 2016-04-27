@@ -12,7 +12,7 @@ module.exports = (function (app) {
                 $rootScope.$state = $state;
                 $rootScope.$stateParams = $stateParams;
                 $rootScope.round = function (v, d) {
-                    if (d === undefined) d = -3;
+                    if (d === undefined) d = -2;
                     return Math.round10(v, d);
                 };
                 angular.promiseBitmap = function (src) {

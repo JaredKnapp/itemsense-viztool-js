@@ -138,8 +138,6 @@ module.exports = (function (app) {
                                 this.zoomX = parent.w / box.w;
                                 this.zoomY = parent.h / box.h;
                                 this.zoom = Math.min(this.zoomX, this.zoomY);
-                                console.log(parent.w, bkWidth, this.zoom, box.x, box.w)
-                                console.log(parent.h, bkHeight, this.zoom, box.y, box.h)
                                 canvas.width = canvas.style.width = bkWidth * this.zoom;
                                 canvas.height = canvas.style.height = bkHeight * this.zoom;
                                 this.adjustCanvasParent(box, parent);
@@ -379,19 +377,19 @@ module.exports = (function (app) {
                     }, {
                         x1: {
                             get: () => stage.metersToStage(stage.project.presentationArea.x1, "x"),
-                            set: v => stage.project.presentationArea.x1 = Math.round10(stage.stageToMeters(v, "x"), -3)
+                            set: v => stage.project.presentationArea.x1 = Math.round10(stage.stageToMeters(v, "x"), -2)
                         },
                         x2: {
                             get: () => stage.metersToStage(stage.project.presentationArea.x2, "x"),
-                            set: v => stage.project.presentationArea.x2 = Math.round10(stage.stageToMeters(v, "x"), -3)
+                            set: v => stage.project.presentationArea.x2 = Math.round10(stage.stageToMeters(v, "x"), -2)
                         },
                         y1: {
                             get: () => stage.metersToStage(stage.project.presentationArea.y1, "y"),
-                            set: v => stage.project.presentationArea.y1 = Math.round10(stage.stageToMeters(v, "y"), -3)
+                            set: v => stage.project.presentationArea.y1 = Math.round10(stage.stageToMeters(v, "y"), -2)
                         },
                         y2: {
                             get: () => stage.metersToStage(stage.project.presentationArea.y2, "y"),
-                            set: v => stage.project.presentationArea.y2 = Math.round10(stage.stageToMeters(v, "y"), -3)
+                            set: v => stage.project.presentationArea.y2 = Math.round10(stage.stageToMeters(v, "y"), -2)
                         }
                     });
                 zoomHandler = stage.on("zoom", ()=>wrapper.draw);

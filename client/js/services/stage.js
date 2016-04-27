@@ -177,8 +177,8 @@ module.exports = (function (app) {
                         startTrace() {
                             const makeZonePoint = (p) => {
                                 return {
-                                    x: Math.round10(this.stageToMeters(p.x, "x"), -3),
-                                    y: Math.round10(this.stageToMeters(p.y, "y"), -3),
+                                    x: Math.round10(this.stageToMeters(p.x, "x"), -2),
+                                    y: Math.round10(this.stageToMeters(p.y, "y"), -2),
                                     z: 0
                                 };
                             };
@@ -308,8 +308,18 @@ module.exports = (function (app) {
                         addReader: function (ref) {
                             var reader = Reader.create(ref, this);
                             readers.push(reader);
+                            return this.selectReader(reader);
+                        },
+                        selectReader: function (reader) {
                             this.reader = reader;
-                            reader.activate(true);
+                            if (reader)
+                                reader.activate(true);
+                            return reader;
+                        },
+                        setReader: function (name) {
+                            const reader = _.find(readers, r => r.model.name === name);
+                            if (reader)
+                                this.selectReader(reader);
                             return reader;
                         },
                         removeReader: function (reader) {

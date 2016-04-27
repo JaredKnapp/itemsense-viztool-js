@@ -130,11 +130,11 @@ module.exports = (function (app) {
                     });
                     element.bind("keydown", function (ev) {
                         if (ev.keyCode === 38) { //arrow up
-                            element.html(Math.round10(val() + step, -3));
+                            element.html(Math.round10(val() + step, -2));
                             scope.$apply(read);
                         }
                         else if (ev.keyCode === 40) { //arrow down
-                            element.html(Math.round10(val() - step, -3));
+                            element.html(Math.round10(val() - step, -2));
                             scope.$apply(read);
                         }
                         else if (ev.keyCode === 13) {
