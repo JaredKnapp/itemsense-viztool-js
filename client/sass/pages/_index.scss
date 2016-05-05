@@ -93,7 +93,7 @@
 .pnj-li-icon-del{
   @extend .label;
   @extend .label-default;
-  @extend .label-pill;
+  @extend .label-pill !optional;
   @extend .pull-right;
   @extend .fa;
   @extend .fa-trash;
