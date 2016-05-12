@@ -70,7 +70,7 @@ gulp.task("babelify", ["lint"], function () {
 });
 gulp.task("jsLibs", ["babelify"], function () {
     var base = path.resolve(PATHS.base, "app.js"),
-        fn = "(function(){require('" + base + "');})();";
+        fn = "(function(){require('" + (process.platform.match(/^win/) ? base.replace(/\\/g,"\\\\") : base) + "');})();";
     return browserify(fn)
         .on("log", gutil.log)
         .bundle()
