@@ -247,7 +247,7 @@ function startProject(project) {
                     return readPromise;
                 },
                 getDirect(){
-                    var startTime = itemSenseJob ? itemSenseJob.creationTime(/[.].+Z.+/,"") : undefined ;
+                    var startTime = itemSenseJob ? itemSenseJob.creationTime.replace(/[.].+Z.+/,"") : undefined ;
                     readPromise = wrapper.stash(itemsenseApi.items.get({pageSize: 1000, fromTime:startTime })).then(function (items) {
                         if (!itemSenseJob)
                             return q.reject({statusCode: 500, response: {body: "Job not started"}});
