@@ -1,10 +1,10 @@
 {
   "name": "itemsense-viztool-js",
-  "version": "4.5.0",
+  "version": "4.5.1",
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "postversion":"git push"
+    "postversion": "git push"
   },
   "dependencies": {
     "amqp": "^0.2.4",
