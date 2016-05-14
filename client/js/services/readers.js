@@ -137,7 +137,7 @@ module.exports = (function (app) {
                                 this.drawDevice();
                                 field.x = device.x = model._x;
                                 field.y = device.y = model._y;
-                                device.rotation = model.yaw;
+                                device.rotation = - model.yaw;
                                 if (update)
                                     stage.update();
                             },

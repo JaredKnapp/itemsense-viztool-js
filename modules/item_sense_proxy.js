@@ -144,9 +144,9 @@ class ConfigDump {
         const result = ConfigDump.createTemplate("job");
         result.signature = `Dump configuration for job: ${id} running on ${this.project.itemSense}`;
         return this.itemsenseApi.jobs.get(id).then((job) => {
-                result.job = job;
-                return this.itemsenseApi.recipes.get(job.job.recipeName);
-            })
+            result.job = job;
+            return this.itemsenseApi.recipes.get(job.job.recipeName);
+        })
             .then((recipe)=> {
                 result.recipe = recipe;
                 return this.populateReaderInfo(result);
@@ -210,7 +210,6 @@ function startProject(project) {
                 stash: function (promise) {
 
                     return promise.then(function (data) {
-                        var now = new Date().getTime();
                         results.last = createResultItem(data.items, "at");
                         return results.last;
                     }, function (error) {
@@ -240,21 +239,17 @@ function startProject(project) {
                 },
                 getNodeRedFlow(){
                     readPromise = wrapper.stash(wrapper.restCall({url: project.nodeRedEndPoint}))
-                        .catch(error=> {
+                        .catch(error => {
                             console.log(error);
                             return q.reject(error)
                         });
                     return readPromise;
                 },
                 getDirect(){
-                    readPromise = wrapper.stash(itemsenseApi.items.get({pageSize: 1000})).then(function (items) {
-                        if (!itemSenseJob)
-                            return q.reject({statusCode: 500, response: {body: "Job not started"}});
-                        items.data = _.filter(items.data, function (i) {
-                            return i.lastModifiedTime > itemSenseJob.creationTime
-                        });
-                        return items;
-                    });
+                    if (!itemSenseJob) return q.reject({statusCode: 500, response: {body: "Job not started"}});
+                    readPromise = wrapper.stash(itemsenseApi.items.get({
+                        pageSize: 1000,
+                        fromTime: itemSenseJob.creationTime.replace(/[.].+Z.+/, "")}));
                     return readPromise;
                 },
                 getItems: function () {

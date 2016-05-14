@@ -293,6 +293,13 @@ module.exports = (function (app) {
                                     this.stage.refreshReaders();
                                 if(this.zones && this.stage)
                                     this.stage.zones = this.zones;
+                            },
+                            defaultFloorPlan(project){
+                                this.scale = project.scale;
+                                this.origin = projectOrigin(project);
+                                this.origin.project = this;
+                                this.floorPlan = project.floorPlan;
+                                this.zoom = project.zoom;
                             }
                         },
                         {
@@ -320,7 +327,7 @@ module.exports = (function (app) {
                             },
                             floorPlanUrl: {
                                 get: function () {
-                                    return "/projects/" + this.handle + "/" + floorPlan + "?v=" + floorPlanVersion;
+                                    return "/projects/" + this.handle + "/" + (floorPlan || "default") + "?v=" + floorPlanVersion;
                                 }
                             },
                             rulerCoords: {

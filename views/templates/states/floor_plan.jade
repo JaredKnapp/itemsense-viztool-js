@@ -1,6 +1,8 @@
 .container
     .pnj-easel(easel)
     .pnj-tools
+        div(ng-show= "!project.floorPlan" flow-init="{target:planUpload}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow)")
+            button.btn.btn-default(flow-btn flow-attrs="{accept:'image/png,image/jpeg,image/gif'}" ) Upload floor plan
         div(ng-show="project.floorPlan")
             i.pnj-zoom-in(ng-click="zoomIn()" title="Zoom In")
             i.pnj-zoom-out(ng-click="zoomOut()" title="Zoom Out")

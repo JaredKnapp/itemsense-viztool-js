@@ -444,7 +444,8 @@ module.exports = (function (app) {
                             get: ()=>project.origin,
                             set: function (v) {
                                 this.origin = v;
-                                this.scope.$emit("shouldSave", "general");
+                                if(this.scope)
+                                    this.scope.$emit("shouldSave", "general");
                             }
                         },
                         origin: {
