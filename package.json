@@ -3,7 +3,8 @@
   "version": "4.5.0",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "postversion":"git push"
   },
   "dependencies": {
     "amqp": "^0.2.4",
