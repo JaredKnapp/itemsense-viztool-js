@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "postversion": "git push"
+    "postversion": "git push origin development"
   },
   "dependencies": {
     "amqp": "^0.2.4",
