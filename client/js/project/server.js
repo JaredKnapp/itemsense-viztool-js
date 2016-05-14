@@ -183,7 +183,7 @@ module.exports=(function(app) {
                         self.job = job;
                         if (!self.isJobRunning())
                             self.jobInterval = null;
-                    });
+                    }).catch((error)=> {console.log(error); self.jobMonitor=false;});
                 else
                     self.jobInterval = null;
             },
