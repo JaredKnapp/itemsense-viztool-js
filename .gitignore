@@ -9,4 +9,5 @@ client/staging/babeled.js
 client/staging/lib.js
 !public/projects/readme
 tests/experiments/*.log
+tests/
 .DS_Store
