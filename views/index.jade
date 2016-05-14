@@ -7,6 +7,6 @@ block content
             uib-alert(ng-if="alert" type="{{alert.type}}" close="alertClosed()" dismiss-on-timeout="3000") {{alert.msg}}
             uib-tabset
                 uib-tab(heading = "Project" select="$state.go('project',{id:project.handle || 'newProject'})" active="mainTab.project")
-                uib-tab(heading = "Floor Plan" disable="!project.handle" select="$state.go('floorPlan',{id:project.handle})" active="mainTab.floorPlan")
+                uib-tab(heading = "Floor Plan" disable="!project.floorPlan" select="$state.go('floorPlan',{id:project.handle})" active="mainTab.floorPlan")
                 uib-tab(heading = "Classification" disable="!project.classes" select="$state.go('classes',{id:project.handle})" active="mainTab.classes")
             .ui-view

@@ -61,7 +61,9 @@ module.exports=(function(app) {
                     method: "POST",
                     url: "/project/",
                     data: self
-                }).then(() => {
+                }).then((project) => {
+                    if(!self.floorPlan)
+                        self.defaultFloorPlan(project);
                     delete self.shouldSave.general;
                     if(self.shouldSave.zones)
                         return self.saveZoneMap(self.zoneMap);

@@ -47,6 +47,7 @@ function resolveProjectFile(id) {
 }
 
 function threadError(err, r) {
+    console.log("thread error", err,r);
     return {
         status: err.payload.data.statusCode || r.status,
         msg: err.payload.data.response.body || ""
@@ -54,7 +55,7 @@ function threadError(err, r) {
 }
 
 function fileError(err, r) {
-    console.log(err);
+    console.log("file Error",err,err.payload);
     return {
         status: err.code === "ENOENT" ? 404 : r.status,
         msg: err.message || r.msg
@@ -75,8 +76,20 @@ function handleError(err, res, fn) {
     res.status(r.status).json(r);
 }
 
+function addDefaultFloorPlan(body){
+    const filename = path.resolve(getProjectDir(body.handle),"default.png"),
+        defaultBackground= path.resolve(getProjectDir(body.handle),"..","..","images","default.png");
+    body.scale=125;
+    body.origin = {x:627,y:373};
+    body.zoom = 0.771;
+    body.floorPlan = "default.png";
+    console.log("filename",filename, defaultBackground);
+    fs.copySync(defaultBackground,filename);
+}
 function saveProject(fileName, body) {
     var defer = q.defer();
+    if(body.floorPlan === null)
+        addDefaultFloorPlan(body);
     fs.outputJSON(fileName, body, defer.makeNodeResolver());
     return defer.promise;
 }
@@ -104,8 +117,8 @@ router.get("/", function (req, res) {
 router.post("/", function (req, res) {
     var fileName = path.resolve(getProjectDir(req.body.handle), "project.json");
     saveProject(fileName, req.body)
-        .then(()=> thread.updateProcess (req.body))
-        .then(result=> res.json(result), err => handleError(err,res,fileError));
+        .then(()=> thread.updateProcess (req.body), err => handleError(err,res,fileError))
+        .then(()=> res.json(req.body), err => handleError(err,res,threadError));
 });
 
 router.get("/:projectId", function (req, res) {
