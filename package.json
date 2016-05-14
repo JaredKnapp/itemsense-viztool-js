@@ -1,6 +1,6 @@
 {
   "name": "itemsense-viztool-js",
-  "version": "4.5.4",
+  "version": "4.5.5",
   "private": true,
   "scripts": {
     "start": "node server.js"
