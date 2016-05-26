@@ -112,8 +112,9 @@
   margin-top:20px;
 }
 .pnj-presenter-image{
-  width:80%;
-  height:80%;
+  @extend .img-circle;
+  width:100%;
+  height:100%;
 }
 .pnj-panel-btn{
   @extend .pnj-center-box;
