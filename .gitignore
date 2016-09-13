@@ -11,3 +11,8 @@ client/staging/lib.js
 tests/experiments/*.log
 tests/
 .DS_Store
+
+#vscode ##
+launch.json
+*.d.ts
+typings.json
