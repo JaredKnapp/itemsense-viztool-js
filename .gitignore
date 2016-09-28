@@ -11,3 +11,6 @@ client/staging/lib.js
 tests/experiments/*.log
 tests/
 .DS_Store
+## VS Code specific
+/.vscode
+/typings
