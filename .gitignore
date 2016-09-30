@@ -16,3 +16,6 @@ tests/
 launch.json
 *.d.ts
 typings.json
+/.vscode
+/typings
+

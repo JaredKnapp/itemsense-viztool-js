@@ -6,7 +6,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgb(221, 207, 207);
+  background-color: rgb(77, 210, 255);
   z-index: 1000;
 }
 
@@ -68,6 +68,8 @@
   right: 410px;
   bottom: 0;
   top: 94px;
+  background-color: rgb(77, 210, 255);
+
 }
 
 .pnj-presenter-easel {
@@ -76,7 +78,7 @@
   top: 10px;
   bottom: 10px;
   right: 0;
-  background-color: rgb(221, 207, 207);
+  background-color: rgb(77, 210, 255);
   display: flex;
   justify-content:center;
   align-content:center;
@@ -97,6 +99,7 @@
   margin-top:12px;
   cursor:pointer;
   text-align:center;
+  background-color: white;
 }
 
 .pnj-clear-filter{
@@ -112,8 +115,9 @@
   margin-top:20px;
 }
 .pnj-presenter-image{
-  width:80%;
-  height:80%;
+  @extend .img-circle;
+  max-width:100%;
+  max-height:100%;
 }
 .pnj-panel-btn{
   @extend .pnj-center-box;
