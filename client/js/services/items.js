@@ -43,7 +43,7 @@ module.exports = (function (app) {
                             if (model._y === shape.y)
                                     defer.resolve();
                         stage.activeTweens += 1;
-                        createjs.Tween.get(shape).to({x: model._x, y: model._y}, 1500, ease).call(function () {
+                        createjs.Tween.get(shape).to({x: model._x, y: model._y}, 250, null).call(function () {
                             stage.activeTweens -= 1;
                             defer.resolve();
                         });

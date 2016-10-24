@@ -171,7 +171,7 @@ module.exports = (function (app) {
                         nodeRedEndPoint = null,
                         showItems = false,
                         pullItems = false,
-                        pullInterval = 5,
+                        pullInterval = 1,
                         stage = null,
                         recipes = null,
                         recipe = null,
@@ -469,7 +469,7 @@ module.exports = (function (app) {
                                 enumerable:true,
                                 get:()=>pullInterval,
                                 set:function (v){
-                                    pullInterval = Math.max(v,5);
+                                    pullInterval = Math.max(v,1);
                                 }
                             },
                             showItems: {
