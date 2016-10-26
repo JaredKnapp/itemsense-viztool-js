@@ -6,6 +6,8 @@
 "use strict";
 
 module.exports = (function (app) {
+    var TWEEN_RATE = 250; //The rate in which dots for the item location move when the location changes
+
     app.factory("ItemModel", ["StageMetrics", function (stageMetrics) {
         return function (ref, stage) {
             var xKey=ref.x === undefined ? "xLocation" : "x",
@@ -43,7 +45,7 @@ module.exports = (function (app) {
                             if (model._y === shape.y)
                                     defer.resolve();
                         stage.activeTweens += 1;
-                        createjs.Tween.get(shape).to({x: model._x, y: model._y}, 250, null).call(function () {
+                        createjs.Tween.get(shape).to({x: model._x, y: model._y}, TWEEN_RATE, null).call(function () {
                             stage.activeTweens -= 1;
                             defer.resolve();
                         });
