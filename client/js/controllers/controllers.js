@@ -252,12 +252,12 @@ module.exports = (function (app) {
                 if (!n) $scope.$emit("shouldSave", "general");
             });
         }])
-        .controller("FloorPlan", ["$scope", function ($scope) {
+        .controller("FloorPlan", ["$scope","_", function ($scope,_) {
             $scope.mainTab = {floorPlan: true};
             $scope.fields = [{i: 0, n: 'Hide'}, {i: 1, n: '3 Meters'}, {i: 2, n: '4 Meters'}, {i: 3, n: '5 Meters'}];
             $scope.$on("keydown", function (ev, key) {
                 if ($scope.$state.current.name === "floorPlan.zone") {
-                    if (key.srcElement.tagName === "BODY") {
+                    if (key.target.tagName === "BODY" ) {
                         if (key.keyCode === 8 || key.keyCode === 46) //backspace || Delete
                             $scope.project.deleteZone();
                         else if (key.keyCode === 67 && (key.metaKey || key.ctrlKey)) //Control or Command-C
@@ -266,6 +266,12 @@ module.exports = (function (app) {
                     }
                 }
             });
+	    $scope.placeReader=function(reader){
+		$scope.project.placeReader(reader);
+		$scope.$state.go("floorPlan.reader",{readerName:reader.name});
+		
+	    };
+	    $scope.hasUnplaced = () => _.find($scope.project.readers,r=>!r.placement);
             $scope.imageSrc = function () {
                 //this doesn't hold previous version of the image, it just forces the ng-src to reload the new image
                 if ($scope.project)
@@ -355,6 +361,14 @@ module.exports = (function (app) {
                 if (n) return;
                 $scope.$emit("shouldSave", "readers");
             });
+
+	    $scope.moveToRulerEnd= function(endpoint){
+		let project = $scope.project;
+		$scope.activeReader.placement.x = Math.round10(project.stageToMeters(project.rulerCoords[endpoint+"X"],'x'),-2);
+		$scope.activeReader.placement.y = Math.round10(project.stageToMeters(project.rulerCoords[endpoint+"Y"],'y'),-2);
+		project.updateReader($scope.activeReader);
+		$scope.shouldSave();
+	    };
 
             $scope.readerStatus=function(reader){
                 return readerStatuses[$scope.project.readerLLRP[reader.name] || "newReader"] || readerStatuses.unknown;

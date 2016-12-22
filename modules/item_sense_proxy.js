@@ -321,7 +321,7 @@ function startProject(project) {
                     });
                 },
                 getJobReaders: (job, recipe) => recipe.readerConfigurationName ? job.readerNames : Object.keys(recipe.readerConfigurations),
-                inProject: reader => reader.facility === project.facility && reader.placement.floor === project.floorName,
+                inProject: reader => reader.facility === project.facility && (!reader.placement || reader.placement.floor === project.floorName),
                 getLLRPStatus() {
                     const result = {};
                     return this.getReaders().then(readers=> {

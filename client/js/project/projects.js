@@ -264,6 +264,11 @@ module.exports = (function (app) {
                                     return null;
                                 }
                             },
+			    placeReader: function(reader){
+				if(!stage) return;
+			    	reader.placement={floor:this.floorName};
+				stage.putReaderInCenter(reader);
+			    },
                             preparePresentation: function (stage, bitmap) {
                                 this.jobMonitor = false;
                                 this.pullItems = false;

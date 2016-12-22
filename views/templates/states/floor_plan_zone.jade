@@ -18,7 +18,8 @@ table.table
     tbody
         tr(ng-repeat="point in project.zone.points" ng-if="point.type === 'full'")
             td {{($index/2)+1}}
-            td(contenteditable="true" ng-model="point._x" step="0.1")
+            td
+                div(contenteditable="true", ng-model="point._x", step="0.1")
             td(contenteditable="true" ng-model="point._y" step="0.1")
 
 

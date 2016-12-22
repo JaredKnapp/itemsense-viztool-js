@@ -3,11 +3,17 @@
  * Project information about readers
  */
 "use strict";
+function correctDegrees(yaw){
+	return (yaw > 180) ? yaw -360: (yaw < -180) ? yaw + 360 : yaw;	
+}
 module.exports = (function (app) {
     app.factory("ProjectReaders", ["_", function (_) {
         function wrap(project) {
             return {
                 updateReader(reader) {
+		   if(!reader.placement) return;
+		   if(reader.placement.yaw)
+			reader.placement.yaw = correctDegrees((reader.placement.yaw || 0) % 360);
                     if (project.stage)
                         project.stage.updateReader(reader);
                 },

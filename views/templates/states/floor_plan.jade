@@ -1,8 +1,6 @@
 .container
     .pnj-easel(easel)
     .pnj-tools
-        div(ng-show= "!project.floorPlan" flow-init="{target:planUpload}" flow-files-submitted="$flow.upload()" flow-file-success="uploadSuccess($file,$message,$flow)")
-            button.btn.btn-default(flow-btn flow-attrs="{accept:'image/png,image/jpeg,image/gif'}" ) Upload floor plan
         div(ng-show="project.floorPlan")
             i.pnj-zoom-in(ng-click="zoomIn()" title="Zoom In")
             i.pnj-zoom-out(ng-click="zoomOut()" title="Zoom Out")
@@ -15,5 +13,8 @@
                     .input-group-addon Reader Fields:
                     select.form-control(ng-model="project.showReaderFields" ng-options="f.i as f.n for f in fields")
         .ui-view
+        h3(ng-show="hasUnplaced()") Unplaced Readers
+        ul
+            li.unplaced-reader(ng-repeat="reader in project.readers", ng-if="!reader.placement", ng-click="placeReader(reader)") {{reader.name.trim() || reader.address}} 
     .pnj-footer#mouseCoords
 

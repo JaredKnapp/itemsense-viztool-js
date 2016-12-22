@@ -1,5 +1,7 @@
 form.css-form(name="readerForm" novalidate)
     button.btn.btn-primary(ng-click="newReader()") New
+    button.btn.btn-primary(ng-click="moveToRulerEnd('start')") On Red
+    button.btn.btn-primary(ng-click="moveToRulerEnd('end')") On Blue
     .form-group
         .input-group
             .pnj-label-75 Type:
@@ -34,7 +36,7 @@ form.css-form(name="readerForm" novalidate)
             input.form-control(type="number" ng-model="activeReader.placement.z" step="0.1")
         .input-group
             .pnj-label-75 Yaw:
-            input.form-control(type="number" ng-model="activeReader.placement.yaw" step="10" ng-change="project.updateReader(activeReader)")
+            input.form-control(type="number" ng-model="activeReader.placement.yaw" step="10" ng-change="project.updateReader(activeReader)" )
         .input-group
             .pnj-label-75 Pitch:
             input.form-control(type="number" ng-model="activeReader.placement.pitch" step="10")

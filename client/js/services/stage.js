@@ -263,6 +263,14 @@ module.exports = (function (app) {
                                 y: screenY / zoom
                             };
                         },
+			putReaderInCenter:function(reader){
+				let screenCenter=this.visibleCenter();
+				reader.placement.x= this.stageToMeters(screenCenter.x,"x");
+				reader.placement.y= this.stageToMeters(screenCenter.y,"y");
+				reader.placement.z= 1.5;
+				reader.placement.yaw=0;
+				this.addReader(reader);
+			},
                         connect: function (p) {
                             var self = this;
                             if (p === project)
@@ -306,6 +314,7 @@ module.exports = (function (app) {
 
                         },
                         addReader: function (ref) {
+			    if(ref &&  ! ref.placement) return;
                             var reader = Reader.create(ref, this);
                             readers.push(reader);
                             return this.selectReader(reader);
@@ -330,7 +339,7 @@ module.exports = (function (app) {
                         },
                         refreshReaders(){
                             _.each(readers, r => r.destroy());
-                            readers = _.map(project.readers, r => Reader.create(r, this, project.readerLLRP[r.name]));
+                            readers = _.map(_.filter(project.readers,r=>r.placement), r => Reader.create(r, this, project.readerLLRP[r.name]));
                             this.update();
                         },
                         showReaders: function (v) {
@@ -341,7 +350,7 @@ module.exports = (function (app) {
                                         r.draw();
                                     });
                                 else
-                                    readers = _.map(project.readers, function (reader) {
+                                    readers = _.map(_.filter(project.readers,r=>r.placement), function (reader) {
                                         return Reader.create(reader, self, project.readerLLRP[reader.name]);
                                     });
                             else
