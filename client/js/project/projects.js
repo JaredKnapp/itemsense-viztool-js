@@ -172,6 +172,7 @@ module.exports = (function (app) {
                         showItems = false,
                         pullItems = false,
                         pullInterval = 1,
+			moveAnimation = "jump",
                         stage = null,
                         recipes = null,
                         recipe = null,
@@ -475,6 +476,13 @@ module.exports = (function (app) {
                                 get:()=>pullInterval,
                                 set:function (v){
                                     pullInterval = Math.max(v,1);
+                                }
+                            },
+                            moveAnimation: {
+                                enumerable:true,
+                                get:()=>moveAnimation,
+                                set:function (v){
+                                    moveAnimation = v;
                                 }
                             },
                             showItems: {

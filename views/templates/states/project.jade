@@ -33,6 +33,12 @@ form.container.form-group(name="projectForm")
         .input-group(ng-if="project.itemSource === 'Node Red Flow'")
             .input-group-addon Node Red Endpoint:
             input.form-control(type="url" name="redpoint" ng-model="project.nodeRedEndPoint" ng-trim="true")
+        .input-group
+            .input-group-addon Update Interval (s):
+            input.form-control(type="number", ng-model="project.pullInterval", min="0")
+        .input-group
+            .input-group-addon Movement Animation:
+            select.form-control(ng-options="v for v in ['ease','jump']", ng-model="project.moveAnimation")
     .clearfix
     .form-group
         button.pnj-save(ng-click="getFacilities()" ng-disabled="!projectForm.$valid" ng-show="!project.facility && !project.facilities") Get Facilities
