@@ -187,7 +187,7 @@ module.exports=(function(app) {
                             self.jobInterval = null;
                     }).catch((error)=> {console.log(error); self.jobMonitor=false;});
                 else
-                    self.jobInterval = null;
+                    self.jobInterval = self.jobMonitor = null;
             },
             monitorJob: function () {
                 var self = this;
