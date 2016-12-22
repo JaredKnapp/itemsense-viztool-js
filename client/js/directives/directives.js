@@ -113,7 +113,8 @@ module.exports = (function (app) {
                     const step = isNaN(attrs.step) ? 1 : parseFloat(attrs.step);
 
                     function read() {
-                        ngModel.$setViewValue(element.html());
+			let v = element.html().match(/[0-9.-]+/);
+                        ngModel.$setViewValue(v ? v[0] : 0);
                     }
 
                     function val() {
@@ -137,19 +138,20 @@ module.exports = (function (app) {
                             element.html(Math.round10(val() - step, -2));
                             scope.$apply(read);
                         }
-                        else if (ev.keyCode === 13) {
+                        else if (ev.keyCode === 13 || ev.keyCode === 9) {
                             element[0].blur();
                             ignoreEvent(ev);
                         }
                         else if (ev.keyCode === 27) {
-                            element.html("escape");
+                            element.html(ngModel.$viewValue);
                             element[0].blur();
                             ignoreEvent(ev);
                         }
                     });
 
                     element.bind("keypress", function (ev) {
-                        if (ev.charCode < 45 || ev.charCode > 57 || ev.charCode === 47)
+			if(ev.charCode)                        
+			if (ev.charCode < 45 || ev.charCode > 57 || ev.charCode === 47)
                             return ignoreEvent(ev);
                     });
                 }
