@@ -83,7 +83,7 @@ module.exports = (function (app) {
                                 scope.$apply();
                             });
 
-                            events.pressup = stage.on("pressup", ()=> {
+                            events.pressup = stage.on("pressup", () => {
                                 if ($state.current.name === "floorPlan.origin") {
                                     if (project.showReaders)
                                         this.refreshReaders();
@@ -183,7 +183,7 @@ module.exports = (function (app) {
                                 };
                             };
                             return Tracer.trace(this).then((points) => {
-                                return this.selectZone(project.addZone(_.map(points, p=>makeZonePoint(p))));
+                                return this.selectZone(project.addZone(_.map(points, p => makeZonePoint(p))));
                             });
                         },
                         selectZone: function (zone) {
@@ -263,14 +263,14 @@ module.exports = (function (app) {
                                 y: screenY / zoom
                             };
                         },
-			putReaderInCenter:function(reader){
-				let screenCenter=this.visibleCenter();
-				reader.placement.x= this.stageToMeters(screenCenter.x,"x");
-				reader.placement.y= this.stageToMeters(screenCenter.y,"y");
-				reader.placement.z= 1.5;
-				reader.placement.yaw=0;
-				this.addReader(reader);
-			},
+                        putReaderInCenter: function (reader) {
+                            let screenCenter = this.visibleCenter();
+                            reader.placement.x = Math.round10(this.stageToMeters(screenCenter.x, "x"),-2);
+                            reader.placement.y = Math.round10(this.stageToMeters(screenCenter.y, "y"),-2);
+                            reader.placement.z = 1.5;
+                            reader.placement.yaw = 0;
+                            this.addReader(reader);
+                        },
                         connect: function (p) {
                             var self = this;
                             if (p === project)
@@ -314,7 +314,7 @@ module.exports = (function (app) {
 
                         },
                         addReader: function (ref) {
-			    if(ref &&  ! ref.placement) return;
+                            if (ref && !ref.placement) return;
                             var reader = Reader.create(ref, this);
                             readers.push(reader);
                             return this.selectReader(reader);
@@ -339,7 +339,7 @@ module.exports = (function (app) {
                         },
                         refreshReaders(){
                             _.each(readers, r => r.destroy());
-                            readers = _.map(_.filter(project.readers,r=>r.placement), r => Reader.create(r, this, project.readerLLRP[r.name]));
+                            readers = _.map(_.filter(project.readers, r => r.placement), r => Reader.create(r, this, project.readerLLRP[r.name]));
                             this.update();
                         },
                         showReaders: function (v) {
@@ -350,7 +350,7 @@ module.exports = (function (app) {
                                         r.draw();
                                     });
                                 else
-                                    readers = _.map(_.filter(project.readers,r=>r.placement), function (reader) {
+                                    readers = _.map(_.filter(project.readers, r => r.placement), function (reader) {
                                         return Reader.create(reader, self, project.readerLLRP[reader.name]);
                                     });
                             else
@@ -421,7 +421,7 @@ module.exports = (function (app) {
                         },
                         markEngagedReaders: function (engaged) {
                             engaged = engaged || {};
-                            _.each(readers, (r)=> r.setStatus(engaged[r.model.name] || "inactive"));
+                            _.each(readers, (r) => r.setStatus(engaged[r.model.name] || "inactive"));
                             this.update();
                         }
                     },
@@ -450,10 +450,10 @@ module.exports = (function (app) {
                             }
                         },
                         _origin: {
-                            get: ()=>project.origin,
+                            get: () => project.origin,
                             set: function (v) {
                                 this.origin = v;
-                                if(this.scope)
+                                if (this.scope)
                                     this.scope.$emit("shouldSave", "general");
                             }
                         },
@@ -515,7 +515,7 @@ module.exports = (function (app) {
                             set(v){
                                 _.each(zoneCollection || [], zone => zone.destroy());
                                 zoneCollection = _.map(v || [], zone => zone.floor === project.floorName ? Zones.createZone(zone, this) : null);
-                                zoneCollection = _.filter(zoneCollection, z=>z);
+                                zoneCollection = _.filter(zoneCollection, z => z);
                             }
                         },
                         zone: {
@@ -546,8 +546,8 @@ module.exports = (function (app) {
                                     reader.deactivate();
                                 reader = v;
                                 project.reader = v ? _.find(project.readers, function (r) {
-                                    return r.placement === v.ref;
-                                }) : null;
+                                        return r.placement === v.ref;
+                                    }) : null;
                             }
                         },
                         item: {
