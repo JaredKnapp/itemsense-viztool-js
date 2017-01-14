@@ -628,20 +628,31 @@ module.exports = (function (app) {
             };
         }])
         .controller("Locate", ["$scope", "_", function ($scope, _) {
+            function collectImages(root) {
+                let images = [];
+                _.each(root.children, v => images = images.concat(collectImages(v)));
+                root.images = _.uniq(root.ImageId ? images.concat(root.ImageId) : images);
+                return root.images;
+            }
+
             function constructTree(areaArray) {
                 let hashMap = _.reduce(areaArray, (result, area) => {
                     result[area.AreaId] = area;
                     return result;
                 }, {});
-                return _.reduce(areaArray, (tree, area) => {
-                    if (!area.ParentId) tree[area.AreaId] = area;
+                let tree = _.reduce(areaArray, (tree, area) => {
+                    let parentId = area.ParentId;
+                    if (!parentId) tree[area.AreaId] = area;
                     else {
-                        if (!hashMap[area.ParentId].children)
-                            hashMap[area.ParentId].children = {};
-                        hashMap[area.ParentId].children[area.AreaId] = area;
+                        let parent = hashMap[parentId];
+                        if (!parent.children)
+                            parent.children = {};
+                        parent.children[area.AreaId] = area;
                     }
                     return tree;
                 }, {});
+                _.each(tree, v => collectImages(v));
+                return tree;
             }
 
             $scope.getLocateAreas = function () {
@@ -650,9 +661,20 @@ module.exports = (function (app) {
                     failure => console.log("failed getting from locate", failure)
                 );
             };
-            $scope.toggleClose = function (v) {
-                v.closed = !v.closed;
-                console.log("close toggled", v);
+
+            $scope.selectNode = function (v) {
+                $scope.selectedNode = v;
+            };
+
+            $scope.reportImages = function (v) {
+                if (v.children)
+                    if (!v.images.length)
+                        return "(<small>No images</small>)";
+                    else if (v.images.length === 1)
+                        return `<small>${v.images[0]}</small>`;
+                    else
+                        return `<small>${v.images.length} images</small>`;
+                return "";
             };
         }]);
 })(angular.module(window.mainApp));

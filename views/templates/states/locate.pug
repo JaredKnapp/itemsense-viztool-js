@@ -1,14 +1,24 @@
 //
    Created by ralemy on 1/14/17.
 .pnj-record-container
-    button.btn.btn-primary(ng-click="getLocateAreas()") Get Areas
     script(type="text/ng-template" id="node_renderer.html")
         span(ng-class="hasAKey(v.children)?'has-children':'end-leaf'")
-            span.pnj-collapse.plus(ng-if="v.closed" ng-click="toggleClose(v)")
-            span.pnj-collapse.minus(ng-if="!v.closed" ng-click="toggleClose(v)")
-            | {{v.Name}}
+            span.pnj-collapse(ng-class="v.closed ? 'plus' : 'minus'" ng-click="v.closed = !v.closed")
+            span(ng-click="selectNode(v)") {{v.Name}}
+                span(style="margin-left:10px;" ng-bind-html="reportImages(v)")
         ul(ng-if="!v.closed")
             li.pnj-locate-li(ng-repeat="(k,v) in v.children" ng-include="'node_renderer.html'")
-
     ul
         li.pnj-locate-li(ng-repeat="(k,v) in tree" ng-include="'node_renderer.html'")
+.pnj-editor
+    button.btn.btn-primary(ng-click="getLocateAreas()") Get Areas
+    table.table(ng-if="selectedNode")
+        thead
+            tr
+                th Area
+                th ImageId
+                th Boundary?
+        tbody
+            tr
+                td {{selectedNode.Name}}
+                td {{selectedNode.images}}
