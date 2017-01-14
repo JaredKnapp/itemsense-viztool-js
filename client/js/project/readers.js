@@ -25,6 +25,18 @@ module.exports = (function (app) {
                 },
                 addReaderMetadata(readers){
                     return _.map(readers, reader => _.merge(reader,project.readerMetadata[reader.address]));
+                },
+                updateReaderMetadata(){
+                    let newMetadata = _.reduce(project.changedReaders, (result,reader) =>{
+                        let metadata = project.getMetadata(reader);
+                        if(metadata && reader.address.trim())
+                            result[reader.address.trim()] = metadata;
+                    });
+                    project.readerMetadata = _.merge(project.readerMetadata, newMetadata);
+                },
+                getMetadata(reader){
+                    console.log("getting metadata ", reader);
+                    return null;
                 }
             };
         }

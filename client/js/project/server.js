@@ -57,6 +57,7 @@ module.exports = (function (app) {
             },
             save: function () {
                 var self = this;
+                self.updateReaderMetadata();
                 return restCall({
                     method: "POST",
                     url: "/project/",
