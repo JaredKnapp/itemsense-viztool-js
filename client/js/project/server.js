@@ -3,7 +3,7 @@
  * backend connection
  */
 "use strict";
-module.exports=(function(app) {
+module.exports = (function (app) {
     app.factory("Server", ["_", "$http", "$q", "$rootScope", "$interval", function (_, $http, $q, $rootScope, $interval) {
         function errorDescription(response) {
             if (response.data)
@@ -47,13 +47,13 @@ module.exports=(function(app) {
                 });
             },
             saveChangedReaders(){
-                var self= this;
-                if(_.find(self.changedReaders, r => !r.address.trim()))
-                    if(!window.confirm("Readers with No addresses will not be saved. Continue?"))
+                var self = this;
+                if (_.find(self.changedReaders, r => !r.address.trim()))
+                    if (!window.confirm("Readers with No addresses will not be saved. Continue?"))
                         return $q.reject("Readers with no addresses");
-                return $q.all(_.map(self.getChangedReaders(),r=> self.postReaders(r)))
-                    .then(()=>self.getReaders())
-                    .then(()=> self.showReaders = !!self.showReaders);
+                return $q.all(_.map(self.getChangedReaders(), r => self.postReaders(r)))
+                    .then(() => self.getReaders())
+                    .then(() => self.showReaders = !!self.showReaders);
             },
             save: function () {
                 var self = this;
@@ -62,25 +62,25 @@ module.exports=(function(app) {
                     url: "/project/",
                     data: self
                 }).then((project) => {
-                    if(!self.floorPlan)
+                    if (!self.floorPlan)
                         self.defaultFloorPlan(project);
                     delete self.shouldSave.general;
-                    if(self.shouldSave.zones)
+                    if (self.shouldSave.zones)
                         return self.saveZoneMap(self.zoneMap);
-                }).then(()=>{
+                }).then(() => {
                     delete self.shouldSave.zones;
-                    if(self.shouldSave.readers)
+                    if (self.shouldSave.readers)
                         return self.saveChangedReaders();
-                }).then(()=>{
+                }).then(() => {
                     delete self.shouldSave.readers;
                     self.changedReaders = [];
                 });
             },
             deleteProject(data){
                 return restCall({
-                    method:"DELETE",
+                    method: "DELETE",
                     url: `/project/${data.handle}`
-                }).then(()=>restCall({url:"/project"}));
+                }).then(() => restCall({url: "/project"}));
             },
             connect: function () {
                 var self = this;
@@ -92,15 +92,15 @@ module.exports=(function(app) {
                 }).then(function (data) {
                     self.recipes = data.recipes || [];
                     self.job = data.job;
-                    self.facilities = _.map(data.facilities, f=>f.name);
+                    self.facilities = _.map(data.facilities, f => f.name);
                     self.zoneMaps = data.zoneMaps || [];
                     self.zoneMap = _.find(data.zoneMaps, function (z) {
                         return z.name === data.currentZoneMap.name;
                     });
-                    self.recipe = _.find(self.recipes, (r) =>{
-                        if(data.job)
+                    self.recipe = _.find(self.recipes, (r) => {
+                        if (data.job)
                             return r.name === data.job.job.recipeName;
-                        if(self.recipe)
+                        if (self.recipe)
                             return r.name === self.recipe.name;
                     });
                     self.duration = data.job ? data.job.job.durationSeconds : 20;
@@ -108,24 +108,25 @@ module.exports=(function(app) {
                         self.jobMonitor = !!self.jobMonitor;
                         self.pullItems = !!self.pullItems;
                     }
-                    else if(self.itemSource !== "Direct Connection")
+                    else if (self.itemSource !== "Direct Connection")
                         self.pullItems = !!self.pullItems;
                     if (self.showReaders && !self.readers)
                         return self.getReaders();
                     return self;
-                }).finally(()=>$rootScope.statusMessage="");
+                }).finally(() => $rootScope.statusMessage = "");
             },
             getReaders: function () {
                 return restCall({
                     url: `/project/${this.handle}/readers`
-                }).then((readers) => {
-                    this.readers = readers;
-                    if (this.stage){
-                        this.stage.showReaders(false);
-                        this.stage.showReaders(this.showReaders);
-                    }
-                    return this;
-                });
+                })
+                    .then((readers) => {
+                        this.readers = readers;
+                        if (this.stage) {
+                            this.stage.showReaders(false);
+                            this.stage.showReaders(this.showReaders);
+                        }
+                        return this;
+                    });
             },
             postReaders: function (reader) {
                 var self = this;
@@ -185,7 +186,10 @@ module.exports=(function(app) {
                         self.job = job;
                         if (!self.isJobRunning())
                             self.jobInterval = null;
-                    }).catch((error)=> {console.log(error); self.jobMonitor=false;});
+                    }).catch((error) => {
+                        console.log(error);
+                        self.jobMonitor = false;
+                    });
                 else
                     self.jobInterval = self.jobMonitor = null;
             },
@@ -214,7 +218,7 @@ module.exports=(function(app) {
                     if (!self.isJobRunning() && self.itemSource === "Direct Connection")
                         self.pullItems = false;
                     return items;
-                }).catch((err)=>{
+                }).catch((err) => {
                     self.pullItems = false;
                     return $q.reject(err);
                 });
@@ -228,24 +232,24 @@ module.exports=(function(app) {
             },
             addZoneMap: function (data) {
                 return this.saveZoneMap(data).then((zoneMap) => {
-                    this.zoneMaps = _.filter(this.zoneMaps,z=>z.name !== zoneMap.name).concat([zoneMap]);
+                    this.zoneMaps = _.filter(this.zoneMaps, z => z.name !== zoneMap.name).concat([zoneMap]);
                     this.zoneMap = zoneMap;
                     this.zones = zoneMap.zones;
                     return this.setCurrentZoneMap(zoneMap.name);
                 });
             },
-            deleteZoneMap: function(zoneMap){
+            deleteZoneMap: function (zoneMap) {
                 return restCall({
-                    method:"Delete",
-                    url:`/project/${this.handle}/zones/${zoneMap.name}`
-                }).then(()=>{
+                    method: "Delete",
+                    url: `/project/${this.handle}/zones/${zoneMap.name}`
+                }).then(() => {
                     this.zoneMaps = _.filter(this.zoneMaps, z => z !== zoneMap);
                 });
             },
             getZoneMap(name){
-                name = name? `/${name}` : "";
+                name = name ? `/${name}` : "";
                 return restCall({
-                    url:`/project/${this.handle}/zones${name}`
+                    url: `/project/${this.handle}/zones${name}`
                 });
             },
             setCurrentZoneMap: function (name) {
@@ -256,10 +260,10 @@ module.exports=(function(app) {
                 });
             },
             getLLRPStatus(){
-                $rootScope.statusMessage="Getting Reader Status....";
+                $rootScope.statusMessage = "Getting Reader Status....";
                 return restCall({
                     url: `/project/${this.handle}/llrp`
-                }).finally(()=>{
+                }).finally(() => {
                     $rootScope.statusMessage = "";
                 });
             },
@@ -272,7 +276,7 @@ module.exports=(function(app) {
                         password: this.password
                     },
                     url: `/project/${this.handle}/facilities`
-                }).then(facilities => this.facilities = _.map(facilities, f=> f.name));
+                }).then(facilities => this.facilities = _.map(facilities, f => f.name));
             }
         };
     }]);

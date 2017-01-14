@@ -22,6 +22,9 @@ module.exports = (function (app) {
                         result[reader.address] = reader;
                         return result;
                     }, {});
+                },
+                addReaderMetadata(reader){
+                    return project.readerMetadata ?  _.merge() : reader;
                 }
             };
         }
@@ -33,7 +36,8 @@ module.exports = (function (app) {
                 changedReaders = [],
                 showReaderFields = 0,
                 showLLRP = false,
-                readerLLRP = {};
+                readerLLRP = {},
+                readerMetadata = {};
             _.each(wrap(project), (fn, key) => project[key] = fn);
             Object.defineProperties(project, {
                 readers: {
@@ -43,6 +47,13 @@ module.exports = (function (app) {
                 reader: {
                     get: () => reader,
                     set: v => reader = v
+                },
+                readerMetadata: {
+                    enumerable:true,
+                    get: () => readerMetadata,
+                    set: function (v) {
+                        readerMetadata = v;
+                    }
                 },
                 showReaders: {
                     enumerable: true,
