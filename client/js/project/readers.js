@@ -23,8 +23,8 @@ module.exports = (function (app) {
                         return result;
                     }, {});
                 },
-                addReaderMetadata(reader){
-                    return project.readerMetadata ?  _.merge() : reader;
+                addReaderMetadata(readers){
+                    return _.map(readers, reader => _.merge(reader,project.readerMetadata[reader.address]));
                 }
             };
         }
