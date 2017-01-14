@@ -1,0 +1,33 @@
+@import "presenter";
+
+ul .pnj-locate-li {
+  list-style: none;
+}
+
+.pnj-locate-li {
+  cursor: pointer;
+  font-size: medium;
+  font-weight: normal;
+  .has-children {
+    font-size: large;
+    font-weight: bold;
+    display: inherit;
+    .pnj-collapse {
+      margin-right: 10px;
+    }
+    .plus {
+      @extend .fa;
+      @extend .fa-plus-square;
+    }
+    .minus {
+      @extend .fa;
+      @extend .fa-minus-square;
+    }
+  }
+  .end-leaf{
+    .pnj-collapse{
+      display: none;
+    }
+  }
+}
+

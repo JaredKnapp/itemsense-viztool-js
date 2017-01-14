@@ -114,6 +114,9 @@ module.exports = (function (app) {
                 $rootScope.symbolUrl = function (fileName) {
                     return "/project/" + $rootScope.project.handle + "/symbols/" + ($rootScope.sanitize(fileName) || "symb");
                 };
+                $rootScope.hasAKey=function(obj,key){
+                    return key === undefined ? _.keys(obj).length : obj[key];
+                };
                 Object.defineProperties($rootScope, {
                     project: {
                         enumerable: true,

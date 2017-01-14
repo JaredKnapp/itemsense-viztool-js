@@ -31,7 +31,6 @@ router.get("/areas/:id?", (req, res) => {
     if (!req.params.id) req.params.id = "";
     restCall({url: LocateBase + "/impinj/areas/GetAreas/" + req.params.id},LocateUser, LocatePassword)
         .then(data => {
-                console.log("success calling locate", data);
                 res.json(data);
             },
             error => {
