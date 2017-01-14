@@ -272,8 +272,8 @@ module.exports = (function (app) {
                 $scope.project.placeReader(reader);
                 $scope.$emit("shouldSave", "readers");
                 $scope.$state.go("floorPlan.reader", {readerName: reader.name});
-
             };
+
             $scope.hasUnplaced = () => _.find($scope.project.readers, r => !r.placement);
             $scope.imageSrc = function () {
                 //this doesn't hold previous version of the image, it just forces the ng-src to reload the new image
