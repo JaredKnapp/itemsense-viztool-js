@@ -7,38 +7,38 @@
 
 module.exports = (function (app) {
     app.factory("PresentationCandidates", ["_", function (_) {
-            return function (project, selection) {
-                return function () {
-                    function canInclude(hash, cls) {
-                        return _.reduce(selection, function (r, v, k) {
-                            return k === cls ? r : r && v.Property === hash[k];
-                        }, true);
-                    }
+        return function (project, selection) {
+            return function () {
+                function canInclude(hash, cls) {
+                    return _.reduce(selection, function (r, v, k) {
+                        return k === cls ? r : r && v.Property === hash[k];
+                    }, true);
+                }
 
-                    function findHashes(cls) {
-                        return _.reduce(project.itemHash, function (result, hash) {
-                            if (!result[hash[cls]])
-                                if (canInclude(hash, cls))
-                                    result[hash[cls]] = true;
-                            return result;
-                        }, {});
-                    }
-
-                    function toArray(hash) {
-                        return _.map(hash, function (v, k) {
-                            if (v)
-                                return k;
-                        });
-                    }
-
-                    return _.reduce(Object.keys(project.classes), function (r, v) {
-                        r[v] = toArray(findHashes(v));
-                        return r;
+                function findHashes(cls) {
+                    return _.reduce(project.itemHash, function (result, hash) {
+                        if (!result[hash[cls]])
+                            if (canInclude(hash, cls))
+                                result[hash[cls]] = true;
+                        return result;
                     }, {});
-                };
-            };
+                }
 
-        }])
+                function toArray(hash) {
+                    return _.map(hash, function (v, k) {
+                        if (v)
+                            return k;
+                    });
+                }
+
+                return _.reduce(Object.keys(project.classes), function (r, v) {
+                    r[v] = toArray(findHashes(v));
+                    return r;
+                }, {});
+            };
+        };
+
+    }])
         .factory("ProjectOrigin", [function () {
             return function (ref) {
                 ref = ref ? ref.origin || {} : {};
@@ -172,7 +172,7 @@ module.exports = (function (app) {
                         showItems = false,
                         pullItems = false,
                         pullInterval = 1,
-			moveAnimation = "jump",
+                        moveAnimation = "jump",
                         stage = null,
                         recipes = null,
                         recipe = null,
@@ -245,7 +245,7 @@ module.exports = (function (app) {
                             },
                             setOrigin: function (x, y) {
                                 shouldSave.general = true;
-                                if (stage)  stage.setOrigin(x, y);
+                                if (stage) stage.setOrigin(x, y);
                             },
                             addTarget: function (k, data) {
                                 if (k === "symbols")
@@ -265,11 +265,11 @@ module.exports = (function (app) {
                                     return null;
                                 }
                             },
-			    placeReader: function(reader){
-				if(!stage) return;
-			    	reader.placement={floor:this.floorName};
-				stage.putReaderInCenter(reader);
-			    },
+                            placeReader: function (reader) {
+                                if (!stage) return;
+                                reader.placement = {floor: this.floorName};
+                                stage.putReaderInCenter(reader);
+                            },
                             preparePresentation: function (stage, bitmap) {
                                 this.jobMonitor = false;
                                 this.pullItems = false;
@@ -295,9 +295,9 @@ module.exports = (function (app) {
                                     this.scale = null;
                                 else
                                     this.scale = this.rulerLength / v;
-                                if(this.showReaders && this.stage)
+                                if (this.showReaders && this.stage)
                                     this.stage.refreshReaders();
-                                if(this.zones && this.stage)
+                                if (this.zones && this.stage)
                                     this.stage.zones = this.zones;
                             },
                             defaultFloorPlan(project){
@@ -472,16 +472,16 @@ module.exports = (function (app) {
                                 }
                             },
                             pullInterval: {
-                                enumerable:true,
-                                get:()=>pullInterval,
-                                set:function (v){
-                                    pullInterval = Math.max(v,1);
+                                enumerable: true,
+                                get: () => pullInterval,
+                                set: function (v) {
+                                    pullInterval = Math.max(v, 1);
                                 }
                             },
                             moveAnimation: {
-                                enumerable:true,
-                                get:()=>moveAnimation,
-                                set:function (v){
+                                enumerable: true,
+                                get: () => moveAnimation,
+                                set: function (v) {
                                     moveAnimation = v;
                                 }
                             },
@@ -645,17 +645,17 @@ module.exports = (function (app) {
                                         stage.setEpcFilter(epcFilter);
                                 }
                             },
-                            itemSource:{
+                            itemSource: {
                                 enumerable: true,
-                                get:() => itemSource,
-                                set: function (v){
+                                get: () => itemSource,
+                                set: function (v) {
                                     itemSource = v;
                                 }
                             },
-                            nodeRedEndPoint:{
+                            nodeRedEndPoint: {
                                 enumerable: true,
-                                get:() => nodeRedEndPoint,
-                                set: function (v){
+                                get: () => nodeRedEndPoint,
+                                set: function (v) {
                                     nodeRedEndPoint = v;
                                 }
                             }
