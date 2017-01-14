@@ -178,6 +178,10 @@ module.exports = (function (app) {
                     params: {
                         id: {value: "newProject", squash: true}
                     }
+                }).state("locate",{
+                    url: "/locate/:id/",
+                    templateUrl:"/templates/states/locate",
+                    controller: "Locate"
                 }).state("floorPlan", {
                     url: "/floorplan/:id/",
                     templateUrl: "/templates/states/floor_plan",
