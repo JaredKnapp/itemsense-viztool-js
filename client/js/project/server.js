@@ -41,6 +41,9 @@ module.exports = (function (app) {
         }
 
         return {
+            callRest:function(opts){
+                return restCall(opts);
+            },
             get: function (id) {
                 return restCall({
                     url: "/project/" + (id || "")
