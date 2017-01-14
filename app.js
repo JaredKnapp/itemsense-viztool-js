@@ -8,7 +8,8 @@ var express = require('express'),
 var routes = require('./routes/index'),
     users = require('./routes/users'),
     templates = require("./routes/templates"),
-    project = require("./routes/project");
+    project = require("./routes/project"),
+    locate = require("./routes/locate");
 
 
 var app = express();
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use("/templates", templates);
 app.use("/project", project);
+app.use("/locate",locate);
 
 
 module.exports = app;
