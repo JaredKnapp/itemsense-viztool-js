@@ -626,5 +626,8 @@ module.exports = (function (app) {
                 if ($scope.iconTitle)
                     return ($scope.iconTitle === "running") ? "greenMarker" : "redMarker";
             };
+        }])
+        .controller("Locate", [function () {
+
         }]);
 })(angular.module(window.mainApp));
