@@ -3,25 +3,25 @@
  * Project information about readers
  */
 "use strict";
-function correctDegrees(yaw){
-	return (yaw > 180) ? yaw -360: (yaw < -180) ? yaw + 360 : yaw;	
+function correctDegrees(yaw) {
+    return (yaw > 180) ? yaw - 360 : (yaw < -180) ? yaw + 360 : yaw;
 }
 module.exports = (function (app) {
     app.factory("ProjectReaders", ["_", function (_) {
         function wrap(project) {
             return {
                 updateReader(reader) {
-		   if(!reader.placement) return;
-		   if(reader.placement.yaw)
-			reader.placement.yaw = correctDegrees((reader.placement.yaw || 0) % 360);
+                    if (!reader.placement) return;
+                    if (reader.placement.yaw)
+                        reader.placement.yaw = correctDegrees((reader.placement.yaw || 0) % 360);
                     if (project.stage)
                         project.stage.updateReader(reader);
                 },
                 getChangedReaders(){
-                    return _.reduce(_.filter(project.changedReaders, r=>r.address.trim()), (result,reader) => {
+                    return _.reduce(_.filter(project.changedReaders, r => r.address.trim()), (result, reader) => {
                         result[reader.address] = reader;
                         return result;
-                    },{});
+                    }, {});
                 }
             };
         }
@@ -34,15 +34,15 @@ module.exports = (function (app) {
                 showReaderFields = 0,
                 showLLRP = false,
                 readerLLRP = {};
-            _.each(wrap(project), (fn, key)=>project[key] = fn);
+            _.each(wrap(project), (fn, key) => project[key] = fn);
             Object.defineProperties(project, {
                 readers: {
-                    get: ()=> readers,
-                    set: v=> readers = v
+                    get: () => readers,
+                    set: v => readers = v
                 },
                 reader: {
                     get: () => reader,
-                    set: v => reader =v
+                    set: v => reader = v
                 },
                 showReaders: {
                     enumerable: true,
@@ -86,9 +86,9 @@ module.exports = (function (app) {
                             project.stage.showReaders(true);
                     }
                 },
-                changedReaders:{
-                    get:()=>changedReaders,
-                    set:(v)=> changedReaders = v
+                changedReaders: {
+                    get: () => changedReaders,
+                    set: (v) => changedReaders = v
                 }
             });
         };
