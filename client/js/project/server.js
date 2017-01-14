@@ -117,9 +117,11 @@ module.exports = (function (app) {
                 }).finally(() => $rootScope.statusMessage = "");
             },
             getReaders: function () {
+                let self = this;
                 return restCall({
-                    url: `/project/${this.handle}/readers`
+                    url: `/project/${self.handle}/readers`
                 })
+                    .then(self.addReaderMetadata)
                     .then((readers) => {
                         this.readers = readers;
                         if (this.stage) {

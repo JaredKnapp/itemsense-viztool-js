@@ -31,11 +31,16 @@ module.exports = (function (app) {
                         let metadata = project.getMetadata(reader);
                         if(metadata && reader.address.trim())
                             result[reader.address.trim()] = metadata;
-                    });
+                        return result;
+                    }, {});
                     project.readerMetadata = _.merge(project.readerMetadata, newMetadata);
                 },
                 getMetadata(reader){
-                    console.log("getting metadata ", reader);
+                    if(reader.type !== "XARRAY"){
+                        let metadata = {placement:reader.placement};
+                        delete reader.placement;
+                        return metadata;
+                    }
                     return null;
                 }
             };
