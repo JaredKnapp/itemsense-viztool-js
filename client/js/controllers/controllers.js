@@ -627,7 +627,27 @@ module.exports = (function (app) {
                     return ($scope.iconTitle === "running") ? "greenMarker" : "redMarker";
             };
         }])
-        .controller("Locate", [function () {
-
+        .controller("Locate", ["$scope","_",function ($scope, _) {
+            function constructTree(areaArray){
+                let hashMap = _.reduce(areaArray, (result,area) => {
+                   result[area.AreaId] = area;
+                   return result;
+                },{});
+                return _.reduce(areaArray, (tree, area) =>{
+                    if(!area.ParentId) tree[area.AreaId] = area;
+                    else {
+                        if (!hashMap[area.ParentId].children)
+                            hashMap[area.ParentId].children = {};
+                        hashMap[area.ParentId].children[area.AreaId] = area;
+                    }
+                    return tree;
+                },{});
+            }
+            $scope.getLocateAreas = function() {
+                $scope.project.callRest({url:"/locate/areas"}).then(
+                    success => console.log("succeeeded getting from locate", constructTree(success.Items)),
+                    failure => console.log("failed getting from locate", failure)
+                );
+            };
         }]);
 })(angular.module(window.mainApp));
