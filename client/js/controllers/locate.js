@@ -6,6 +6,7 @@
 module.exports = (function (app) {
     app.controller("Locate", ["$scope", "LocateFactory",function ($scope, factory) {
 
+        $scope.mainTab = {locate: true};
         $scope.getLocateAreas = function () {
             $scope.project.callRest({url: "/locate/areas"}).then(
                 success => $scope.tree = factory.constructTree(success.Items),

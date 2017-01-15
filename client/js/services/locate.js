@@ -36,6 +36,6 @@ module.exports = (function (app) {
             importFromLocate(project, node){
                 console.log("importing from locate node ", node);
             }
-        }
+        };
     }]);
 })(angular.module(window.mainApp));
