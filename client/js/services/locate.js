@@ -114,13 +114,14 @@ module.exports = (function (app) {
                             error.data.msg &&
                             error.data.msg.message) {
                             if (error.data.msg.message.indexOf("has invalid coordinates") > 0)
-                                badArea = error.data.msg.message.match(/Zone[:]\s+(\S+)\s+has invalid/)[1];
+                                badArea = error.data.msg.message.match(/Zone[:]\s+(\S+)\s+has invalid/);
                             else if (error.data.msg.message.indexOf("overlap.") > 0)
-                                badArea = error.data.msg.message.match(/Zones\s+(\S+)\s+and \S+ overlap.$/)[1];
+                                badArea = error.data.msg.message.match(/Zones\s+(\S+)\s+and (\S+) overlap.$/);
                         }
                         if(badArea){
+                            badArea.pop();
                             console.log(error.data.msg.message, "Removing", badArea);
-                            removeBadArea(node, badArea);
+                            _.each(badArea, area => removeBadArea(node, area));
                             return self.importFromLocate(project, node);
                         }
                     });
