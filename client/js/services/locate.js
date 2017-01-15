@@ -44,14 +44,23 @@ module.exports = (function (app) {
                     return _.flatMap(node.children, gatherZones);
                 if (!node.Boundary)
                     return null;
+                let points = makePoints(node.Boundary);
+                points.pop();
                 return {
                     "name": node.AreaId,
                     "floor": floor,
-                    "points": makePoints(node.Boundary)
+                    "points": points
                 };
             }
 
             return _.filter(gatherZones(node), n => n);
+        }
+
+        function removeBadArea(node, id) {
+            if (node.AreaId === id)
+                delete node.parent.children[id];
+            else
+                _.each(node.children, child => removeBadArea(child, id));
         }
 
         return {
@@ -76,8 +85,9 @@ module.exports = (function (app) {
                 return tree;
             },
             importFromLocate(project, node){
+                let self = this;
                 console.log("importing from locate node ", node);
-                project.callRest({url: `/locate/image/${node.images[0]}/${project.handle}`}
+                return project.callRest({url: `/locate/image/${node.images[0]}/${project.handle}`}
                 ).then(success => {
                     project.floorPlan = `floorplan-${success.ImageId}.png`; //ToDo: get the type from the node object
                     project.scale = success.scale;
@@ -85,15 +95,29 @@ module.exports = (function (app) {
                     project.floorName = node.AreaId;
                     return createFacility(project, node, findParentFacility(node));
                 }).then(faciltiy => {
-                    project.facility = facility.name;
+                    project.facility = faciltiy.name;
                     return project.addZoneMap({
                         name: makeValidName(node.Name),
                         facility: project.facility,
-                        zones: getLeafZones(node)
+                        zones: getLeafZones(node, project.floorName)
                     });
                 }).catch(
-                    error => console.log("Error saving image as background ", error)
-                );
+                    error => {
+                        console.log("Error saving image as background ", error);
+                        let badArea = "";
+                        if (error.data &&
+                            error.data.msg &&
+                            error.data.msg.message) {
+                            if (error.data.msg.message.indexOf("has invalid coordinates") > 0)
+                                badArea = error.data.msg.message.match(/Zone[:]\s+(\S+)\s+has invalid/)[1];
+                            else if (error.data.msg.message.indexOf("overlap.") > 0)
+                                badArea = error.data.msg.message.match(/Zones\s+(\S+)\s+and \S+ overlap.$/)[1];
+                        }
+                        if(badArea){
+                            removeBadArea(node, badArea);
+                            return self.importFromLocate(project, node);
+                        }
+                    });
             }
         };
     }]);
