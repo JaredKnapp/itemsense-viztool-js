@@ -5,6 +5,7 @@
         span(ng-class="hasAKey(v.children)?'has-children':'end-leaf'")
             span.pnj-collapse(ng-class="v.closed ? 'plus' : 'minus'" ng-click="v.closed = !v.closed")
             span(ng-click="selectNode(v)") {{v.Name}}
+                span(style="margin-left:10px;" ng-show ="v.Boundary") ({{v.AreaId}})
                 span(style="margin-left:10px;" ng-bind-html="reportImages(v)")
         ul(ng-if="!v.closed")
             li.pnj-locate-li(ng-repeat="(k,v) in v.children" ng-include="'node_renderer.html'")

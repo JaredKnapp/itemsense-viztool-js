@@ -38,7 +38,7 @@ module.exports = (function (app) {
             let makePoints = boundary =>
                 _.map(JSON.parse(boundary)[0],
                     pair => {
-                        return {x: pair[0], y: -pair[1], z: 0};
+                        return {x: Math.round10(pair[0], -2), y: Math.round10(pair[1], -2), z: 0};
                     });
 
             function gatherZones(node) {
@@ -59,8 +59,7 @@ module.exports = (function (app) {
         }
 
         function removeBadArea(node, id) {
-            if (node.AreaId === id)
-            {
+            if (node.AreaId === id) {
                 console.log("Removing Conflicting Node ", id, node);
                 delete node.parent.children[id];
             }
@@ -96,7 +95,7 @@ module.exports = (function (app) {
                 ).then(success => {
                     project.floorPlan = `floorplan-${success.ImageId}.png`; //ToDo: get the type from the node object
                     project.scale = success.scale;
-                    project.setOrigin(0, 0);
+                    project.setOrigin(0, 1);
                     project.floorName = node.AreaId;
                     return createFacility(project, node, findParentFacility(node));
                 }).then(faciltiy => {
@@ -118,8 +117,8 @@ module.exports = (function (app) {
                             else if (error.data.msg.message.indexOf("overlap.") > 0)
                                 badArea = error.data.msg.message.match(/Zones\s+(\S+)\s+and (\S+) overlap.$/);
                         }
-                        if(badArea){
-                            badArea.pop();
+                        if (badArea) {
+                            badArea.shift();
                             console.log(error.data.msg.message, "Removing", badArea);
                             _.each(badArea, area => removeBadArea(node, area));
                             return self.importFromLocate(project, node);
