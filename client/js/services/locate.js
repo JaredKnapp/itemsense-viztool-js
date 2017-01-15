@@ -6,6 +6,8 @@
 module.exports = (function (app) {
     app.factory("LocateFactory", ["_", function (_) {
 
+        let tree = null;
+
         function makeValidName(str) {
             return str.replace(/[^A-za-z0-9]/g, "_");
         }
@@ -58,7 +60,10 @@ module.exports = (function (app) {
 
         function removeBadArea(node, id) {
             if (node.AreaId === id)
+            {
+                console.log("Removing Conflicting Node ", id, node);
                 delete node.parent.children[id];
+            }
             else
                 _.each(node.children, child => removeBadArea(child, id));
         }
@@ -103,7 +108,7 @@ module.exports = (function (app) {
                     });
                 }).catch(
                     error => {
-                        console.log("Error saving image as background ", error);
+                        console.log("Error importing zones ", error);
                         let badArea = "";
                         if (error.data &&
                             error.data.msg &&
@@ -114,10 +119,23 @@ module.exports = (function (app) {
                                 badArea = error.data.msg.message.match(/Zones\s+(\S+)\s+and \S+ overlap.$/)[1];
                         }
                         if(badArea){
+                            console.log(error.data.msg.message, "Removing", badArea);
                             removeBadArea(node, badArea);
                             return self.importFromLocate(project, node);
                         }
                     });
+            },
+            getLocateAreas(project){
+                return project.callRest({url: "/locate/areas"}).then(
+                    success => {
+                        tree = this.constructTree(success.Items);
+                        return tree;
+                    },
+                    failure => console.log("failed getting from locate", failure)
+                );
+            },
+            lastLocateAreas(){
+                return tree;
             }
         };
     }]);

@@ -11,7 +11,8 @@
     ul
         li.pnj-locate-li(ng-repeat="(k,v) in tree" ng-include="'node_renderer.html'")
 .pnj-editor
-    button.btn.btn-primary(ng-click="getLocateAreas()") Get Areas
+    button.btn.btn-primary(ng-click="getLocateAreas()" ng-if="project.recipes") Get Areas
+    button.btn.btn-success(ng-click="project.connect()" ng-if="!project.recipes") Connect To ItemSense
     div(ng-if="selectedNode")
         table.table
             tr

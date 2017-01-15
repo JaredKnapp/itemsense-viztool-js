@@ -6,12 +6,11 @@
 module.exports = (function (app) {
     app.controller("Locate", ["$scope", "LocateFactory",function ($scope, factory) {
 
+        $scope.tree = factory.lastLocateAreas();
+
         $scope.mainTab = {locate: true};
         $scope.getLocateAreas = function () {
-            $scope.project.callRest({url: "/locate/areas"}).then(
-                success => $scope.tree = factory.constructTree(success.Items),
-                failure => console.log("failed getting from locate", failure)
-            );
+            factory.getLocateAreas($scope.project).then(success => $scope.tree = success);
         };
 
         $scope.selectNode = function (v) {
