@@ -3,6 +3,7 @@
 /*.iml
 /public/javascripts/app.js
 /public/stylesheets/**
+/public/locate/**
 .__browserify_string_empty.js
 public/projects/*
 client/staging/babeled.js
