@@ -676,5 +676,14 @@ module.exports = (function (app) {
                         return `<small>${v.images.length} images</small>`;
                 return "";
             };
+            $scope.notSuitable=function(){
+                if(!$scope.selectedNode)
+                    return "No Area Selected";
+                if($scope.selectedNode.Level !== "Floor")
+                    return "Not a Floor Level Node";
+                if($scope.selectedNode.images.length !== 1)
+                    return "Must have one image";
+                return false;
+            };
         }]);
 })(angular.module(window.mainApp));

@@ -36,6 +36,7 @@ function savePicToDisk(item){
     fs.writeFile(getLocateImagePath(item),buf,defer.makeNodeResolver());
     return defer.promise;
 }
+
 function restCall(opts, user, password) {
     const defer = q.defer(),
         options = _.extend({method: "GET", json: true}, opts),
@@ -82,4 +83,5 @@ router.get("/images/:id?", (req, res) => {
                 res.status(error.statusCode || 500).send(error.body || error);
             });
 });
+
 module.exports = router;
