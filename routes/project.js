@@ -6,14 +6,13 @@
 const express = require("express"),
     fs = require("fs-extra"),
     path = require("path"),
-    getProjectDir = (projectId) => path.resolve(__dirname, "..", "public", "projects", projectId || ""),
     multer = require("multer"),
     through = require("through2"),
-    upload = multer({dest: getProjectDir()}),
+    util = require("../modules/util"),
     thread = require("../modules/thread"),
     csv = require("../modules/csv-classes"),
+    upload = multer({dest: util.getProjectDir()}),
     q = require("q"),
-    util = require("../modules/util"),
     router = express.Router();
 
 
@@ -43,7 +42,7 @@ function getProjectFileName(p) {
 }
 
 function resolveProjectFile(id) {
-    return getProjectFileName(getProjectDir(id));
+    return getProjectFileName(util.getProjectDir(id));
 }
 
 function threadError(err, r) {
@@ -77,8 +76,8 @@ function handleError(err, res, fn) {
 }
 
 function addDefaultFloorPlan(body){
-    const filename = path.resolve(getProjectDir(body.handle),"default.png"),
-        defaultBackground= path.resolve(getProjectDir(body.handle),"..","..","images","default.png");
+    const filename = path.resolve(util.getProjectDir(body.handle),"default.png"),
+        defaultBackground= path.resolve(util.getProjectDir(body.handle),"..","..","images","default.png");
     body.scale=125;
     body.origin = {x:627,y:373};
     body.zoom = 0.771;
@@ -107,7 +106,7 @@ function readProject(fileName) {
 }
 
 router.get("/", function (req, res) {
-    getAllProjects(getProjectDir(".")).then(function (items) {
+    getAllProjects(util.getProjectDir(".")).then(function (items) {
         res.json(items);
     }, function (err) {
         handleError(err, res, fileError);
@@ -115,7 +114,7 @@ router.get("/", function (req, res) {
 });
 
 router.post("/", function (req, res) {
-    var fileName = path.resolve(getProjectDir(req.body.handle), "project.json");
+    var fileName = path.resolve(util.getProjectDir(req.body.handle), "project.json");
     saveProject(fileName, req.body)
         .then(()=> thread.updateProcess (req.body), err => handleError(err,res,fileError))
         .then(()=> res.json(req.body), err => handleError(err,res,threadError));
@@ -131,7 +130,7 @@ router.get("/:projectId", function (req, res) {
 
 router.delete("/:projectId",function(req,res){
     const id =req.params.projectId;
-    deleteFile(getProjectDir(id)).then(()=>{
+    deleteFile(util.getProjectDir(id)).then(()=>{
         thread.stopProcess(id).catch(()=>{});
     }).then(function(result){
         res.json(result);

@@ -35,6 +35,14 @@ module.exports = (function (app) {
             },
             importFromLocate(project, node){
                 console.log("importing from locate node ", node);
+                project.callRest({url: `/locate/image/${node.images[0]}/${project.handle}`}
+                ).then(success => {
+                    project.floorPlan = `floorplan-${success.ImageId}.png`; //ToDo: get the type from the node object
+                    project.scale = success.scale;
+                    project.setOrigin(0,0);
+                }).catch(
+                    error => console.log("Error saving image as background ", error)
+                );
             }
         };
     }]);

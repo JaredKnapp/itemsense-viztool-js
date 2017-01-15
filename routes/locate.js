@@ -8,33 +8,26 @@ const express = require('express'),
     fs = require("fs-extra"),
     path = require("path"),
     _ = require("lodash"),
+    util = require("../modules/util"),
     router = express.Router();
+
 const LocateBase = "http://69.178.218.200:9997"; //ToDo: Make this dynamic!!
 const LocateUser = "impinjuser";
 const LocatePassword = "demo2016";
 
-function getLocateBase(){
-    fs.ensureDirSync(path.resolve(__dirname, "..", "public", "locate"));
-    return path.resolve(__dirname, "..", "public", "locate");
-}
-function getLocateImagePath(item){
-    return path.resolve(getLocateBase(), item.ImageId + ".png");
-}
-function getLocateMetaFile(){
-    return path.resolve(getLocateBase(), "metadata.json");
-}
-function saveJson(items){
-    let defer= q.defer();
-    _.each(items,item => delete item.EncodedImage);
-    fs.outputJSON(getLocateMetaFile(),items,defer.makeNodeResolver());
-    return defer.promise;
-}
-function savePicToDisk(item){
-    console.log("Saving " + item.ImageId);
-    let defer= q.defer();
-    let buf = new Buffer(item.EncodedImage,"base64");
-    fs.writeFile(getLocateImagePath(item),buf,defer.makeNodeResolver());
-    return defer.promise;
+function savePicToProject(projectId, item) {
+    let projectDir = util.getProjectDir(projectId);
+    let defer = q.defer();
+    fs.ensureDirSync(projectDir);
+    fs.writeFile(
+        path.resolve(projectDir, "floorplan-" + item.ImageId + ".png"), //ToDo: specify the type of picture in the object
+        new Buffer(item.EncodedImage, "base64"),
+        defer.makeNodeResolver()
+    );
+    return defer.promise.then(result => {
+        delete item.EncodedImage;
+        return item;
+    });
 }
 
 function restCall(opts, user, password) {
@@ -67,21 +60,20 @@ router.get("/areas/:id?", (req, res) => {
         );
 });
 
-router.get("/images/:id?", (req, res) => {
-    if (!req.params.id) req.params.id = "";
+
+router.get("/image/:id/:pId", (req, res) => {
     return restCall({url: LocateBase + "/impinj/images/GetImages/" + req.params.id}, LocateUser, LocatePassword)
         .then(
             data => {
-                let promises = _.map(data.Items, item => savePicToDisk(item));
-                return q.all(promises)
-                    .then(result => saveJson(data.Items))
-                    .then(result => res.json());
-            })
-        .catch(
+                return savePicToProject(req.params.pId, data)
+                    .then(result => res.json(result));
+            }
+        ).catch(
             error => {
-                console.log("error from locate images ", error);
+                console.log("error importing locate background", error);
                 res.status(error.statusCode || 500).send(error.body || error);
-            });
+            }
+        )
 });
 
 module.exports = router;
