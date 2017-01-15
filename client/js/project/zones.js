@@ -26,9 +26,9 @@ module.exports = (function (app) {
                         counter = _.map(sameBase, (z) => parseInt(z.name.split("_copy_")[1] || "0")).sort().pop();
                     return counter === undefined ? base : `${base}_copy_${counter + 1}`;
                 },
-                addZone: (points) => {
+                addZone: (points, name) => {
                     return project.updateZones(project, {
-                        name: project.cloneZoneName("newZone"),
+                        name: name || project.cloneZoneName("newZone"),
                         floor: project.floorName,
                         points: points
                     });

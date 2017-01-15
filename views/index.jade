@@ -9,5 +9,5 @@ block content
                 uib-tab(heading = "Project" select="$state.go('project',{id:project.handle || 'newProject'})" active="mainTab.project")
                 uib-tab(heading = "Floor Plan" disable="!project.floorPlan" select="$state.go('floorPlan',{id:project.handle})" active="mainTab.floorPlan")
                 uib-tab(heading = "Classification" disable="!project.classes" select="$state.go('classes',{id:project.handle})" active="mainTab.classes")
-                uib-tab(heading = "Locate Areas" disable="!project.handle" select="$state.go('locate',{id:project.handle})" active="mainTab.locate")
+                uib-tab(heading = "Locate Areas" disable="!project.facilities" select="$state.go('locate',{id:project.handle})" active="mainTab.locate")
             .ui-view

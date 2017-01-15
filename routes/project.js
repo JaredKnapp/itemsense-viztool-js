@@ -249,6 +249,8 @@ router.get("/:projectId/llrp", threadCall.bind(null, "getLLRPStatus", false));
 
 router.get("/:projectId/facilities", threadCall.bind(null, "getFacilities", false));
 
+router.post("/:projectId/facility/:itemId", threadCall.bind(null,"addFacility",false));
+
 router.post("/:projectId/facilities", function (req, res) {
     const itemsenseApi = util.connectToItemsense(req.body.url,req.body.user,req.body.password);
     return itemsenseApi.facilities.get().then(

@@ -6,11 +6,52 @@
 module.exports = (function (app) {
     app.factory("LocateFactory", ["_", function (_) {
 
+        function makeValidName(str) {
+            return str.replace(/[^A-za-z0-9]/g, "_");
+        }
+
         function collectImages(root) {
             let images = [];
             _.each(root.children, v => images = images.concat(collectImages(v)));
             root.images = _.uniq(root.ImageId ? images.concat(root.ImageId) : images);
             return root.images;
+        }
+
+        function findParentFacility(node) {
+            if (node.Level === "Facility")
+                return node;
+            else if (node.parent)
+                return findParentFacility(node.parent);
+            else
+                return null;
+        }
+
+        function createFacility(project, node, facilityNode) {
+            if (!facilityNode) facilityNode = node;
+            let name = makeValidName(facilityNode.Name);
+            return project.callRest({url: `/project/${project.handle}/facility/${name}`, method: "POST"});
+        }
+
+        function getLeafZones(node, floor) {
+            let makePoints = boundary =>
+                _.map(JSON.parse(boundary)[0],
+                    pair => {
+                        return {x: pair[0], y: -pair[1], z: 0};
+                    });
+
+            function gatherZones(node) {
+                if (node.children)
+                    return _.flatMap(node.children, gatherZones);
+                if (!node.Boundary)
+                    return null;
+                return {
+                    "name": node.AreaId,
+                    "floor": floor,
+                    "points": makePoints(node.Boundary)
+                };
+            }
+
+            return _.filter(gatherZones(node), n => n);
         }
 
         return {
@@ -27,6 +68,7 @@ module.exports = (function (app) {
                         if (!parent.children)
                             parent.children = {};
                         parent.children[area.AreaId] = area;
+                        area.parent = parent;
                     }
                     return tree;
                 }, {});
@@ -39,7 +81,16 @@ module.exports = (function (app) {
                 ).then(success => {
                     project.floorPlan = `floorplan-${success.ImageId}.png`; //ToDo: get the type from the node object
                     project.scale = success.scale;
-                    project.setOrigin(0,0);
+                    project.setOrigin(0, 0);
+                    project.floorName = node.AreaId;
+                    return createFacility(project, node, findParentFacility(node));
+                }).then(faciltiy => {
+                    project.facility = facility.name;
+                    return project.addZoneMap({
+                        name: makeValidName(node.Name),
+                        facility: project.facility,
+                        zones: getLeafZones(node)
+                    });
                 }).catch(
                     error => console.log("Error saving image as background ", error)
                 );

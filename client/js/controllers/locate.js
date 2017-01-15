@@ -29,6 +29,8 @@ module.exports = (function (app) {
             return "";
         };
         $scope.notSuitable=function(){
+            if(!$scope.project.recipes)
+                return "Not Connected to ItemSense";
             if(!$scope.selectedNode)
                 return "No Area Selected";
             if($scope.selectedNode.Level !== "Floor")
