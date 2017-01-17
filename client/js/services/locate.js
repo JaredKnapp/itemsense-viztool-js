@@ -94,7 +94,7 @@ module.exports = (function (app) {
                 return project.callRest({url: `/locate/image/${node.images[0]}/${project.handle}`}
                 ).then(success => {
                     project.floorPlan = `floorplan-${success.ImageId}.png`; //ToDo: get the type from the node object
-                    project.scale = success.scale;
+                    project.scale = success.MapScale;
                     project.setOrigin(0, 1);
                     project.floorName = node.AreaId;
                     return createFacility(project, node, findParentFacility(node));
