@@ -219,6 +219,9 @@ module.exports = (function (app) {
                         isActive = false, hasdragged = false, movingPoint = null, zoomHandler = null,
                         movingPointDragged = false,
                         wrapper = Object.create({
+                            hitTest(x,y) {
+                                return shape.hitTest(x,y);
+                            },
                             activate() {
                                 isActive = true;
                                 stage.addChild(shape);

@@ -129,3 +129,30 @@
 color:red;
 cursor:pointer;
 }
+
+.pnj-add-antenna{
+  @extend .input-group-addon;
+  padding:0;
+  min-width: 55px;
+}
+
+.pnj-ruler-dot{
+  @extend .fa;
+  @extend .fa-circle;
+  font-size:20px;
+  margin:5px;
+}
+
+.pnj-ruler-gray{
+  @extend .pnj-ruler-dot;
+  color:gray;
+}
+
+.pnj-ruler-red{
+  @extend .pnj-ruler-dot;
+  color:red;
+}
+.pnj-ruler-blue{
+  @extend .pnj-ruler-dot;
+  color:blue;
+}

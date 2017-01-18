@@ -213,25 +213,34 @@ module.exports = (function (app) {
                             Tracer.cancel();
                         },
                         removeRuler: function () {
-                            this.removeChild(Ruler.shape);
-                            this.update();
+                            // this.removeChild(Ruler.shape);
+                            // this.update();
                         },
                         setRulerLength: function (v) {
                             Ruler.length = v;
                             this.update();
                         },
                         addRuler: function () {
-                            if (!this.containsShape(Ruler.shape))
+                            if (!this.isRulerVisible())
                                 this.addChild(Ruler.shape);
                             if (!Ruler.coords.startX)
                                 this.putRulerInCenter();
                             Ruler.draw(true);
                             this.rulerLength = Ruler.length;
                         },
+                        isRulerVisible(){
+                            return this.containsShape(Ruler.shape);
+                        },
                         putRulerInCenter(){
                             Ruler.coords.init(this.visibleCenter(), 20);
                             Ruler.draw(true);
                             this.rulerLength = Ruler.length;
+                        },
+                        zoneUnderRuler(endpoint){
+                            let shape = null;
+                            if (this.isRulerVisible())
+                                shape = _.find(zoneCollection, z => z.hitTest(Ruler.coords[endpoint + "X"], Ruler.coords[endpoint + "Y"]));
+                            return shape ? shape.zone : null;
                         },
                         setFloorPlan: function (plan) {
                             var self = this;
@@ -265,8 +274,8 @@ module.exports = (function (app) {
                         },
                         putReaderInCenter: function (reader) {
                             let screenCenter = this.visibleCenter();
-                            reader.placement.x = Math.round10(this.stageToMeters(screenCenter.x, "x"),-2);
-                            reader.placement.y = Math.round10(this.stageToMeters(screenCenter.y, "y"),-2);
+                            reader.placement.x = Math.round10(this.stageToMeters(screenCenter.x, "x"), -2);
+                            reader.placement.y = Math.round10(this.stageToMeters(screenCenter.y, "y"), -2);
                             reader.placement.z = 1.5;
                             reader.placement.yaw = 0;
                             this.addReader(reader);

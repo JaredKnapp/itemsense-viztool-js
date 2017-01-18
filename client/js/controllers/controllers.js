@@ -322,7 +322,7 @@ module.exports = (function (app) {
                 if (!n) $scope.$emit("shouldSave", "general");
             });
         }])
-        .controller("Readers", ["$scope", function ($scope) {
+        .controller("Readers", ["$scope", "_", function ($scope, _) {
             const readerStatuses = {
                 engage: "In current Job",
                 occupied: "Occupied by another process",
@@ -368,10 +368,8 @@ module.exports = (function (app) {
             });
 
             $scope.moveToRulerEnd = function (endpoint) {
-                let project = $scope.project;
-                $scope.activeReader.placement.x = Math.round10(project.stageToMeters(project.rulerCoords[endpoint + "X"], 'x'), -2);
-                $scope.activeReader.placement.y = Math.round10(project.stageToMeters(project.rulerCoords[endpoint + "Y"], 'y'), -2);
-                project.updateReader($scope.activeReader);
+                $scope.activeReader.placement = _.merge($scope.activeReader.placement, getRulerXY($scope.project, endpoint));
+                $scope.project.updateReader($scope.activeReader);
                 $scope.shouldSave();
             };
 
@@ -403,6 +401,41 @@ module.exports = (function (app) {
                 });
             };
 
+            $scope.hasRuler = function () {
+                return $scope.project.stage.isRulerVisible();
+            };
+            $scope.hitsZone = function (endPoint) {
+                return $scope.project.stage.zoneUnderRuler(endPoint);
+            };
+            $scope.setToZone = function (endpoint, antenna) {
+                $scope.activeReader.antennaZones[antenna] = getAntennaZoneName(endpoint);
+                $scope.shouldSave("readers");
+            };
+
+            $scope.addAntenna = function () {
+                let v = parseInt((window.prompt("Antenna ID") || "").trim());
+                if (!v || v < 0) return;
+                if (!$scope.activeReader.antennaZones)
+                    $scope.activeReader.antennaZones = {};
+                $scope.activeReader.antennaZones[v] = "Antenna_" + v;
+                $scope.shouldSave("readers");
+            };
+            $scope.deleteAntenna = function (v) {
+                delete $scope.activeReader.antennaZones[v];
+                $scope.shouldSave("readers");
+            };
+            function getAntennaZoneName(endpoint) {
+                let zone = $scope.project.stage.zoneUnderRuler(endpoint);
+                if (!zone) return $scope.activeReader.readerZone;
+                let xy = getRulerXY($scope.project, endpoint);
+                return `${zone.name}_${xy.x}_${xy.y}`;
+            }
+
+            function getRulerXY(project, endpoint) {
+                let x = Math.round10(project.stageToMeters(project.rulerCoords[endpoint + "X"], 'x'), -2);
+                let y = Math.round10(project.stageToMeters(project.rulerCoords[endpoint + "Y"], 'y'), -2);
+                return {x: x, y: y};
+            }
         }])
         .controller("Classes", ["$scope", "_", function ($scope, _) {
             $scope.mainTab = {classes: true};

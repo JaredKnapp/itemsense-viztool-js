@@ -20,26 +20,39 @@ form.css-form(name="readerForm" novalidate)
             input.form-control(type="text" ng-model="activeReader.facility")
     h4(ng-if="project.showLLRP && !statusMessage") Status:
         small           {{readerStatus(activeReader)}}
-    .form-group
-        h3 Placement
-        .input-group
-            .pnj-label-75 Floor:
-            input.form-control(type="text" ng-model="activeReader.placement.floor")
-        .input-group
-            .pnj-label-75 X:
-            input.form-control(type="number" ng-model="activeReader.placement.X" step="0.1" ng-change="project.updateReader(activeReader)")
-        .input-group
-            .pnj-label-75 Y:
-            input.form-control(type="number" ng-model="activeReader.placement.Y" step="0.1" ng-change="project.updateReader(activeReader)")
-        .input-group
-            .pnj-label-75 Z:
-            input.form-control(type="number" ng-model="activeReader.placement.z" step="0.1")
-        .input-group
-            .pnj-label-75 Yaw:
-            input.form-control(type="number" ng-model="activeReader.placement.yaw" step="10" ng-change="project.updateReader(activeReader)" )
-        .input-group
-            .pnj-label-75 Pitch:
-            input.form-control(type="number" ng-model="activeReader.placement.pitch" step="10")
-        .input-group
-            .pnj-label-75 Roll:
-            input.form-control(type="number" ng-model="activeReader.placement.roll" step="10")
+    uib-tabset
+        uib-tab(heading = "Placement" index=0)
+            .form-group
+                .input-group
+                    .pnj-label-75 Floor:
+                    input.form-control(type="text" ng-model="activeReader.placement.floor")
+                .input-group
+                    .pnj-label-75 X:
+                    input.form-control(type="number" ng-model="activeReader.placement.X" step="0.1" ng-change="project.updateReader(activeReader)")
+                .input-group
+                    .pnj-label-75 Y:
+                    input.form-control(type="number" ng-model="activeReader.placement.Y" step="0.1" ng-change="project.updateReader(activeReader)")
+                .input-group
+                    .pnj-label-75 Z:
+                    input.form-control(type="number" ng-model="activeReader.placement.z" step="0.1")
+                .input-group
+                    .pnj-label-75 Yaw:
+                    input.form-control(type="number" ng-model="activeReader.placement.yaw" step="10" ng-change="project.updateReader(activeReader)" )
+                .input-group
+                    .pnj-label-75 Pitch:
+                    input.form-control(type="number" ng-model="activeReader.placement.pitch" step="10")
+                .input-group
+                    .pnj-label-75 Roll:
+                    input.form-control(type="number" ng-model="activeReader.placement.roll" step="10")
+        uib-tab(heading = "Antennas" index=1)
+            .form-group
+                .input-group(ng-repeat="(k,v) in activeReader.antennaZones")
+                    .input-group-addon {{k}}:
+                    input.form-control(type="text" ng-model="activeReader.antennaZones[k]")
+                    .pnj-add-antenna(ng-if="hasRuler()")
+                        span(ng-class="hitsZone('start')? 'pnj-ruler-red':'pnj-ruler-gray'" ng-click="setToZone('start',k)")
+                        span(ng-class="hitsZone('end')? 'pnj-ruler-blue':'pnj-ruler-gray'" ng-click="setToZone('end',k)")
+                    .input-group-addon
+                        span.fa.fa-trash(ng-click="deleteAntenna(k)")
+            button.btn.btn-default(ng-click="addAntenna()") Add Antenna Zone
+

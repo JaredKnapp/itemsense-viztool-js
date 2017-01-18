@@ -28,20 +28,19 @@ module.exports = (function (app) {
                 },
                 updateReaderMetadata(){
                     let newMetadata = _.reduce(project.changedReaders, (result,reader) =>{
-                        let metadata = project.getMetadata(reader);
-                        if(metadata && reader.address.trim())
-                            result[reader.address.trim()] = metadata;
+                        if(reader.address.trim())
+                            result[reader.address.trim()] = project.getMetadata(reader);
                         return result;
                     }, {});
                     project.readerMetadata = _.merge(project.readerMetadata, newMetadata);
                 },
                 getMetadata(reader){
+                    let metadata = {};
                     if(reader.type !== "XARRAY"){
-                        let metadata = {placement:reader.placement};
+                        metadata = _.merge(metadata,{placement:reader.placement});
                         delete reader.placement;
-                        return metadata;
                     }
-                    return null;
+                    return metadata;
                 }
             };
         }
