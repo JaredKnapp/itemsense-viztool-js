@@ -37,6 +37,10 @@
                a(href="javascript:void(0);" ng-click="toggle('jobMonitor')")
                   i.pnj-menu-check(ng-show="project.jobMonitor")
                   |    Monitor Job
+            li.menu-item
+               a(href="javascript:void(0);" ng-click="toggleRuler()")
+                  i.pnj-menu-check(ng-show="project.stage.isRulerVisible()")
+                  |    Show Ruler
             li.menu-item(ng-class="{disabled:!project.recipes}")
                a(href="javascript:void(0);" ng-click="toggle('showReaders')")
                   i.pnj-menu-check(ng-show="project.showReaders")

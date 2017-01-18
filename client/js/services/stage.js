@@ -102,7 +102,7 @@ module.exports = (function (app) {
                             scope.$on("EndPlanState", function (ev, state) {
                                 switch (state) {
                                     case "ruler":
-                                        return self.removeRuler();
+                                        break;
                                     case "trace":
                                         return self.endTrace();
                                     case "zone":
@@ -212,13 +212,18 @@ module.exports = (function (app) {
                         endTrace: function () {
                             Tracer.cancel();
                         },
-                        removeRuler: function () {
-                            // this.removeChild(Ruler.shape);
-                            // this.update();
+                        hideRuler: function () {
+                            this.removeChild(Ruler.shape);
+                            this.update();
                         },
                         setRulerLength: function (v) {
                             Ruler.length = v;
                             this.update();
+                        },
+                        showRuler(){
+                            this.hideRuler();
+                            Ruler.coords.startX = undefined;
+                            this.addRuler();
                         },
                         addRuler: function () {
                             if (!this.isRulerVisible())

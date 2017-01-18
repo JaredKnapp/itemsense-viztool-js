@@ -137,6 +137,12 @@ module.exports = (function (app) {
             if (!ignore)
                 $scope.$emit("shouldSave", "general");
         };
+        $scope.toggleRuler = function(){
+            if($scope.project.stage.isRulerVisible())
+                $scope.project.stage.hideRuler();
+            else
+                $scope.project.stage.showRuler();
+        };
         $scope.saveClass = function () {
             return (Object.keys($scope.project.shouldSave).length) ? "btn-warning" : "hidden";
         };
