@@ -35,7 +35,7 @@ module.exports = (function (app) {
                             main.addChild.apply(main, children);
                         },
                         addHeatmap:function(){
-
+                            console.log("adding heatmap");
                         },
                         selectLayer: function (c) {
                             var i = _.findIndex(layers, function (l) {
