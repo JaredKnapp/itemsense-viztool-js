@@ -34,6 +34,9 @@ module.exports = (function (app) {
                             });
                             main.addChild.apply(main, children);
                         },
+                        addHeatmap:function(){
+
+                        },
                         selectLayer: function (c) {
                             var i = _.findIndex(layers, function (l) {
                                 return l === c.name;
