@@ -57,7 +57,7 @@
                a(href="javascript:void(0);" ng-click="toggle('showItems')")
                   i.pnj-menu-check(ng-show="project.showItems")
                   |    Show Items
-            li.menu-item(ng-class="{disabled:!project.items}")
+            li.menu-item(ng-class="{disabled: false && !project.items}")
                a(href="javascript:void(0);" ng-click="project.stage.addHeatmap()")
                   i.pnj-menu-check(ng-show="false")
                   |    Show Heatmap
