@@ -8,9 +8,9 @@
 
 module.exports = (function (app) {
     app.factory("Stage", ["_", "$q", "$state", "$interval", "CreateJS", "Origin", "Ruler", "Tracer", "Zones", "Reader", "Item",
-        "TimeLapse", "StagePresentationArea",
+        "TimeLapse", "StagePresentationArea", "HeatMap",
         function (_, $q, $state, $interval, createjs, Origin, Ruler, Tracer, Zones, Reader, Item,
-                  TimeLapse, PresentationArea) {
+                  TimeLapse, PresentationArea, HeatMap) {
             var main = new createjs.Container(),
                 canvas = document.createElement("canvas"),
                 stage = new createjs.Stage(canvas),
@@ -34,8 +34,17 @@ module.exports = (function (app) {
                             });
                             main.addChild.apply(main, children);
                         },
-                        addHeatmap:function(){
-                            console.log("adding heatmap");
+                        duplicateCanvas(canvas){
+                            let newCanvas = document.createElement("canvas");
+                            newCanvas.width = canvas.width;
+                            newCanvas.height = canvas.height;
+                            newCanvas.style.position = "absolute";
+                            newCanvas.style.top = newCanvas.style.left = "0";
+                            return newCanvas;
+                        },
+                        syncCoords(target){
+                            target.width=canvas.width;
+                            target.height=canvas.height;
                         },
                         selectLayer: function (c) {
                             var i = _.findIndex(layers, function (l) {
@@ -300,6 +309,9 @@ module.exports = (function (app) {
                             this.setFloorPlan(p.floorPlanUrl);
                             this.zones = p.zones;
                             self.showReaders(p.showReaders);
+                            self.dispatchEvent(new createjs.Event("connect").set({
+                                project:p
+                            }));
                             self.update();
                         },
                         disconnect: function () {
@@ -611,6 +623,9 @@ module.exports = (function (app) {
                         },
                         project: {
                             get: () => project
+                        },
+                        canvas: {
+                            get: () => canvas
                         }
                     });
             canvas.width = bkWidth;
@@ -661,7 +676,8 @@ module.exports = (function (app) {
                 if (wrapper.activeTweens > 0)
                     stage.update();
             });
-            PresentationArea(wrapper, project);
+            PresentationArea(wrapper);
+            HeatMap(wrapper);
             return wrapper;
         }]);
 })(angular.module(window.mainApp));
