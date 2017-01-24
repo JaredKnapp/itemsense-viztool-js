@@ -204,7 +204,7 @@ class ConfigDump {
 
 function startProject(project) {
     const itemsenseApi = util.connectToItemsense(project.itemSense.trim(), project.user, project.password);
-    var readPromise = null, interval = null, itemSenseJob = null,
+    var readPromise = null, interval = null, itemSenseJob = null, connected = false,
         results = wrapResults(),
         wrapper = Object.create({
                 stash: function (promise) {
@@ -246,7 +246,9 @@ function startProject(project) {
                     return readPromise;
                 },
                 getDirect(){
-                    if (!itemSenseJob) return q.reject({statusCode: 500, response: {body: "Job not started"}});
+                    if (!itemSenseJob)
+                        if (connected) return q.reject({statusCode: 503, response: {body: "Job not started"}});
+                        else return q({items: []});
                     readPromise = wrapper.stash(itemsenseApi.items.get({
                         pageSize: 1000,
                         fromTime: itemSenseJob.creationTime.replace(/[.].+Z.+/, "")
@@ -298,7 +300,7 @@ function startProject(project) {
                         return zmap;
                     });
                 },
-                addFacility: function(data){
+                addFacility: function (data) {
                     return itemsenseApi.facilities.createOrReplace(data);
                 },
                 deleteZoneMap: function (data) {
@@ -396,7 +398,7 @@ function startProject(project) {
                         if (itemSenseJob && job.id === itemSenseJob.id)
                             if (self.isComplete(job)) {
                                 self.stopInterval();
-                                itemSenseJob = null
+                                itemSenseJob = null;
                             }
                         return job;
                     });
@@ -430,6 +432,11 @@ function startProject(project) {
                 itemSenseJob: {
                     set: function (v) {
                         itemSenseJob = v;
+                    }
+                },
+                connected: {
+                    set: function (v) {
+                        connected = true;
                     }
                 }
             });
@@ -467,6 +474,7 @@ var md = {
             return project.getFacilities();
         }).then(function (facilities) {
             payload.facilities = facilities;
+            project.connected = true;
             return payload;
         });
     },
