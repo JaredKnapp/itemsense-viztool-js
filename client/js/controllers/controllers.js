@@ -137,8 +137,8 @@ module.exports = (function (app) {
             if (!ignore)
                 $scope.$emit("shouldSave", "general");
         };
-        $scope.toggleRuler = function(){
-            if($scope.project.stage.isRulerVisible())
+        $scope.toggleRuler = function () {
+            if ($scope.project.stage.isRulerVisible())
                 $scope.project.stage.hideRuler();
             else
                 $scope.project.stage.showRuler();
@@ -337,6 +337,13 @@ module.exports = (function (app) {
                 disconnected: "Disconnected",
                 unknown: "UnKnown"
             };
+
+            $scope.readerTypes = [
+                {label: 'xArray', data: 'XARRAY'},
+                {label: 'xSpan', data: 'XSPAN'},
+                {label: 'xPortal', data: 'XPORTAL'},
+                {label: 'Spot Reader', data: 'SPEEDWAY'},
+            ];
 
             function makeReader() {
                 var newReader = {

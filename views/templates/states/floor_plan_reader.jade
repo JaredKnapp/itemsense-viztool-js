@@ -5,7 +5,7 @@ form.css-form(name="readerForm" novalidate)
     .form-group
         .input-group
             .pnj-label-75 Type:
-            select.form-control(ng-options="type.data as type.label for type in [{label:'xArray',data:'XARRAY'},{label:'Spot Reader',data:'SPEEDWAY'}]" ng-model="activeReader.type")
+            select.form-control(ng-options="type.data as type.label for type in readerTypes" ng-model="activeReader.type")
         .input-group
             .pnj-label-75 Name:
             input.form-control(type="text" ng-model="activeReader.name" required)

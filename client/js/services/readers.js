@@ -7,72 +7,72 @@
 
 module.exports = (function (app) {
     app.factory("StageMetrics", [function () {
-            return function (ref, stage, xKey, yKey) {
-                xKey = xKey || "x";
-                yKey = yKey || "y";
-                if (ref.x === undefined)
-                    Object.defineProperties(ref, {
-                        x: {
-                            configurable: true,
-                            get: function () {
-                                return ref[xKey];
-                            },
-                            set: function (v) {
-                                ref[xKey] = v;
-                            }
-                        },
-                        y: {
-                            configurable: true,
-                            get: function () {
-                                return ref[yKey];
-                            },
-                            set: function (v) {
-                                ref[yKey] = v;
-                            }
-                        }
-                    });
-                //Expects ref to have x and y, in meters from origin. (what is supplied by item sense)
+        return function (ref, stage, xKey, yKey) {
+            xKey = xKey || "x";
+            yKey = yKey || "y";
+            if (ref.x === undefined)
                 Object.defineProperties(ref, {
-                    _x: { //x for the shape
+                    x: {
                         configurable: true,
                         get: function () {
-                            return stage.metersToStage(ref.x, "x");
+                            return ref[xKey];
                         },
                         set: function (v) {
-                            ref.x = Math.round10(stage.stageToMeters(v, "x"),-2);
+                            ref[xKey] = v;
                         }
                     },
-                    _y: { //y for the shape
+                    y: {
                         configurable: true,
                         get: function () {
-                            return stage.metersToStage(ref.y, "y");
+                            return ref[yKey];
                         },
                         set: function (v) {
-                            ref.y = Math.round10(stage.stageToMeters(v, "y"),-2);
-                        }
-                    },
-                    X: { // X in meters, to display on UI
-                        configurable: true,
-                        get: function () {
-                            return Math.round10(ref.x, -2);
-                        },
-                        set: function (v) {
-                            ref.x = v;
-                        }
-                    },
-                    Y: { // Y in meters to display on UI
-                        configurable: true,
-                        get: function () {
-                            return Math.round10(ref.y, -2);
-                        },
-                        set: function (v) {
-                            ref.y = v;
+                            ref[yKey] = v;
                         }
                     }
                 });
-                return ref;
-            };
-        }])
+            //Expects ref to have x and y, in meters from origin. (what is supplied by item sense)
+            Object.defineProperties(ref, {
+                _x: { //x for the shape
+                    configurable: true,
+                    get: function () {
+                        return stage.metersToStage(ref.x, "x");
+                    },
+                    set: function (v) {
+                        ref.x = Math.round10(stage.stageToMeters(v, "x"), -2);
+                    }
+                },
+                _y: { //y for the shape
+                    configurable: true,
+                    get: function () {
+                        return stage.metersToStage(ref.y, "y");
+                    },
+                    set: function (v) {
+                        ref.y = Math.round10(stage.stageToMeters(v, "y"), -2);
+                    }
+                },
+                X: { // X in meters, to display on UI
+                    configurable: true,
+                    get: function () {
+                        return Math.round10(ref.x, -2);
+                    },
+                    set: function (v) {
+                        ref.x = v;
+                    }
+                },
+                Y: { // Y in meters to display on UI
+                    configurable: true,
+                    get: function () {
+                        return Math.round10(ref.y, -2);
+                    },
+                    set: function (v) {
+                        ref.y = v;
+                    }
+                }
+            });
+            return ref;
+        };
+    }])
         .factory("ReaderModel", ["StageMetrics", function (StageMetrics) {
             //ToDo: extend to have properties that readers need to be shown on stage.
             return function (ref, stage) {
@@ -109,26 +109,38 @@ module.exports = (function (app) {
                             },
                             hasStatus: status => color === colors[status] || (color === colors.active && prevColor === colors[status]),
                             shouldDrawFields: function () {
-                                if (reader.type !== "XARRAY") return false;
                                 if (this.hasStatus("engage")) return true;
                                 return this.hasStatus("inactive");
                             },
-                            drawFields: function () {
-                                var g = field.graphics.clear().s("brown").ss(1);
-                                if (!this.shouldDrawFields())
-                                    return;
-                                if (stage.showReaderFields > 2)
-                                    g = g.f("rgba(200,0,0,0.2)").dc(0, 0, stage.metersToCanvas(5));
-                                if (stage.showReaderFields > 1)
-                                    g = g.f("rgba(200,200,0,0.2)").dc(0, 0, stage.metersToCanvas(4));
-                                if (stage.showReaderFields)
-                                    g.f("rgba(0,200,0,0.2)").dc(0, 0, stage.metersToCanvas(3));
+                            drawFieldFunction(){
+                                let identity = g => g,
+                                    xSpanH = stage.metersToCanvas(1);
+                                if (reader.type === "XSPAN")
+                                    return this.shouldDrawFields() ? (g, r) => g.de(-r, -xSpanH / 2, 2 * r, xSpanH) : identity;
+                                if (reader.type === "XARRAY")
+                                    return this.shouldDrawFields() ? (g, r) => g.dc(0, 0, r) : identity;
+                                return identity;
                             },
-                            drawDevice: function () {
-                                var l = stage.screenToCanvas(10),
+                            drawFields() {
+                                let g = field.graphics.clear().s("brown").ss(1),
+                                    drawFn = this.drawFieldFunction(g);
+                                if (stage.showReaderFields > 2)
+                                    drawFn(g.f("rgba(200,0,0,0.2)"), stage.metersToCanvas(5));
+                                if (stage.showReaderFields > 1)
+                                    drawFn(g.f("rgba(200,200,0,0.2)"), stage.metersToCanvas(4));
+                                if (stage.showReaderFields)
+                                    drawFn(g.f("rgba(0,200,0,0.2)"), stage.metersToCanvas(3));
+                            },
+                            drawDevice() {
+                                let l = stage.screenToCanvas(10),
+                                    xspanL = stage.screenToCanvas(15),
+                                    xspanW = stage.screenToCanvas(8),
                                     r = stage.screenToCanvas(3);
                                 if (reader.type === "XARRAY")
                                     device.graphics.clear().s("brown").ss(1).f(color).r(-l, -l, l * 2, l * 2).dc(0, -l, r);
+                                else if (reader.type === "XSPAN")
+                                    device.graphics.clear().s("brown").ss(1).f(color)
+                                        .r(-xspanL, -xspanW, xspanL * 2, xspanW * 2).dc(xspanL, 0, r);
                                 else
                                     device.graphics.clear().s("brown").ss(1).f(color).dc(0, 0, l);
                             },
@@ -137,7 +149,7 @@ module.exports = (function (app) {
                                 this.drawDevice();
                                 field.x = device.x = model._x;
                                 field.y = device.y = model._y;
-                                device.rotation = - model.yaw;
+                                device.rotation = field.rotation = -model.yaw;
                                 if (update)
                                     stage.update();
                             },

@@ -24,11 +24,16 @@ module.exports = (function (app) {
                     }, {});
                 },
                 addReaderMetadata(readers){
-                    return _.map(readers, reader => _.merge(reader,project.readerMetadata[reader.address]));
+                    return _.map(readers, reader => {
+                        let metadata = project.readerMetadata[reader.address] || {};
+                        if(metadata.placement) reader.placement = metadata.placement;
+                        if(metadata.extraType) reader.type = metadata.extraType;
+                        return reader;
+                    });
                 },
                 updateReaderMetadata(){
-                    let newMetadata = _.reduce(project.changedReaders, (result,reader) =>{
-                        if(reader.address.trim())
+                    let newMetadata = _.reduce(project.changedReaders, (result, reader) => {
+                        if (reader.address.trim())
                             result[reader.address.trim()] = project.getMetadata(reader);
                         return result;
                     }, {});
@@ -36,9 +41,13 @@ module.exports = (function (app) {
                 },
                 getMetadata(reader){
                     let metadata = {};
-                    if(reader.type !== "XARRAY"){
-                        metadata = _.merge(metadata,{placement:reader.placement});
+                    if (reader.type !== "XARRAY") {
+                        metadata = _.merge(metadata, {placement: reader.placement});
                         delete reader.placement;
+                    }
+                    if (reader.type === "XSPAN") {
+                        metadata = _.merge(metadata, {extraType: "XSPAN"});
+                        reader.type = "UNKNOWN";
                     }
                     return metadata;
                 }
@@ -65,7 +74,7 @@ module.exports = (function (app) {
                     set: v => reader = v
                 },
                 readerMetadata: {
-                    enumerable:true,
+                    enumerable: true,
                     get: () => readerMetadata,
                     set: function (v) {
                         readerMetadata = v;
