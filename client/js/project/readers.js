@@ -12,6 +12,8 @@ module.exports = (function (app) {
             return {
                 updateReader(reader) {
                     if (!reader.placement) return;
+                    _.each(["x", "y", "z", "yaw", "pitch", "roll"],
+                        item => reader.placement[item] ? item : reader.placement[item] = 0.0);
                     if (reader.placement.yaw)
                         reader.placement.yaw = correctDegrees((reader.placement.yaw || 0) % 360);
                     if (project.stage)
@@ -26,8 +28,8 @@ module.exports = (function (app) {
                 addReaderMetadata(readers){
                     return _.map(readers, reader => {
                         let metadata = project.readerMetadata[reader.address] || {};
-                        if(metadata.placement) reader.placement = metadata.placement;
-                        if(metadata.extraType) reader.type = metadata.extraType;
+                        if (metadata.placement) reader.placement = metadata.placement;
+                        if (metadata.extraType) reader.type = metadata.extraType;
                         return reader;
                     });
                 },
