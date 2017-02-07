@@ -269,7 +269,7 @@ module.exports = (function (app) {
                                 if (!stage) return;
                                 reader.placement = {floor: this.floorName};
                                 stage.putReaderInCenter(reader);
-                                this.shouldSave();
+                                this.shouldSave.readers=true;
                             },
                             preparePresentation: function (stage, bitmap) {
                                 this.jobMonitor = false;
