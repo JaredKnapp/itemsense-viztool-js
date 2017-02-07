@@ -18,6 +18,7 @@ module.exports = (function (app) {
                 floorPlan, project, bkWidth = 1300, bkHeight = 700, events = {}, zone = null, zoneCollection = [],
                 readers = [], reader = null,
                 items = {}, itemInterval = null, item = null, activeTweens = 0,
+                itemHandlers=[],
                 layers = ["Floorplan", "Origin", "Zone", "Field", "Reader", "Item", "Ruler", "Tracer", "TimeLapse", "Area"],
                 wrapper = Object.create({
                         offAll: function () {
@@ -43,8 +44,8 @@ module.exports = (function (app) {
                             return newCanvas;
                         },
                         syncCoords(target){
-                            target.width=canvas.width;
-                            target.height=canvas.height;
+                            target.width = canvas.width;
+                            target.height = canvas.height;
                         },
                         selectLayer: function (c) {
                             var i = _.findIndex(layers, function (l) {
@@ -310,7 +311,7 @@ module.exports = (function (app) {
                             this.zones = p.zones;
                             self.showReaders(p.showReaders);
                             self.dispatchEvent(new createjs.Event("connect").set({
-                                project:p
+                                project: p
                             }));
                             self.update();
                         },
@@ -391,7 +392,7 @@ module.exports = (function (app) {
                                 $state.go("floorPlan");
                             self.update();
                         },
-                        showItems: function (v) {
+                        showItems(v) {
                             if (v)
                                 this.tweenItems(project.items);
                             else {
@@ -421,7 +422,7 @@ module.exports = (function (app) {
                         tweenItems: function (itms) {
                             var self = this;
                             _.each(itms.data, function (i) {
-                                if (!i.epc.match(self.epcFilter))
+                                if (_.find(itemHandlers, handler => !handler(i, items.data)))
                                     return;
                                 if (items[i.epc])
                                     items[i.epc].tween(i);
@@ -626,6 +627,9 @@ module.exports = (function (app) {
                         },
                         canvas: {
                             get: () => canvas
+                        },
+                        itemHandlers: {
+                            get: () => itemHandlers
                         }
                     });
             canvas.width = bkWidth;
@@ -648,6 +652,7 @@ module.exports = (function (app) {
             wrapper.initLayers();
             stage.addChild(main);
             wrapper.addChild(Origin.shape);
+            wrapper.itemHandlers.push(item => item.epc.match(wrapper.epcFilter));
             Origin.stage = wrapper;
             Ruler.init(wrapper);
             timeLapse.init(wrapper);
