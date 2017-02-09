@@ -215,93 +215,118 @@ module.exports = (function (app) {
                         },
                         shape = new createjs.Shape(),
                         editor = new createjs.Shape();
-                    let points, lastX, lastY, model,
-                        isActive = false, hasdragged = false, movingPoint = null, zoomHandler = null,
-                        movingPointDragged = false,
-                        wrapper = Object.create({
-                            hitTest(x,y) {
-                                return shape.hitTest(x,y);
-                            },
-                            activate() {
-                                isActive = true;
-                                stage.addChild(shape);
-                                stage.addChild(editor);
-                                this.draw();
-                                stage.dispatchEvent(new createjs.Event("newZone").set({zone: wrapper}));
-                            },
-                            destroy() {
-                                stage.removeChild(shape);
-                                stage.removeChild(editor);
-                                stage.off("Zoom", zoomHandler);
-                                stage.update();
-                            },
-                            deactivate() {
-                                isActive = false;
-                                stage.removeChild(editor);
-                                this.draw();
-                            },
-                            draw() {
-                                this.drawPoly(shape.graphics.clear().s("brown").ss(4, null, null, null, true)
-                                    .f(isActive ? colors.selected : colors.fixture), points);
-                                if (isActive)
-                                    this.drawPoints();
-                                stage.update();
-                            },
-                            drawPoly(g, pts) {
-                                _.reduce(pts, function (r, p, i) {
-                                    if (!i) return r.mt(p.x, p.y);
-                                    return p.type === "full" ? r.lt(p.x, p.y) : r;
-                                }, g).lt(pts[0].x, pts[0].y);
-                            },
-                            updateHalfPoint(p,i){
-                                const p1 = i ? points[i - 1] : points[points.length - 1],
-                                    p2 = points[i + 1] || points[0];
-                                p.x = (p1.x + p2.x) / 2;
-                                p.y = (p1.y + p2.y) / 2;
-                            },
-                            drawPoints() {
-                                const radius = stage.screenToCanvas(4);
-                                _.reduce(points, (r, p, i) => {
-                                    if (p.type === "full")
-                                        return r.s("brown").ss(4, null, null, null, true).f("brown").dc(p.x, p.y, radius).es().ef();
-                                    this.updateHalfPoint(p,i);
-                                    return r.s("brown").ss(2, null, null, null, true).f("white").dc(p.x, p.y, radius * 0.75).es().ef();
-                                }, editor.graphics.clear());
-                            },
-                            removePoint(point) {
-                                if (zone.points.length < 4) return;
-                                zone.points = _.reduce(this.points, function (r, p) {
-                                    if (p.type === "full" && p !== point)
-                                        r.push(p.ref);
-                                    return r;
-                                }, []);
-                                points = ZonePoints(zone, stage, this);
-                                model.update(points);
-                                this.draw();
+                    let points, lastX, lastY, model, textBoxes, isActive, hasdragged, movingPoint, zoomHandler, movingPointDragged, wrapper;
+                    textBoxes = {};
+                    isActive = false;
+                    hasdragged = false;
+                    movingPoint = null;
+                    zoomHandler = null;
+                    movingPointDragged = false;
+                    wrapper = Object.create({
+                        hitTest(x, y) {
+                            return shape.hitTest(x, y);
+                        },
+                        activate() {
+                            isActive = true;
+                            stage.addChild(shape);
+                            stage.addChild(editor);
+                            this.draw();
+                            stage.dispatchEvent(new createjs.Event("newZone").set({zone: wrapper}));
+                        },
+                        destroy() {
+                            stage.removeChild(shape);
+                            stage.removeChild(editor);
+                            stage.off("Zoom", zoomHandler);
+                            stage.update();
+                        },
+                        deactivate() {
+                            isActive = false;
+                            stage.removeChild(editor);
+                            this.draw();
+                        },
+                        addBox(box){
+                            box.shape = new createjs.Text(box.text, "10px Arial", "#000000");
+                            box.shape.x = box._x = stage.metersToStage(box.x, "x");
+                            box.shape.y = box._y = stage.metersToStage(box.y, "y");
+                            box.textBaseline = "alphabetic";
+                            textBoxes[box.readerZone] = box;
+                        },
+                        renderTextBox(box){
+                            if (!box.text)
+                                return stage.removeChild(box.shape);
+                            box.shape.x = box._x - (box.shape.getBounds().width/2);
+                            if (!stage.containsShape(box.shape))
+                                stage.addChild(box.shape);
+                        },
+                        draw() {
+                            this.drawPoly(shape.graphics.clear().s("brown").ss(4, null, null, null, true)
+                                .f(isActive ? colors.selected : colors.fixture), points);
+                            if (isActive)
+                                this.drawPoints();
+                            _.each(textBoxes, box => this.renderTextBox(box));
+                            stage.update();
+                        },
+                        drawPoly(g, pts) {
+                            _.reduce(pts, function (r, p, i) {
+                                if (!i) return r.mt(p.x, p.y);
+                                return p.type === "full" ? r.lt(p.x, p.y) : r;
+                            }, g).lt(pts[0].x, pts[0].y);
+                        },
+                        updateHalfPoint(p, i){
+                            const p1 = i ? points[i - 1] : points[points.length - 1],
+                                p2 = points[i + 1] || points[0];
+                            p.x = (p1.x + p2.x) / 2;
+                            p.y = (p1.y + p2.y) / 2;
+                        },
+                        drawPoints() {
+                            const radius = stage.screenToCanvas(4);
+                            _.reduce(points, (r, p, i) => {
+                                if (p.type === "full")
+                                    return r.s("brown").ss(4, null, null, null, true).f("brown").dc(p.x, p.y, radius).es().ef();
+                                this.updateHalfPoint(p, i);
+                                return r.s("brown").ss(2, null, null, null, true).f("white").dc(p.x, p.y, radius * 0.75).es().ef();
+                            }, editor.graphics.clear());
+                        },
+                        removePoint(point) {
+                            if (zone.points.length < 4) return;
+                            zone.points = _.reduce(this.points, function (r, p) {
+                                if (p.type === "full" && p !== point)
+                                    r.push(p.ref);
+                                return r;
+                            }, []);
+                            points = ZonePoints(zone, stage, this);
+                            model.update(points);
+                            this.draw();
 
-                            },
-                            convertPoint(point) {
-                                zone.points = _.reduce(this.points, (r, p) => {
-                                    if (p.type === "full" || p === point)
-                                        r.push(p.ref);
-                                    return r;
-                                }, []);
-                                points = ZonePoints(zone, stage, this);
-                                model.update(points);
-                                this.draw();
-                            }
+                        },
+                        convertPoint(point) {
+                            zone.points = _.reduce(this.points, (r, p) => {
+                                if (p.type === "full" || p === point)
+                                    r.push(p.ref);
+                                return r;
+                            }, []);
+                            points = ZonePoints(zone, stage, this);
+                            model.update(points);
+                            this.draw();
+                        }
 
-                        }, {
-                            model: {
-                                get: () => model
-                            },
-                            points: {
-                                get: () => points
-                            },
-                            zone: {
-                                get: () => zone
-                            }
-                        });
+                    }, {
+                        model: {
+                            get: () => model
+                        },
+                        points: {
+                            get: () => points
+                        },
+                        zone: {
+                            get: () => zone
+                        },
+                        name: {
+                            get: () => model.name
+                        },
+                        textBoxes: {
+                            get: () => textBoxes
+                        }
+                    });
                     points = ZonePoints(zone, stage, wrapper);
                     model = createModel(zone, points);
                     shape.on("mousedown", (ev) => {

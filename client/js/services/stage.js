@@ -19,7 +19,7 @@ module.exports = (function (app) {
                 readers = [], reader = null,
                 items = {}, itemInterval = null, item = null, activeTweens = 0,
                 itemHandlers=[],
-                layers = ["Floorplan", "Origin", "Zone", "Field", "Reader", "Item", "Ruler", "Tracer", "TimeLapse", "Area"],
+                layers = ["Floorplan", "Origin", "Zone", "Count", "Field", "Reader", "Item", "Ruler", "Tracer", "TimeLapse", "Area"],
                 wrapper = Object.create({
                         offAll: function () {
                             _.each(events, function (v, k) {
@@ -559,6 +559,9 @@ module.exports = (function (app) {
                                 zone = v;
                                 project.zone = v ? v.model : null;
                             }
+                        },
+                        zoneCollection: {
+                            get: () => zoneCollection
                         },
                         scale: {
                             enumerable: false,
