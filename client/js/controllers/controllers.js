@@ -472,7 +472,7 @@ module.exports = (function (app) {
                 var sort = !$scope.sortStatus[key];
                 $scope.sortStatus = {};
                 $scope.sortStatus[key] = sort;
-                $scope.classes = _.sortByOrder($scope.classes, [key], sort);
+                $scope.classes = _.orderBy($scope.classes, [key], sort);
             };
             $scope.editRecord = function (record) {
                 $scope.$state.go("classes.epc", {epc: record.EPC});
