@@ -258,6 +258,14 @@ module.exports = (function (app) {
                             symbolImage: function (fileName) {
                                 return "/projects/" + this.handle + "/symbols/" + fileName;
                             },
+                            getSymbolColor: function (epc) {
+                                try {
+                                    const hash = this.itemHash[epc];
+                                    return this.symbols[(hash.Color || hash.Category).toLowerCase()].Color;
+                                } catch (e) {
+                                    return null;
+                                }
+                            },
                             getSymbol: function (epc) {
                                 try {
                                     return this.symbols[this.itemHash[epc].Category.toLowerCase()];

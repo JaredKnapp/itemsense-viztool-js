@@ -14,13 +14,13 @@ module.exports = (function (app) {
             return stageMetrics(ref, stage,xKey,yKey);
         };
     }]).factory("Item", ["CreateJS", "ItemModel", "$q", function (createjs, ItemModel, $q) {
-        return function (ref, stage, hash) {
+        return function (ref, stage, hashColor) {
             var shape = new createjs.Shape(),
                 ease = stage.project.moveAnimation === "ease" ? createjs.Ease.sineOut : null,
 		tweenRate = stage.project.moveAnimation === "ease" ? 1500 : 250,
                 zoomHandler = null,
                 tweenPromise = null,
-                color = hash ? hash.Color || "gray" : "gray",
+                color = hashColor || "gray",
                 model = ItemModel(ref, stage),
                 wrapper = Object.create({
                     destroy: function (update) {

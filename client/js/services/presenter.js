@@ -75,7 +75,7 @@ module.exports = (function (app) {
                                     if (items[i.epc])
                                         items[i.epc].tween(i);
                                     else
-                                        items[i.epc] = Item(i, self, project.getSymbol(i.epc));
+                                        items[i.epc] = Item(i, self, project.getSymbolColor(i.epc));
                                     if (item && item.model.epc === i.epc)
                                         wrapper.item = items[i.epc];
                                 });
